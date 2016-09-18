@@ -18,17 +18,17 @@ public class Game extends JComponent implements KeyListener {
 	public static final int TYPE_SHIELD = 2;
 	public static final int TYPE_HURTBOX = 3;
 	// hitbox colours
-	Color transparentred = new Color(255, 0, 0, 75);
-	Color transparentgreen = new Color(0, 255, 0, 75);
-	Color transparentblue = new Color(0, 0, 255, 75);
-	Color transparentpink = new Color(0, 0, 255, 50);
+	public static Color transparentred = new Color(255, 0, 0, 75);
+	public static Color transparentgreen = new Color(0, 255, 0, 75);
+	public static Color transparentblue = new Color(0, 0, 255, 75);
+	public static Color transparentpink = new Color(0, 0, 255, 50);
 
 	boolean shouldShowHitboxes = true;
 	ArrayList<Hitbox> hitboxes = new ArrayList<Hitbox>();
-	public static final Hitbox GROUND_HITBOX = new Hitbox(0, 600, 1000, 200, TYPE_GROUND);
+	public static final Hitbox GROUND_HITBOX = new Hitbox(200, 600, 600, 100, TYPE_GROUND);
 
 	ArrayList<Character> characters = new ArrayList<Character>();
-	Character GOE = new Character(50, 10, KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT, KeyEvent.VK_UP, KeyEvent.VK_Q);
+	Character GOE = new Character(500, 10, KeyEvent.VK_UP, KeyEvent.VK_DOWN, KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT, KeyEvent.VK_SPACE, KeyEvent.VK_Q);
 
 	public Game() {
 		hitboxes.add(GROUND_HITBOX);
@@ -47,7 +47,6 @@ public class Game extends JComponent implements KeyListener {
 
 		// draws hitboxes, should be after all other drawing code
 		drawHitBoxes(g, hitboxes);
-
 	}
 
 	public void doPlayerDrawing(Graphics g) {
@@ -59,8 +58,8 @@ public class Game extends JComponent implements KeyListener {
 
 	public void doPlayerPhysics() {
 		for (Character person : characters) {
-			Rectangle groundChecker = new Rectangle(person.getX(), person.getY() + 1, person.getWidth(),
-					person.getHeight());
+			Rectangle groundChecker = new Rectangle((int)person.getX(), (int)person.getY() + 1, (int)person.getWidth(),
+					(int)person.getHeight());
 			if (checkCollision(groundChecker, hitboxes.get(0).getRect()))
 				person.isGrounded = true;
 			else
@@ -75,13 +74,13 @@ public class Game extends JComponent implements KeyListener {
 
 	public void drawGround(Graphics g) {
 		g.setColor(Color.black);
-		g.fillRect(0, 600, 1000, 200);
+		g.fillRect(200, 600, 600, 100);
 	}
 
 	public void drawHitBoxes(Graphics g, ArrayList<Hitbox> hitboxList) {
 		if (shouldShowHitboxes)
 			for (Hitbox myhitbox : hitboxList) {
-				switch (myhitbox.getType()) {
+				switch ((int)myhitbox.getType()) {
 				case TYPE_GROUND:
 					g.setColor(transparentgreen);
 					break;
@@ -95,10 +94,10 @@ public class Game extends JComponent implements KeyListener {
 					g.setColor(transparentpink);
 					break;
 				}
-				g.fillRect(myhitbox.getX(), myhitbox.getY(), myhitbox.getWidth(), myhitbox.getHeight());
+				g.fillRect((int)myhitbox.getX(), (int)myhitbox.getY(), (int)myhitbox.getWidth(), (int)myhitbox.getHeight());
 			}
 	}
-
+	
 	public boolean checkCollision(Rectangle rect1, Rectangle rect2) {
 		if (rect1.intersects(rect2))
 			return true;
@@ -121,7 +120,8 @@ public class Game extends JComponent implements KeyListener {
 	@Override
 	public void keyReleased(KeyEvent e) {
 		for (Character person : characters) {
-			person.keysPressed.remove(e.getKeyCode());
+			if (person.keysPressed.contains(e.getKeyCode()))
+				person.keysPressed.remove(e.getKeyCode());
 		}
 		if (e.getKeyCode() == KeyEvent.VK_SHIFT) {
 			shouldShowHitboxes = !shouldShowHitboxes;

@@ -4,45 +4,45 @@ import java.awt.*;
 
 public class Hitbox {
 
-	private int x;
-	private int y;
-	private int w;
-	private int h;
+	private double x;
+	private double y;
+	private double w;
+	private double h;
 	private int type;
 	private Rectangle rect;
-	public Hitbox(int posx, int posy, int width, int height, int typeOfHitbox) {
+	public Hitbox(double posx, double posy, double width, double height, int typeOfHitbox) {
 		x = posx;
 		y = posy;
 		w = width;
 		h = height;
 		type = typeOfHitbox;
-		rect = new Rectangle(x,y,w,h);
+		rect = new Rectangle((int)x,(int)y,(int)w,(int)h);
 	}
 	//stock return methods. nothing special here
-	public int getX(){
+	public double getX(){
 		return x;
 	}
-	public int getY(){
+	public double getY(){
 		return y;
 	}
-	public int getWidth(){
+	public double getWidth(){
 		return w;
 	}
-	public int getHeight(){
+	public double getHeight(){
 		return h;
 	}
-	public int getType(){
+	public double getType(){
 		return type;
 	}
 	public Rectangle getRect(){
 		return rect;
 	}
-	public void updateLocation(int posx,int posy, int width, int height){
+	public void updateLocation(double posx,double posy, double width, double height){
 		x = posx;
 		y = posy;
 		w = width;
 		h = height;
-		rect = new Rectangle(x,y,w,h);
+		rect = new Rectangle((int)x,(int)y,(int)w,(int)h);
 	}
 	
 }
