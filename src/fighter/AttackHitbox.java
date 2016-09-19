@@ -6,8 +6,7 @@ public class AttackHitbox extends Hitbox {
 	public int lifetime = 15;
 	public boolean isActive = true;
 
-	public AttackHitbox(Character linkedPlayer, double width, double height, double localposx,
-			double localposy, int lifeTime) {
+	public AttackHitbox(Character linkedPlayer, double localposx, double localposy, double width, double height,  int lifeTime) {
 		super(linkedPlayer.getX()+localposx, linkedPlayer.getVelY()+localposy, width, height, Game.TYPE_ATTACK);
 		localX = localposx;
 		localY = localposy;

@@ -3,6 +3,7 @@ package fighter;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
+import java.awt.image.BufferedImage;
 import java.util.*;
 
 public class Character {
@@ -28,12 +29,31 @@ public class Character {
 	private double horizontalInAirDistance = 2;
 	private boolean hasDoubleJump = false;
 	private double maxAirSpeed = 10;
+	// State variables
+	private static int STATE_NEUTRAL = 0;
+	private static int STATE_ATTACK = 1;
+	private static int STATE_ATTACKUP = 1;
+	private static int STATE_ATTACKDOWN = 1;
+	private static int STATE_ATTACKLEFT = 1;
+	private static int STATE_ATTACKRIGHT = 1;
+
+	private int direction = 1;
+	private static int DIRECTION_LEFT = 0;
+	private static int DIRECTION_RIGHT = 1;
+	private int state = 0;
+
 	HashSet<Integer> keysPressed = new HashSet<Integer>();
+	BufferedImage neutralImage = new Image("img/stickman_neutral.png").img;
+	BufferedImage jabImage = new Image("img/stickman_attack1.png").img;
+	private final double startx;
+	private final double starty;
 
 	public Character(int posx, int posy, int upKey, int downKey, int leftKey, int rightKey, int jumpKey,
 			int attackKey) {
 		x = posx;
 		y = posy;
+		startx = x;
+		starty = y;
 		keyUp = upKey;
 		keyDown = downKey;
 		keyLeft = leftKey;
@@ -49,12 +69,24 @@ public class Character {
 		handleInput();
 		move();
 		translateHitboxes();
-		g.fillRect((int) x, (int) y, (int) w, (int) h);
-		for (int i = 0; i < hitboxes.size(); i++) {
-			g.setColor(Game.transparentred);
-			AttackHitbox tempbox = hitboxes.get(i);
-			Graphics2D g2 = (Graphics2D) g;
-			g2.fill(tempbox.getRect());
+		blastZone();
+		
+		drawCorrectSprite(g);
+
+	}
+
+	public void drawCorrectSprite(Graphics g) {
+		if (state == STATE_NEUTRAL) {
+			if (direction == DIRECTION_RIGHT)
+				g.drawImage(neutralImage, (int) x, (int) y, w, h, null);
+			if (direction == DIRECTION_LEFT)
+				g.drawImage(neutralImage, (int) x + w, (int) y, -w, h, null);
+		}
+		if (state == STATE_ATTACK) {
+			if (direction == DIRECTION_RIGHT)
+				g.drawImage(jabImage, (int) x, (int) y, (int) (w * 1.6), h, null);
+			if (direction == DIRECTION_LEFT)
+				g.drawImage(jabImage, (int) x + w, (int) y, (int) (-w * 1.6), h, null);
 		}
 	}
 
@@ -67,29 +99,40 @@ public class Character {
 		applyFriction();
 	}
 
+	public void blastZone() {
+		if (x < 0 || x + w > 1000 || y < 0 || y + h > 800) {
+			x = startx;
+			y = starty;
+		}
+	}
+
 	public void handleInput() {
-		// Jumping code
-		if (isPressing(keyJump)) {
-			if (isGrounded) {
-				vely -= jumpHeight;
-				keysPressed.remove(keyJump);
-			} else if (hasDoubleJump) {
-				vely -= jumpHeight * 2;
-				hasDoubleJump = false;
+		if (state == STATE_NEUTRAL) {
+			// Jumping code
+			if (isPressing(keyJump)) {
+				if (isGrounded) {
+					vely -= jumpHeight;
+					keysPressed.remove(keyJump);
+				} else if (hasDoubleJump) {
+					vely -= jumpHeight * 2;
+					hasDoubleJump = false;
+				}
 			}
-		}
-		// Horizontal Movement code
-		if (isPressing(keyLeft)) {
-			if (isGrounded)
-				velx = -runSpeed;
-			else if (Math.abs(velx) < maxAirSpeed)
-				velx -= horizontalInAirDistance;
-		}
-		if (isPressing(keyRight)) {
-			if (isGrounded)
-				velx = runSpeed;
-			else if (Math.abs(velx) < maxAirSpeed)
-				velx += horizontalInAirDistance;
+			// Horizontal Movement code
+			if (isPressing(keyLeft)) {
+				if (isGrounded) {
+					velx = -runSpeed;
+					direction = DIRECTION_LEFT;
+				} else if (Math.abs(velx) < maxAirSpeed)
+					velx -= horizontalInAirDistance;
+			}
+			if (isPressing(keyRight)) {
+				if (isGrounded) {
+					velx = runSpeed;
+					direction = DIRECTION_RIGHT;
+				} else if (Math.abs(velx) < maxAirSpeed)
+					velx += horizontalInAirDistance;
+			}
 		}
 		chooseAttack();
 	}
@@ -111,9 +154,12 @@ public class Character {
 			velx /= horizontalSlowdownFactor;
 	}
 
+	// TODO attack locations. syntax is : character, local position x, local
+	// position y,width, height, time it will be out for
 	private void chooseAttack() {
 		if (isPressing(keyAttack)) {
-			hitboxes.add(new AttackHitbox(this, 20, 20, 5, 5, 100));
+			hitboxes.add(new AttackHitbox(this, 20, 15, 15, 15, 5));
+			state = STATE_ATTACK;
 			keysPressed.remove(keyAttack);
 		}
 
@@ -135,14 +181,16 @@ public class Character {
 	public void translateHitboxes() {
 		hurtbox.updateLocation(x, y, w, h);
 		for (AttackHitbox box : hitboxes) {
-
-			box.updateLocation(x + box.getlocalX(), y + box.getlocalY(), box.getWidth(), box.getHeight());
-
+			if (direction == DIRECTION_RIGHT)
+				box.updateLocation(x + box.getlocalX(), y + box.getlocalY(), box.getWidth(), box.getHeight());
+			if (direction == DIRECTION_LEFT)
+				box.updateLocation(x - box.getlocalX(), y + box.getlocalY(), box.getWidth(), box.getHeight());
 		}
 		for (AttackHitbox box : hitboxes) {
 
 			if (!box.isActive) {
 				hitboxes.remove(box);
+				state = STATE_NEUTRAL;
 				break;
 			}
 		}
