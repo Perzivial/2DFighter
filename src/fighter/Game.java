@@ -21,7 +21,7 @@ public class Game extends JComponent implements KeyListener {
 	public static Color transparentred = new Color(255, 0, 0, 75);
 	public static Color transparentgreen = new Color(0, 255, 0, 75);
 	public static Color transparentblue = new Color(0, 0, 255, 75);
-	public static Color transparentpink = new Color(0, 0, 255, 50);
+	public static Color transparentpurple = new Color(100, 0, 100, 50);
 
 	boolean shouldShowHitboxes = true;
 	ArrayList<Hitbox> hitboxes = new ArrayList<Hitbox>();
@@ -30,8 +30,8 @@ public class Game extends JComponent implements KeyListener {
 	ArrayList<Character> characters = new ArrayList<Character>();
 	Character GOE = new Character(500, 400, KeyEvent.VK_UP, KeyEvent.VK_DOWN, KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT,
 			KeyEvent.VK_SPACE, KeyEvent.VK_Q);
-	Character GOE2 = new Character(500, 400, KeyEvent.VK_W, KeyEvent.VK_S, KeyEvent.VK_A, KeyEvent.VK_D,
-			KeyEvent.VK_E, KeyEvent.VK_F);
+	Character GOE2 = new Character(500, 400, KeyEvent.VK_W, KeyEvent.VK_S, KeyEvent.VK_A, KeyEvent.VK_D, KeyEvent.VK_E,
+			KeyEvent.VK_F);
 
 	public Game() {
 		hitboxes.add(GROUND_HITBOX);
@@ -70,11 +70,12 @@ public class Game extends JComponent implements KeyListener {
 			else
 				person.isGrounded = false;
 		}
+		checkForAndExecutePlayerHitDectection();
 	}
 
 	public void drawBackground(Graphics g) {
 		g.setColor(Color.white);
-		g.fillRect(0, 0, 1000, 800);
+		g.fillRect(0, 0, 1200, 675);
 	}
 
 	public void drawGround(Graphics g) {
@@ -84,13 +85,19 @@ public class Game extends JComponent implements KeyListener {
 
 	public void drawPlayerHitboxes(Graphics g) {
 		for (Character person : characters) {
-			if (shouldShowHitboxes)
+			if (shouldShowHitboxes) {
+
 				for (int i = 0; i < person.hitboxes.size(); i++) {
 					g.setColor(Game.transparentred);
 					AttackHitbox tempbox = person.hitboxes.get(i);
 					Graphics2D g2 = (Graphics2D) g;
 					g2.fill(tempbox.getRect());
 				}
+				g.setColor(Game.transparentpurple);
+				Graphics2D g2 = (Graphics2D) g;
+				g2.fill(person.getHurtbox().getRect());
+
+			}
 		}
 	}
 
@@ -108,12 +115,28 @@ public class Game extends JComponent implements KeyListener {
 					g.setColor(transparentblue);
 					break;
 				case TYPE_HURTBOX:
-					g.setColor(transparentpink);
+					g.setColor(transparentpurple);
 					break;
 				}
 				g.fillRect((int) myhitbox.getX(), (int) myhitbox.getY(), (int) myhitbox.getWidth(),
 						(int) myhitbox.getHeight());
 			}
+	}
+
+	// self explanatory naming FTW
+	public void checkForAndExecutePlayerHitDectection() {
+		for (int j = 0; j < characters.size(); j++) {
+			for (int i = 0; i < characters.size(); i++) {
+				for (int o = 0; o < characters.get(i).hitboxes.size(); o++) {
+					if (checkCollision(characters.get(j).getHurtbox().getRect(),
+							characters.get(i).hitboxes.get(o).getRect())) {
+						if (!characters.get(i).hitboxes.get(o).getLinkedCharacter()
+								.equals(characters.get(j).getHurtbox().getLinkedCharacter()))
+							System.out.println("A collision was detected");
+					}
+				}
+			}
+		}
 	}
 
 	public boolean checkCollision(Rectangle rect1, Rectangle rect2) {

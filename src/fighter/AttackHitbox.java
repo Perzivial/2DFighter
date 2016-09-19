@@ -5,12 +5,18 @@ public class AttackHitbox extends Hitbox {
 	private double localY;
 	public int lifetime = 15;
 	public boolean isActive = true;
+	private double knockbackX;
+	private double knockbackY;
 
-	public AttackHitbox(Character linkedPlayer, double localposx, double localposy, double width, double height,  int lifeTime) {
-		super(linkedPlayer.getX()+localposx, linkedPlayer.getVelY()+localposy, width, height, Game.TYPE_ATTACK);
+	public AttackHitbox(Character boundPlayer, double localposx, double localposy, double width, double height,
+			double xknockback, double yknockback, int lifeTime) {
+		super(boundPlayer, boundPlayer.getX() + localposx, boundPlayer.getVelY() + localposy, width, height,
+				Game.TYPE_ATTACK);
 		localX = localposx;
 		localY = localposy;
-		lifetime = lifeTime;		
+		knockbackX = xknockback;
+		knockbackY = yknockback;
+		lifetime = lifeTime;
 	}
 
 	public double getlocalX() {
@@ -19,6 +25,14 @@ public class AttackHitbox extends Hitbox {
 
 	public double getlocalY() {
 		return localY;
+	}
+
+	public double getknockbackX() {
+		return knockbackX;
+	}
+
+	public double getKnockbackY() {
+		return knockbackY;
 	}
 
 	@Override

@@ -38,7 +38,7 @@ public class Character {
 	private static int STATE_ATTACKRIGHT = 1;
 
 	private int direction = 1;
-	private static int DIRECTION_LEFT = 0;
+	private static int DIRECTION_LEFT = -1;
 	private static int DIRECTION_RIGHT = 1;
 	private int state = 0;
 
@@ -47,7 +47,6 @@ public class Character {
 	BufferedImage jabImage = new Image("img/stickman_attack1.png").img;
 	private final double startx;
 	private final double starty;
-
 	public Character(int posx, int posy, int upKey, int downKey, int leftKey, int rightKey, int jumpKey,
 			int attackKey) {
 		x = posx;
@@ -60,9 +59,8 @@ public class Character {
 		keyRight = rightKey;
 		keyJump = jumpKey;
 		keyAttack = attackKey;
-		hurtbox = new Hitbox(x, y, w, h, Game.TYPE_HURTBOX);
+		hurtbox = new Hitbox(this, x, y, w, h, Game.TYPE_HURTBOX);
 	}
-
 	public void draw(Graphics g) {
 		updateStates();
 		fall();
@@ -70,11 +68,11 @@ public class Character {
 		move();
 		translateHitboxes();
 		blastZone();
-		
+
 		drawCorrectSprite(g);
 
 	}
-
+	
 	public void drawCorrectSprite(Graphics g) {
 		if (state == STATE_NEUTRAL) {
 			if (direction == DIRECTION_RIGHT)
@@ -158,8 +156,19 @@ public class Character {
 	// position y,width, height, time it will be out for
 	private void chooseAttack() {
 		if (isPressing(keyAttack)) {
-			hitboxes.add(new AttackHitbox(this, 20, 15, 15, 15, 5));
-			state = STATE_ATTACK;
+			if (isPressing(keyUp)) {
+
+			} else if (isPressing(keyDown)) {
+
+			} else if (isPressing(keyLeft)) {
+
+			} else if (isPressing(keyRight)) {
+
+			} else {
+				hitboxes.add(new AttackHitbox(this, 20, 15, 15, 15, 100, 100, 5));
+				state = STATE_ATTACK;
+				velx += direction * 2;
+			}
 			keysPressed.remove(keyAttack);
 		}
 
@@ -196,7 +205,7 @@ public class Character {
 		}
 	}
 
-	public Hitbox getHitbox() {
+	public Hitbox getHurtbox() {
 		return hurtbox;
 	}
 
