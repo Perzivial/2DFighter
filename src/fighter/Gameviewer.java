@@ -1,10 +1,14 @@
 package fighter;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Rectangle;
+import java.awt.Toolkit;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.lang.reflect.Method;
 
 // Take a look in the JRE (Java Runtime Environment) Library classes.jar for javax.swing in Eclipse IDE
@@ -19,9 +23,13 @@ import javax.swing.Timer;
 @SuppressWarnings("deprecation")
 public class Gameviewer extends JFrame {
 	private static final long serialVersionUID = 1L;
+	Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+	double width = screenSize.getWidth();
+	double height = screenSize.getHeight();
 	JFrame frame;
 	private final static int ONE_SECOND = 1000;
 	private static Timer timer = null;
+	private int screensizeChangeBuffer = 0;
 	Game thegame = new Game();
 
 	public Gameviewer(String s) throws Exception {
@@ -48,10 +56,44 @@ public class Gameviewer extends JFrame {
 		frame.getContentPane().setBackground(Color.black);
 		thegame.setVisible(true);
 		frame.setVisible(true);
+		frame.addComponentListener(new ComponentListener() {
 
+			public void componentResized(ComponentEvent e) {
+				// do stuff
+				System.out.println("Window has ben resized, scaling accordingly");
+				if (screensizeChangeBuffer >= 5) {
+					thegame.isnormalscreen = !thegame.isnormalscreen;
+					screensizeChangeBuffer = 0;
+					if (!thegame.isnormalscreen)
+						frame.setSize((int) width, (int) height);
+					else
+						frame.setSize(1200, 675);
+				}
+			}
+
+			@Override
+			public void componentMoved(ComponentEvent e) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void componentShown(ComponentEvent e) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void componentHidden(ComponentEvent e) {
+				// TODO Auto-generated method stub
+
+			}
+		});
 		timer = new Timer(ONE_SECOND / 60, new ActionListener() {
 
 			public void actionPerformed(ActionEvent e) {
+				if (screensizeChangeBuffer < 5)
+					screensizeChangeBuffer++;
 				thegame.repaint();
 			}
 		});

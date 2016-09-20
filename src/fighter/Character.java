@@ -97,8 +97,8 @@ public class Character {
 		applyFriction();
 	}
 
-	public void blastZone() {
-		if (x < 0 || x + w > 1000 || y < 0 || y + h > 800) {
+	private void blastZone() {
+		if (x < 0 || x + w > 1200 || y < 0 || y + h > 675) {
 			x = startx;
 			y = starty;
 		}
@@ -193,7 +193,7 @@ public class Character {
 			if (direction == DIRECTION_RIGHT)
 				box.updateLocation(x + box.getlocalX(), y + box.getlocalY(), box.getWidth(), box.getHeight());
 			if (direction == DIRECTION_LEFT)
-				box.updateLocation(x - box.getlocalX(), y + box.getlocalY(), box.getWidth(), box.getHeight());
+				box.updateLocation(x + box.getlocalX() - (w*1.75), y + box.getlocalY(), box.getWidth(), box.getHeight());
 		}
 		for (AttackHitbox box : hitboxes) {
 

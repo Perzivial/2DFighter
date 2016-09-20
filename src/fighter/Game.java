@@ -1,17 +1,28 @@
 package fighter;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
+import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.geom.AffineTransform;
 import java.util.ArrayList;
-
 import javax.swing.JComponent;
+import net.java.games.input.*;
 
 public class Game extends JComponent implements KeyListener {
+	// screen related variables
+	public static final int DEFAULT_SCREEN_SIZE_X = 1200;
+	public static final int DEFAULT_SCREEN_SIZE_Y = 675;
+	static Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+	static double screenWidth = screenSize.getWidth();
+	static double screenHeight = screenSize.getHeight();
+	boolean isnormalscreen = true;
+
 	// types of hitboxes. affects how they are drawn, among other things
 	public static final int TYPE_GROUND = 0;
 	public static final int TYPE_ATTACK = 1;
@@ -25,7 +36,7 @@ public class Game extends JComponent implements KeyListener {
 
 	boolean shouldShowHitboxes = true;
 	ArrayList<Hitbox> hitboxes = new ArrayList<Hitbox>();
-	public static final Hitbox GROUND_HITBOX = new Hitbox(200, 600, 600, 100, TYPE_GROUND);
+	public static final Hitbox GROUND_HITBOX = new Hitbox(200, 600, 720, 100, TYPE_GROUND);
 
 	ArrayList<Character> characters = new ArrayList<Character>();
 	Character GOE = new Character(500, 400, KeyEvent.VK_UP, KeyEvent.VK_DOWN, KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT,
@@ -37,12 +48,23 @@ public class Game extends JComponent implements KeyListener {
 		hitboxes.add(GROUND_HITBOX);
 		characters.add(GOE);
 		characters.add(GOE2);
+
+		ControllerEnvironment ce = ControllerEnvironment.getDefaultEnvironment();
+		Controller[] cs = ce.getControllers();
+		for (int i = 0; i < cs.length; i++) {
+			System.out.println(i + ". " + cs[i].getName() + ", " + cs[i].getType());
+		}
+
 	}
 
 	@Override
 	public void paintComponent(Graphics g) {
 		// TODO the paint method
-
+		Graphics2D g2 = (Graphics2D) g;
+		AffineTransform oldTransform = g2.getTransform();
+		if (!isnormalscreen)
+			g2.scale(((screenWidth / DEFAULT_SCREEN_SIZE_Y) / 16)
+					* 9/* screenWidth / DEFAULT_SCREEN_SIZE_X */, screenHeight / DEFAULT_SCREEN_SIZE_Y);
 		// basic background stuff to build scene
 		drawBackground(g);
 		drawGround(g);
@@ -52,6 +74,8 @@ public class Game extends JComponent implements KeyListener {
 		// draws hitboxes, should be after all other drawing code
 		drawHitBoxes(g, hitboxes);
 		drawPlayerHitboxes(g);
+
+		g2.setTransform(oldTransform);
 	}
 
 	public void doPlayerDrawing(Graphics g) {
@@ -80,7 +104,7 @@ public class Game extends JComponent implements KeyListener {
 
 	public void drawGround(Graphics g) {
 		g.setColor(Color.black);
-		g.fillRect(200, 600, 600, 100);
+		g.fillRect(200, 600, 720, 100);
 	}
 
 	public void drawPlayerHitboxes(Graphics g) {
