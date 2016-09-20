@@ -170,12 +170,17 @@ public class Game extends JComponent implements KeyListener {
 		for (Character person1 : characters) {
 			for (Character person2 : characters) {
 				for (AttackHitbox hitbox : person2.hitboxes) {
-					
+
 					if (checkCollision(person1.getHurtbox().getRect(), hitbox.getRect())) {
 						if (!person1.equals(hitbox.getLinkedCharacter())) {
+							// in the scope or this part of the code, person1 is
+							// the person getting hit, and hitbox is the
+							// reference o the hitbox hitting the person
 							person1.applyKnockback(hitbox.getKnockbackX() * person2.getDirection(),
 									hitbox.getKnockbackY());
 							person1.applyHitstun(hitbox.getHitstunLength());
+							person1.setDirection(hitbox.getLinkedCharacter().getDirection());
+
 						}
 					}
 				}
@@ -204,7 +209,6 @@ public class Game extends JComponent implements KeyListener {
 
 	@Override
 	public void keyReleased(KeyEvent e) {
-		System.out.println(e.getKeyCode());
 		for (Character person : characters) {
 			if (person.keysPressed.contains(e.getKeyCode()))
 				person.keysPressed.remove(e.getKeyCode());

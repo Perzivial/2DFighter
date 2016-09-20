@@ -47,7 +47,7 @@ public class Character {
 	HashSet<Integer> keysPressed = new HashSet<Integer>();
 	BufferedImage neutralImage = new Image("img/stickman_neutral.png").img;
 	BufferedImage jabImage = new Image("img/stickman_attack1.png").img;
-	BufferedImage hitstunImage = new Image("img/stickmanhitstun.png").img;
+	BufferedImage hitstunImage = new Image("img/stickman_hitstun.png").img;
 	private final double startx;
 	private final double starty;
 
@@ -79,6 +79,8 @@ public class Character {
 	}
 
 	public void drawCorrectSprite(Graphics g) {
+		// draws the correct sprite given current state, direction and other
+		// factors
 		if (state == STATE_NEUTRAL) {
 			if (direction == DIRECTION_RIGHT)
 				g.drawImage(neutralImage, (int) x, (int) y, w, h, null);
@@ -181,7 +183,8 @@ public class Character {
 	}
 
 	// TODO attack locations. syntax is : character, local position x, local
-	// position y,width, height, time it will be out for
+	// position y,width, height, hitstun time, knockbackx, knockbacky, time it
+	// will be out for
 	private void chooseAttack() {
 		if (isPressing(keyAttack)) {
 			if (isPressing(keyUp)) {
@@ -193,7 +196,7 @@ public class Character {
 			} else if (isPressing(keyRight)) {
 
 			} else {
-				hitboxes.add(new AttackHitbox(this, 20, 15, 15, 15, 1, -10, 1000, 5));
+				hitboxes.add(new AttackHitbox(this, 20, 15, 15, 15, .5, -1, 10, 5));
 				state = STATE_ATTACK;
 				velX += direction * 2;
 			}
@@ -298,6 +301,17 @@ public class Character {
 		if (newVelY < 0)
 			y--;
 		setVelY(newVelY);
+	}
+
+	// changes the controls at runtime
+	public void changecontrols(int newKeyUp, int newKeyDown, int newKeyLeft, int newKeyRight, int newKeyJump,
+			int newKeyAttack) {
+		keyUp = newKeyUp;
+		keyDown = newKeyDown;
+		keyLeft = newKeyLeft;
+		keyRight = newKeyRight;
+		keyJump = newKeyJump;
+		keyAttack = newKeyAttack;
 	}
 
 	private void setJumpHeight(double newJumpHeight) {
