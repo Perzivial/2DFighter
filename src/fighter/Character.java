@@ -1,10 +1,15 @@
 package fighter;
 
+import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
+import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 import java.util.*;
+
+import net.java.games.input.Controller;
+import net.java.games.input.ControllerEnvironment;
 
 public class Character {
 	private double fallSpeed = 1;
@@ -51,8 +56,12 @@ public class Character {
 	private final double startx;
 	private final double starty;
 	private boolean isController = false;
+	private String controllerName;
 	private String moveAxisName;
-	private int moveAxisMidpoint;
+	private double moveAxisMidpoint;
+	private String buttonJump;
+	private String buttonAttack;
+	private int portNum;
 
 	public Character(int posx, int posy, int upKey, int downKey, int leftKey, int rightKey, int jumpKey,
 			int attackKey) {
@@ -69,15 +78,51 @@ public class Character {
 		hurtbox = new Hitbox(this, x, y, w, h, Game.TYPE_HURTBOX);
 	}
 
-	public Character(int posx, int posy, String moveAxisName, int moveAxisMidpoint, int jumpButton, int attackButton) {
+	public Character(int posx, int posy, String nameOfController, String axisName, double axisMidpoint,
+			String jumpButton, String attackButton, ArrayList<Character> characters) {
+
+		keyUp = KeyEvent.VK_UP;
+		keyDown = KeyEvent.VK_DOWN;
+		keyLeft = KeyEvent.VK_LEFT;
+		keyRight = KeyEvent.VK_RIGHT;
+		keyJump = KeyEvent.VK_SPACE;
+		keyAttack = KeyEvent.VK_Q;
+
 		x = posx;
 		y = posy;
 		startx = x;
 		starty = y;
+
 		hurtbox = new Hitbox(this, x, y, w, h, Game.TYPE_HURTBOX);
+
+		Controller[] ca = ControllerEnvironment.getDefaultEnvironment().getControllers();
+		for (Controller currentController : ca) {
+			boolean isvalid = true;
+			if (currentController.getName().equals(nameOfController)) {
+				for (Character person : characters) {
+					if (person.getIsUsingController())
+						if (person.portNum == currentController.getPortNumber())
+							isvalid = false;
+					if (isvalid) {
+						this.portNum = currentController.getPortNumber();
+						break;
+					}
+				}
+			}
+
+		}
+		moveAxisName = axisName;
+		moveAxisMidpoint = axisMidpoint;
+		buttonJump = jumpButton;
+		buttonAttack = attackButton;
+		isController = true;
+
 	}
 
 	public void draw(Graphics g) {
+		g.setColor(Color.black);
+		if (isController)
+			g.fillRect((int) x, (int) y, w, h);
 		updateStates();
 		fall();
 		handleInput();
@@ -140,36 +185,42 @@ public class Character {
 	}
 
 	public void handleInput() {
-		if (state != STATE_HITSTUN) {
-			if (state == STATE_NEUTRAL) {
-				// Jumping code
-				if (isPressing(keyJump)) {
-					if (isGrounded) {
-						velY -= jumpHeight;
-						keysPressed.remove(keyJump);
-					} else if (hasDoubleJump) {
-						velY -= jumpHeight * 2;
-						hasDoubleJump = false;
+		if (!isController) {
+			if (state != STATE_HITSTUN) {
+				if (state == STATE_NEUTRAL) {
+					// Jumping code
+					if (isPressing(keyJump)) {
+						if (isGrounded) {
+							velY -= jumpHeight;
+							keysPressed.remove(keyJump);
+						} else if (hasDoubleJump) {
+							velY -= jumpHeight * 2;
+							hasDoubleJump = false;
+						}
+					}
+					// Horizontal Movement code
+					if (isPressing(keyLeft)) {
+						runLeft();
+					}
+					if (isPressing(keyRight)) {
+						if (isGrounded) {
+							velX = runSpeed;
+							direction = DIRECTION_RIGHT;
+						} else if (Math.abs(velX) < maxAirSpeed)
+							velX += horizontalInAirDistance;
 					}
 				}
-				// Horizontal Movement code
-				if (isPressing(keyLeft)) {
-					if (isGrounded) {
-						velX = -runSpeed;
-						direction = DIRECTION_LEFT;
-					} else if (Math.abs(velX) < maxAirSpeed)
-						velX -= horizontalInAirDistance;
-				}
-				if (isPressing(keyRight)) {
-					if (isGrounded) {
-						velX = runSpeed;
-						direction = DIRECTION_RIGHT;
-					} else if (Math.abs(velX) < maxAirSpeed)
-						velX += horizontalInAirDistance;
-				}
+				chooseAttack();
 			}
-			chooseAttack();
 		}
+	}
+
+	public void runLeft() {
+		if (isGrounded) {
+			velX = -runSpeed;
+			direction = DIRECTION_LEFT;
+		} else if (Math.abs(velX) < maxAirSpeed)
+			velX -= horizontalInAirDistance;
 	}
 
 	public void fall() {
@@ -331,6 +382,22 @@ public class Character {
 		y += velY;
 	}
 
+	public String getAxisName() {
+		return moveAxisName;
+	}
+
+	public double getAxisMidpoint() {
+		return moveAxisMidpoint;
+	}
+
+	public void setAxisName(String newAxisName) {
+		moveAxisName = newAxisName;
+	}
+
+	public void setAxisMidpoint(double newAxisMidpoint) {
+		moveAxisMidpoint = newAxisMidpoint;
+	}
+
 	public void applyKnockback(double newVelX, double newVelY) {
 		setVelX(newVelX);
 		if (newVelY < 0)
@@ -353,6 +420,10 @@ public class Character {
 			keyJump = newKeyJump;
 		if (newKeyAttack != -1)
 			keyAttack = newKeyAttack;
+	}
+
+	public boolean getIsUsingController() {
+		return isController;
 	}
 
 	private void setJumpHeight(double newJumpHeight) {

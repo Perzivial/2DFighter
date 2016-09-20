@@ -47,6 +47,7 @@ public class Game extends JComponent implements KeyListener {
 	private int screenState = 0;
 	private final static int SCREEN_STATE_INGAME = 0;
 	private final static int SCREEN_STATE_ADDCHARACTER = 1;
+	private final static int SCREEN_STATE_CONTROLLERCALIBRATION = 2;
 	private int characterSlideNum = 0;
 	private int characterSlideNum2 = 1;
 	private boolean isEditing = false;
@@ -55,9 +56,10 @@ public class Game extends JComponent implements KeyListener {
 
 	public Game() {
 		hitboxes.add(GROUND_HITBOX);
+		doControllerThings();
+		characters.add(new Character(300, 700, "Xbox 360 Wired Controller", "x", .5, "1", "4", characters));
 		characters.add(GOE);
 		characters.add(GOE2);
-		doControllerThings();
 		for (Controller control : controllers) {
 			System.out.println(control.getName());
 		}
@@ -258,12 +260,23 @@ public class Game extends JComponent implements KeyListener {
 	}
 
 	public void getControllerInput() {
-		for(Controller currentController: controllers){
+		for (Controller currentController : controllers) {
 			Component[] components = currentController.getComponents();
 			currentController.poll();
-			for(Component comp: components){
-				if(comp.getPollData() > .1){
-					System.out.println("yay " + comp.getName());
+			for (Component comp : components) {
+				// comp.getPollData() returns an float between 0 and 1 that says
+				// how far a button or axis has been pushed
+				for (Character person : characters) {
+					if (person.getIsUsingController())
+						if (person.getAxisName().equals(comp.getName())) {
+							if ((Math.abs(comp.getPollData()) > .2)
+									&& (Math.abs(comp.getPollData()) < (float) person.getAxisMidpoint())) {
+								if (comp.getPollData() > 0) {
+									//person.runLeft();
+								}
+
+							}
+						}
 				}
 			}
 		}
@@ -277,7 +290,9 @@ public class Game extends JComponent implements KeyListener {
 
 	@Override
 	public void keyPressed(KeyEvent e) {
+		// depending on the state, different keys are checked for
 		switch (screenState) {
+
 		case (SCREEN_STATE_INGAME):
 			for (Character person : characters) {
 				person.keysPressed.add(e.getKeyCode());
@@ -286,6 +301,7 @@ public class Game extends JComponent implements KeyListener {
 				screenState = SCREEN_STATE_ADDCHARACTER;
 			// in game play code above here
 			break;
+
 		case (SCREEN_STATE_ADDCHARACTER):
 
 			if (e.getKeyCode() == KeyEvent.VK_1) {
@@ -294,6 +310,7 @@ public class Game extends JComponent implements KeyListener {
 				characterSlideNum = 0;
 				characterSlideNum2 = 1;
 			}
+
 			if (e.getKeyCode() == KeyEvent.VK_ESCAPE)
 				screenState = SCREEN_STATE_INGAME;
 			if (characters.size() > 0) {
