@@ -8,8 +8,8 @@ import java.util.*;
 
 public class Character {
 	private double fallSpeed = 1;
-	private double velx;
-	private double vely;
+	private double velX;
+	private double velY;
 	private double x;
 	private double y;
 	private int w = 20;
@@ -32,21 +32,25 @@ public class Character {
 	// State variables
 	private static int STATE_NEUTRAL = 0;
 	private static int STATE_ATTACK = 1;
-	private static int STATE_ATTACKUP = 1;
-	private static int STATE_ATTACKDOWN = 1;
-	private static int STATE_ATTACKLEFT = 1;
-	private static int STATE_ATTACKRIGHT = 1;
+	private static int STATE_ATTACKUP = 2;
+	private static int STATE_ATTACKDOWN = 3;
+	private static int STATE_ATTACKLEFT = 4;
+	private static int STATE_ATTACKRIGHT = 5;
+	private static int STATE_HITSTUN = 6;
 
 	private int direction = 1;
-	private static int DIRECTION_LEFT = -1;
-	private static int DIRECTION_RIGHT = 1;
+	public final static int DIRECTION_LEFT = -1;
+	public final static int DIRECTION_RIGHT = 1;
 	private int state = 0;
+	private int hitstunCounter = 0;
 
 	HashSet<Integer> keysPressed = new HashSet<Integer>();
 	BufferedImage neutralImage = new Image("img/stickman_neutral.png").img;
 	BufferedImage jabImage = new Image("img/stickman_attack1.png").img;
+	BufferedImage hitstunImage = new Image("img/stickmanhitstun.png").img;
 	private final double startx;
 	private final double starty;
+
 	public Character(int posx, int posy, int upKey, int downKey, int leftKey, int rightKey, int jumpKey,
 			int attackKey) {
 		x = posx;
@@ -61,6 +65,7 @@ public class Character {
 		keyAttack = attackKey;
 		hurtbox = new Hitbox(this, x, y, w, h, Game.TYPE_HURTBOX);
 	}
+
 	public void draw(Graphics g) {
 		updateStates();
 		fall();
@@ -72,7 +77,7 @@ public class Character {
 		drawCorrectSprite(g);
 
 	}
-	
+
 	public void drawCorrectSprite(Graphics g) {
 		if (state == STATE_NEUTRAL) {
 			if (direction == DIRECTION_RIGHT)
@@ -86,15 +91,32 @@ public class Character {
 			if (direction == DIRECTION_LEFT)
 				g.drawImage(jabImage, (int) x + w, (int) y, (int) (-w * 1.6), h, null);
 		}
+		if (state == STATE_HITSTUN) {
+			if (direction == DIRECTION_RIGHT)
+				g.drawImage(hitstunImage, (int) x, (int) y, w, h, null);
+			if (direction == DIRECTION_LEFT)
+				g.drawImage(hitstunImage, (int) x + w, (int) y, -w, h, null);
+		}
 	}
 
 	public void move() {
-		x += velx;
-		if (new Rectangle((int) x, (int) (y + vely), (int) w, (int) h).intersects(Game.GROUND_HITBOX.getRect()))
+		x += velX;
+
+		if (new Rectangle((int) x, (int) (y + velY), (int) w, (int) h).intersects(Game.GROUND_HITBOX.getRect())) {
+
 			y = (int) Game.GROUND_HITBOX.getRect().getY() - h;
-		else
-			y += vely;
-		applyFriction();
+
+		} else {
+
+			y += velY;
+		}
+		if (state != STATE_HITSTUN)
+			applyFriction();
+	}
+
+	public void applyHitstun(int length) {
+		hitstunCounter = length;
+		state = STATE_HITSTUN;
 	}
 
 	private void blastZone() {
@@ -109,27 +131,27 @@ public class Character {
 			// Jumping code
 			if (isPressing(keyJump)) {
 				if (isGrounded) {
-					vely -= jumpHeight;
+					velY -= jumpHeight;
 					keysPressed.remove(keyJump);
 				} else if (hasDoubleJump) {
-					vely -= jumpHeight * 2;
+					velY -= jumpHeight * 2;
 					hasDoubleJump = false;
 				}
 			}
 			// Horizontal Movement code
 			if (isPressing(keyLeft)) {
 				if (isGrounded) {
-					velx = -runSpeed;
+					velX = -runSpeed;
 					direction = DIRECTION_LEFT;
-				} else if (Math.abs(velx) < maxAirSpeed)
-					velx -= horizontalInAirDistance;
+				} else if (Math.abs(velX) < maxAirSpeed)
+					velX -= horizontalInAirDistance;
 			}
 			if (isPressing(keyRight)) {
 				if (isGrounded) {
-					velx = runSpeed;
+					velX = runSpeed;
 					direction = DIRECTION_RIGHT;
-				} else if (Math.abs(velx) < maxAirSpeed)
-					velx += horizontalInAirDistance;
+				} else if (Math.abs(velX) < maxAirSpeed)
+					velX += horizontalInAirDistance;
 			}
 		}
 		chooseAttack();
@@ -137,19 +159,23 @@ public class Character {
 
 	public void fall() {
 		if (!isGrounded) {
-			vely += fallSpeed;
+			velY += fallSpeed;
 		} else
-			vely = 0;
+			velY = 0;
 	}
 
 	public void updateStates() {
 		if (isGrounded && !hasDoubleJump)
 			hasDoubleJump = true;
+		if (hitstunCounter > -1)
+			hitstunCounter--;
+		if (hitstunCounter == 0)
+			state = STATE_NEUTRAL;
 	}
 
 	public void applyFriction() {
 		if (isGrounded)
-			velx /= horizontalSlowdownFactor;
+			velX /= horizontalSlowdownFactor;
 	}
 
 	// TODO attack locations. syntax is : character, local position x, local
@@ -165,9 +191,9 @@ public class Character {
 			} else if (isPressing(keyRight)) {
 
 			} else {
-				hitboxes.add(new AttackHitbox(this, 20, 15, 15, 15, 100, 100, 5));
+				hitboxes.add(new AttackHitbox(this, 20, 15, 15, 15, 1, -10, 1000, 5));
 				state = STATE_ATTACK;
-				velx += direction * 2;
+				velX += direction * 2;
 			}
 			keysPressed.remove(keyAttack);
 		}
@@ -193,7 +219,8 @@ public class Character {
 			if (direction == DIRECTION_RIGHT)
 				box.updateLocation(x + box.getlocalX(), y + box.getlocalY(), box.getWidth(), box.getHeight());
 			if (direction == DIRECTION_LEFT)
-				box.updateLocation(x + box.getlocalX() - (w*1.75), y + box.getlocalY(), box.getWidth(), box.getHeight());
+				box.updateLocation(x + box.getlocalX() - (w * 1.75), y + box.getlocalY(), box.getWidth(),
+						box.getHeight());
 		}
 		for (AttackHitbox box : hitboxes) {
 
@@ -219,11 +246,11 @@ public class Character {
 	}
 
 	public double getVelX() {
-		return vely;
+		return velY;
 	}
 
 	public double getVelY() {
-		return velx;
+		return velX;
 	}
 
 	public double getWidth() {
@@ -244,6 +271,31 @@ public class Character {
 
 	public double getMaxAirSpeed() {
 		return maxAirSpeed;
+	}
+
+	public int getDirection() {
+		return direction;
+	}
+
+	public void setDirection(int newDirection) {
+		direction = newDirection;
+	}
+
+	public void setVelX(double newVelX) {
+		velX = newVelX;
+		x += velX;
+	}
+
+	public void setVelY(double newVelY) {
+		velY = newVelY;
+		y += velY;
+	}
+
+	public void applyKnockback(double newVelX, double newVelY) {
+		setVelX(newVelX);
+		if (newVelY < 0)
+			y--;
+		setVelY(newVelY);
 	}
 
 	private void setJumpHeight(double newJumpHeight) {

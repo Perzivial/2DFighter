@@ -7,15 +7,17 @@ public class AttackHitbox extends Hitbox {
 	public boolean isActive = true;
 	private double knockbackX;
 	private double knockbackY;
-
+	private int hitstunLength;
+	
 	public AttackHitbox(Character boundPlayer, double localposx, double localposy, double width, double height,
-			double xknockback, double yknockback, int lifeTime) {
+			double xknockback, double yknockback, int hitstunLen,int lifeTime) {
 		super(boundPlayer, boundPlayer.getX() + localposx, boundPlayer.getVelY() + localposy, width, height,
 				Game.TYPE_ATTACK);
 		localX = localposx;
 		localY = localposy;
 		knockbackX = xknockback;
 		knockbackY = yknockback;
+		hitstunLength = hitstunLen;
 		lifetime = lifeTime;
 	}
 
@@ -27,14 +29,16 @@ public class AttackHitbox extends Hitbox {
 		return localY;
 	}
 
-	public double getknockbackX() {
+	public double getKnockbackX() {
 		return knockbackX;
 	}
 
 	public double getKnockbackY() {
 		return knockbackY;
 	}
-
+	public int getHitstunLength(){
+		return hitstunLength;
+	}
 	@Override
 	public void updateLocation(double posx, double posy, double width, double height) {
 		super.updateLocation(posx, posy, width, height);
