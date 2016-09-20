@@ -149,20 +149,33 @@ public class Game extends JComponent implements KeyListener {
 
 	// self explanatory naming FTW
 	public void checkForAndExecutePlayerHitDectection() {
-		for (int j = 0; j < characters.size(); j++) {
-			for (int i = 0; i < characters.size(); i++) {
-				for (int o = 0; o < characters.get(i).hitboxes.size(); o++) {
-					if (checkCollision(characters.get(j).getHurtbox().getRect(),
-							characters.get(i).hitboxes.get(o).getRect())) {
-						if (!characters.get(i).hitboxes.get(o).getLinkedCharacter()
-								.equals(characters.get(j).getHurtbox().getLinkedCharacter())) {
-							System.out.println("A collision was detected");
-							characters.get(j).applyKnockback(
-									(characters.get(i).hitboxes.get(o).getKnockbackX())
-											* characters.get(i).getDirection(),
-									(characters.get(i).hitboxes.get(o).getKnockbackY()));
-							characters.get(j).applyHitstun(characters.get(i).hitboxes.get(o).getHitstunLength());
-							characters.get(j).setDirection(characters.get(i).getDirection());
+		/*
+		 * for (int j = 0; j < characters.size(); j++) { for (int i = 0; i <
+		 * characters.size(); i++) { for (int o = 0; o <
+		 * characters.get(i).hitboxes.size(); o++) { if
+		 * (checkCollision(characters.get(j).getHurtbox().getRect(),
+		 * characters.get(i).hitboxes.get(o).getRect())) { if
+		 * (!characters.get(i).hitboxes.get(o).getLinkedCharacter()
+		 * .equals(characters.get(j).getHurtbox().getLinkedCharacter())) {
+		 * System.out.println("A collision was detected");
+		 * characters.get(j).applyKnockback(
+		 * (characters.get(i).hitboxes.get(o).getKnockbackX())
+		 * characters.get(i).getDirection(),
+		 * (characters.get(i).hitboxes.get(o).getKnockbackY()));
+		 * characters.get(j).applyHitstun(characters.get(i).hitboxes.get(o).
+		 * getHitstunLength());
+		 * characters.get(j).setDirection(characters.get(i).getDirection()); } }
+		 * } } }
+		 */
+		for (Character person1 : characters) {
+			for (Character person2 : characters) {
+				for (AttackHitbox hitbox : person2.hitboxes) {
+					
+					if (checkCollision(person1.getHurtbox().getRect(), hitbox.getRect())) {
+						if (!person1.equals(hitbox.getLinkedCharacter())) {
+							person1.applyKnockback(hitbox.getKnockbackX() * person2.getDirection(),
+									hitbox.getKnockbackY());
+							person1.applyHitstun(hitbox.getHitstunLength());
 						}
 					}
 				}

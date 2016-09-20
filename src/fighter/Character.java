@@ -127,34 +127,36 @@ public class Character {
 	}
 
 	public void handleInput() {
-		if (state == STATE_NEUTRAL) {
-			// Jumping code
-			if (isPressing(keyJump)) {
-				if (isGrounded) {
-					velY -= jumpHeight;
-					keysPressed.remove(keyJump);
-				} else if (hasDoubleJump) {
-					velY -= jumpHeight * 2;
-					hasDoubleJump = false;
+		if (state != STATE_HITSTUN) {
+			if (state == STATE_NEUTRAL) {
+				// Jumping code
+				if (isPressing(keyJump)) {
+					if (isGrounded) {
+						velY -= jumpHeight;
+						keysPressed.remove(keyJump);
+					} else if (hasDoubleJump) {
+						velY -= jumpHeight * 2;
+						hasDoubleJump = false;
+					}
+				}
+				// Horizontal Movement code
+				if (isPressing(keyLeft)) {
+					if (isGrounded) {
+						velX = -runSpeed;
+						direction = DIRECTION_LEFT;
+					} else if (Math.abs(velX) < maxAirSpeed)
+						velX -= horizontalInAirDistance;
+				}
+				if (isPressing(keyRight)) {
+					if (isGrounded) {
+						velX = runSpeed;
+						direction = DIRECTION_RIGHT;
+					} else if (Math.abs(velX) < maxAirSpeed)
+						velX += horizontalInAirDistance;
 				}
 			}
-			// Horizontal Movement code
-			if (isPressing(keyLeft)) {
-				if (isGrounded) {
-					velX = -runSpeed;
-					direction = DIRECTION_LEFT;
-				} else if (Math.abs(velX) < maxAirSpeed)
-					velX -= horizontalInAirDistance;
-			}
-			if (isPressing(keyRight)) {
-				if (isGrounded) {
-					velX = runSpeed;
-					direction = DIRECTION_RIGHT;
-				} else if (Math.abs(velX) < maxAirSpeed)
-					velX += horizontalInAirDistance;
-			}
+			chooseAttack();
 		}
-		chooseAttack();
 	}
 
 	public void fall() {
