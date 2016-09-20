@@ -50,6 +50,9 @@ public class Character {
 	BufferedImage hitstunImage = new Image("img/stickman_hitstun.png").img;
 	private final double startx;
 	private final double starty;
+	private boolean isController = false;
+	private String moveAxisName;
+	private int moveAxisMidpoint;
 
 	public Character(int posx, int posy, int upKey, int downKey, int leftKey, int rightKey, int jumpKey,
 			int attackKey) {
@@ -63,6 +66,14 @@ public class Character {
 		keyRight = rightKey;
 		keyJump = jumpKey;
 		keyAttack = attackKey;
+		hurtbox = new Hitbox(this, x, y, w, h, Game.TYPE_HURTBOX);
+	}
+
+	public Character(int posx, int posy, String moveAxisName, int moveAxisMidpoint, int jumpButton, int attackButton) {
+		x = posx;
+		y = posy;
+		startx = x;
+		starty = y;
 		hurtbox = new Hitbox(this, x, y, w, h, Game.TYPE_HURTBOX);
 	}
 
@@ -330,18 +341,18 @@ public class Character {
 	// changes the controls at runtime
 	public void changecontrols(int newKeyUp, int newKeyDown, int newKeyLeft, int newKeyRight, int newKeyJump,
 			int newKeyAttack) {
-		if(newKeyUp!=-1)
-		keyUp = newKeyUp;
-		if(newKeyDown!=-1)
-		keyDown = newKeyDown;
-		if(newKeyLeft!=-1)
-		keyLeft = newKeyLeft;
-		if(newKeyRight!=-1)
-		keyRight = newKeyRight;
-		if(newKeyJump!=-1)
-		keyJump = newKeyJump;
-		if(newKeyAttack!=-1)
-		keyAttack = newKeyAttack;
+		if (newKeyUp != -1)
+			keyUp = newKeyUp;
+		if (newKeyDown != -1)
+			keyDown = newKeyDown;
+		if (newKeyLeft != -1)
+			keyLeft = newKeyLeft;
+		if (newKeyRight != -1)
+			keyRight = newKeyRight;
+		if (newKeyJump != -1)
+			keyJump = newKeyJump;
+		if (newKeyAttack != -1)
+			keyAttack = newKeyAttack;
 	}
 
 	private void setJumpHeight(double newJumpHeight) {

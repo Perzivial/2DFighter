@@ -225,7 +225,7 @@ public class Game extends JComponent implements KeyListener {
 
 	public void doControllerThings() {
 		for (int i = 0; i < ca.length; i++) {
-			//if (ca[i].getType() == Type.GAMEPAD) {
+			if (ca[i].getType() == Type.GAMEPAD || ca[i].getType() == Type.STICK) {
 				controllers.add(ca[i]);
 				/* Get the name of the controller */
 				System.out.println(ca[i].getName());
@@ -251,7 +251,7 @@ public class Game extends JComponent implements KeyListener {
 						System.out.print(" Digital");
 					}
 				}
-			//}
+			}
 			System.out.println("");
 			System.out.println("----");
 		}
