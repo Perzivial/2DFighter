@@ -266,6 +266,30 @@ public class Character {
 		return h;
 	}
 
+	public int getDownKey() {
+		return keyDown;
+	}
+
+	public int getUpKey() {
+		return keyUp;
+	}
+
+	public int getLeftKey() {
+		return keyLeft;
+	}
+
+	public int getRightKey() {
+		return keyRight;
+	}
+
+	public int getJumpKey() {
+		return keyJump;
+	}
+
+	public int getAttackKey() {
+		return keyAttack;
+	}
+
 	public double getJumpHeight() {
 		return jumpHeight;
 	}
@@ -306,11 +330,17 @@ public class Character {
 	// changes the controls at runtime
 	public void changecontrols(int newKeyUp, int newKeyDown, int newKeyLeft, int newKeyRight, int newKeyJump,
 			int newKeyAttack) {
+		if(newKeyUp!=-1)
 		keyUp = newKeyUp;
+		if(newKeyDown!=-1)
 		keyDown = newKeyDown;
+		if(newKeyLeft!=-1)
 		keyLeft = newKeyLeft;
+		if(newKeyRight!=-1)
 		keyRight = newKeyRight;
+		if(newKeyJump!=-1)
 		keyJump = newKeyJump;
+		if(newKeyAttack!=-1)
 		keyAttack = newKeyAttack;
 	}
 

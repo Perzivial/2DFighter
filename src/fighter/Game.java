@@ -13,6 +13,7 @@ import java.awt.geom.AffineTransform;
 import java.util.ArrayList;
 import javax.swing.JComponent;
 import net.java.games.input.*;
+import net.java.games.input.Controller.Type;
 
 public class Game extends JComponent implements KeyListener {
 	// screen related variables
@@ -43,38 +44,66 @@ public class Game extends JComponent implements KeyListener {
 			KeyEvent.VK_SPACE, KeyEvent.VK_Q);
 	Character GOE2 = new Character(500, 400, KeyEvent.VK_W, KeyEvent.VK_S, KeyEvent.VK_A, KeyEvent.VK_D, KeyEvent.VK_E,
 			KeyEvent.VK_F);
+	private int screenState = 0;
+	private final static int SCREEN_STATE_INGAME = 0;
+	private final static int SCREEN_STATE_ADDCHARACTER = 1;
+	private int characterSlideNum = 0;
+	private int characterSlideNum2 = 1;
+	private boolean isEditing = false;
+	Controller[] ca = ControllerEnvironment.getDefaultEnvironment().getControllers();
+	ArrayList<Controller> controllers = new ArrayList<Controller>();
 
 	public Game() {
 		hitboxes.add(GROUND_HITBOX);
 		characters.add(GOE);
 		characters.add(GOE2);
-
-		ControllerEnvironment ce = ControllerEnvironment.getDefaultEnvironment();
-		Controller[] cs = ce.getControllers();
-		for (int i = 0; i < cs.length; i++) {
-			System.out.println(i + ". " + cs[i].getName() + ", " + cs[i].getType());
+		doControllerThings();
+		for (Controller control : controllers) {
+			System.out.println(control.getName());
 		}
-
 	}
 
 	@Override
 	public void paintComponent(Graphics g) {
 		// TODO the paint method
+		getControllerInput();
 		Graphics2D g2 = (Graphics2D) g;
 		AffineTransform oldTransform = g2.getTransform();
 		if (!isnormalscreen)
-			g2.scale(((screenWidth / DEFAULT_SCREEN_SIZE_Y) / 16)
-					* 9/* screenWidth / DEFAULT_SCREEN_SIZE_X */, screenHeight / DEFAULT_SCREEN_SIZE_Y);
-		// basic background stuff to build scene
-		drawBackground(g);
-		drawGround(g);
-		doPlayerPhysics();
-		doPlayerDrawing(g);
+			g2.scale(((screenWidth / DEFAULT_SCREEN_SIZE_Y) / 16) * 9, screenHeight / DEFAULT_SCREEN_SIZE_Y);
+		switch (screenState) {
+		case (SCREEN_STATE_INGAME):
+			// basic background stuff to build scene
+			drawBackground(g);
+			drawGround(g);
+			doPlayerPhysics();
+			doPlayerDrawing(g);
 
-		// draws hitboxes, should be after all other drawing code
-		drawHitBoxes(g, hitboxes);
-		drawPlayerHitboxes(g);
+			// draws hitboxes, should be after all other drawing code
+			drawHitBoxes(g, hitboxes);
+			drawPlayerHitboxes(g);
+			break;
+		case (SCREEN_STATE_ADDCHARACTER):
+			g.setColor(Color.WHITE);
+			g.drawString("Press 1 to add new character(keyboard)", 20, 20);
+			g.drawString("Press 2 to add new control method (controller *not inplemented yet*)", 20, 40);
+			g.drawString("Up and down to choose which character to edit", 20, 60);
+			g.drawString("Left and right to change which attribute to edit, then press 3 to edit it", 20, 80);
+			g.drawString("Current amount of characters: " + characters.size()
+					+ ", you are viewing the inputs for number: " + characterSlideNum, 20, 100);
+			if (characters.size() > 0) {
+				g.drawString(String.valueOf(characters.get(characterSlideNum).getUpKey()), 60, 200);
+				g.drawString(String.valueOf(characters.get(characterSlideNum).getDownKey()), 120, 200);
+				g.drawString(String.valueOf(characters.get(characterSlideNum).getLeftKey()), 180, 200);
+				g.drawString(String.valueOf(characters.get(characterSlideNum).getRightKey()), 240, 200);
+				g.drawString(String.valueOf(characters.get(characterSlideNum).getJumpKey()), 300, 200);
+				g.drawString(String.valueOf(characters.get(characterSlideNum).getAttackKey()), 360, 200);
 
+				g.drawString("^", 60 * characterSlideNum2, 220);
+			}
+
+			break;
+		}
 		g2.setTransform(oldTransform);
 	}
 
@@ -194,6 +223,52 @@ public class Game extends JComponent implements KeyListener {
 		return false;
 	}
 
+	public void doControllerThings() {
+		for (int i = 0; i < ca.length; i++) {
+			//if (ca[i].getType() == Type.GAMEPAD) {
+				controllers.add(ca[i]);
+				/* Get the name of the controller */
+				System.out.println(ca[i].getName());
+				System.out.println("Type: " + ca[i].getType().toString());
+
+				/* Get this controllers components (buttons and axis) */
+				Component[] components = ca[i].getComponents();
+				System.out.println("Component Count: " + components.length);
+				for (int j = 0; j < components.length; j++) {
+
+					/* Get the components name */
+					System.out.println("Component " + j + ": " + components[j].getName());
+					System.out.println("    Identifier: " + components[j].getIdentifier().getName());
+					System.out.print("    ComponentType: ");
+					if (components[j].isRelative()) {
+						System.out.print("Relative");
+					} else {
+						System.out.print("Absolute");
+					}
+					if (components[j].isAnalog()) {
+						System.out.print(" Analog");
+					} else {
+						System.out.print(" Digital");
+					}
+				}
+			//}
+			System.out.println("");
+			System.out.println("----");
+		}
+	}
+
+	public void getControllerInput() {
+		for(Controller currentController: controllers){
+			Component[] components = currentController.getComponents();
+			currentController.poll();
+			for(Component comp: components){
+				if(comp.getPollData() > .1){
+					System.out.println("yay " + comp.getName());
+				}
+			}
+		}
+	}
+
 	// TODO key pressing code, should be in it's own area, unbroken
 	@Override
 	public void keyTyped(KeyEvent e) {
@@ -202,19 +277,77 @@ public class Game extends JComponent implements KeyListener {
 
 	@Override
 	public void keyPressed(KeyEvent e) {
-		for (Character person : characters) {
-			person.keysPressed.add(e.getKeyCode());
+		switch (screenState) {
+		case (SCREEN_STATE_INGAME):
+			for (Character person : characters) {
+				person.keysPressed.add(e.getKeyCode());
+			}
+			if (e.getKeyCode() == KeyEvent.VK_ESCAPE)
+				screenState = SCREEN_STATE_ADDCHARACTER;
+			// in game play code above here
+			break;
+		case (SCREEN_STATE_ADDCHARACTER):
+
+			if (e.getKeyCode() == KeyEvent.VK_1) {
+				characters.add(new Character(500, 400, KeyEvent.VK_UP, KeyEvent.VK_DOWN, KeyEvent.VK_LEFT,
+						KeyEvent.VK_RIGHT, KeyEvent.VK_SPACE, KeyEvent.VK_Q));
+				characterSlideNum = 0;
+				characterSlideNum2 = 1;
+			}
+			if (e.getKeyCode() == KeyEvent.VK_ESCAPE)
+				screenState = SCREEN_STATE_INGAME;
+			if (characters.size() > 0) {
+				if (!isEditing) {
+					if (e.getKeyCode() == KeyEvent.VK_UP && characterSlideNum > 0) {
+						characterSlideNum--;
+					}
+					if (e.getKeyCode() == KeyEvent.VK_DOWN && characterSlideNum < characters.size() - 1) {
+						characterSlideNum++;
+					}
+					if (e.getKeyCode() == KeyEvent.VK_LEFT && characterSlideNum2 > 1) {
+						characterSlideNum2--;
+					}
+					if (e.getKeyCode() == KeyEvent.VK_RIGHT && characterSlideNum2 < 6) {
+						characterSlideNum2++;
+					}
+					if (e.getKeyCode() == KeyEvent.VK_ENTER)
+						isEditing = true;
+				} else {
+					if (characterSlideNum2 == 1)
+						characters.get(characterSlideNum).changecontrols(e.getKeyCode(), -1, -1, -1, -1, -1);
+					if (characterSlideNum2 == 2)
+						characters.get(characterSlideNum).changecontrols(-1, -e.getKeyCode(), -1, -1, -1, -1);
+					if (characterSlideNum2 == 3)
+						characters.get(characterSlideNum).changecontrols(-1, -1, e.getKeyCode(), -1, -1, -1);
+					if (characterSlideNum2 == 4)
+						characters.get(characterSlideNum).changecontrols(-1, -1, -1, e.getKeyCode(), -1, -1);
+					if (characterSlideNum2 == 5)
+						characters.get(characterSlideNum).changecontrols(-1, -1, -1, -1, e.getKeyCode(), -1);
+					if (characterSlideNum2 == 6)
+						characters.get(characterSlideNum).changecontrols(-1, -1, -1, -1, -1, e.getKeyCode());
+					isEditing = false;
+				}
+			}
+			break;
 		}
 	}
 
 	@Override
 	public void keyReleased(KeyEvent e) {
-		for (Character person : characters) {
-			if (person.keysPressed.contains(e.getKeyCode()))
-				person.keysPressed.remove(e.getKeyCode());
+		switch (screenState) {
+		case (SCREEN_STATE_INGAME):
+			for (Character person : characters) {
+				if (person.keysPressed.contains(e.getKeyCode()))
+					person.keysPressed.remove(e.getKeyCode());
+			}
+			if (e.getKeyCode() == KeyEvent.VK_SHIFT) {
+				shouldShowHitboxes = !shouldShowHitboxes;
+			}
+			break;
+		case (SCREEN_STATE_ADDCHARACTER):
+
+			break;
 		}
-		if (e.getKeyCode() == KeyEvent.VK_SHIFT) {
-			shouldShowHitboxes = !shouldShowHitboxes;
-		}
+
 	}
 }
