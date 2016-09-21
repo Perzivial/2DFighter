@@ -43,6 +43,7 @@ public class Character {
 	private static int STATE_ATTACKRIGHT = 5;
 	private static int STATE_HITSTUN = 6;
 	private static int STATE_JUMP = 7;
+	private static int STATE_LANDINGLAG = 8;
 	private int direction = 1;
 	public final static int DIRECTION_LEFT = -1;
 	public final static int DIRECTION_RIGHT = 1;
@@ -72,6 +73,12 @@ public class Character {
 	public boolean isJumpButtonDown;
 	private int portNum;
 	private int jumpTimeBuffer = 0;
+	public boolean wasJumpKeyDownLastFrame = false;
+	public boolean[] jumpKeyDownHistory = new boolean[] { false, false, false };
+	private double lastFrameX;
+	private double lastFrameY;
+	private boolean lastFrameIsGrounded;
+	private int landingLagCounter = 0;
 
 	public Character(int posx, int posy, int upKey, int downKey, int leftKey, int rightKey, int jumpKey,
 			int attackKey) {
@@ -127,6 +134,7 @@ public class Character {
 
 		updateStates();
 		fall();
+		checkifShouldApplyLandingLag();
 		handleInput();
 		move();
 
@@ -134,7 +142,9 @@ public class Character {
 		translateHitboxes();
 
 		drawCorrectSprite(g);
-
+		recordLastFrameX();
+		recordLastFrameY();
+		recordLastFrameIsGrounded();
 	}
 
 	public void drawCorrectSprite(Graphics g) {
@@ -157,6 +167,12 @@ public class Character {
 				g.drawImage(hitstunImage, (int) x, (int) y, w, h, null);
 			if (direction == DIRECTION_LEFT)
 				g.drawImage(hitstunImage, (int) x + w, (int) y, -w, h, null);
+		}
+		if (state == STATE_LANDINGLAG) {
+			if (direction == DIRECTION_RIGHT)
+				g.drawImage(neutralImage, (int) x, (int) y + (int) (h / 2), w, (int) (h / 2), null);
+			if (direction == DIRECTION_LEFT)
+				g.drawImage(neutralImage, (int) x + w, (int) y + (int) (h / 2), -w, (int) (h / 2), null);
 		}
 	}
 
@@ -239,22 +255,50 @@ public class Character {
 	}
 
 	public void jump() {
-		if (!isController) {
-			if (isGrounded) {
-				velY -= jumpHeight;
-				keysPressed.remove(keyJump);
-				state = STATE_JUMP;
-				jumpTimeBuffer = 2;
-			} else if (hasDoubleJump) {
-				velY -= jumpHeight * 2;
-				hasDoubleJump = false;
-				state = STATE_JUMP;
-				jumpTimeBuffer = 2;
+		boolean canJump = true;
+		for (boolean bool : jumpKeyDownHistory) {
+			if (bool == true) {
+				canJump = false;
 			}
-		} else {
-
 		}
+		if (canJump) {
+			if (!isController) {
+				if (isGrounded) {
+					velY -= jumpHeight;
+					keysPressed.remove(keyJump);
+					state = STATE_JUMP;
+					jumpTimeBuffer = 2;
+					jumpKeyDownHistory[0] = true;
+				} else if (hasDoubleJump) {
+					velY -= jumpHeight * 2;
+					hasDoubleJump = false;
+					state = STATE_JUMP;
+					jumpTimeBuffer = 2;
+					jumpKeyDownHistory[0] = true;
+					keysPressed.remove(keyJump);
+				}
+			} else {
 
+			}
+		}
+	}
+
+	public void recordLastFrameX() {
+		lastFrameX = x;
+	}
+
+	public void recordLastFrameY() {
+		lastFrameY = y;
+	}
+
+	public void recordLastFrameIsGrounded() {
+		lastFrameIsGrounded = isGrounded;
+	}
+
+	public void cycleArray(boolean newBoolean, boolean[] array) {
+		array[2] = array[1];
+		array[1] = array[0];
+		array[0] = newBoolean;
 	}
 
 	public void fall() {
@@ -267,11 +311,35 @@ public class Character {
 		}
 	}
 
+	public void checkifShouldApplyLandingLag() {
+		if (isGrounded) {
+			if (!lastFrameIsGrounded) {
+				if (state == STATE_NEUTRAL)
+					placeInLandingLag(5);
+				else if (state == STATE_ATTACK) {
+					placeInLandingLag(10);
+					hitboxes.clear();
+				}
+			}
+		}
+	}
+
+	public void placeInLandingLag(int length) {
+		landingLagCounter = length;
+		state = STATE_LANDINGLAG;
+	}
+
 	public void updateStates() {
-		if(isGrounded && state != STATE_JUMP){
+		if (landingLagCounter > 0) {
+			landingLagCounter--;
+		} else if (state == STATE_LANDINGLAG) {
+			state = STATE_NEUTRAL;
+		}
+		if (isGrounded && state != STATE_JUMP) {
 			isJumpButtonDown = false;
 			hasDoubleJump = true;
 		}
+		cycleArray(false, jumpKeyDownHistory);
 		if (jumpTimeBuffer > 0)
 			jumpTimeBuffer--;
 		if (state == STATE_JUMP && jumpTimeBuffer == 0)
@@ -364,7 +432,8 @@ public class Character {
 
 			if (!box.isActive) {
 				hitboxes.remove(box);
-				state = STATE_NEUTRAL;
+				if (state != STATE_LANDINGLAG)
+					state = STATE_NEUTRAL;
 				break;
 			}
 		}

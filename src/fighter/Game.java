@@ -308,19 +308,24 @@ public class Game extends JComponent implements KeyListener {
 							}
 						}
 						if (person.getJumpButton().equals(comp.getName())) {
+							boolean hasPressedThisFrame = false;
 							if (comp.getPollData() == 1.0) {
-								
 								person.jump();
+								System.out.println("true");
+								hasPressedThisFrame = true;
+								person.wasJumpKeyDownLastFrame = true;
+								person.cycleArray(true, person.jumpKeyDownHistory);
 							}
 						}
 						if (person.getAttackButton().equals(comp.getName())) {
 							if (comp.getPollData() == 1.0) {
-								if(!person.getIsAttackButtonDown()){
-								person.chooseAttack();
-								person.setIsAttackButtonDown(true);
-								System.out.println(person.getIsAttackButtonDown());
+								if (!person.getIsAttackButtonDown()) {
+									person.chooseAttack();
+									person.setIsAttackButtonDown(true);
+									// System.out.println(person.getIsAttackButtonDown());
 								}
-							} if (comp.getPollData() != 1.0) 
+							}
+							if (comp.getPollData() != 1.0)
 								person.setIsAttackButtonDown(false);
 						}
 					}
