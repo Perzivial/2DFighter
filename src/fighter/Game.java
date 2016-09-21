@@ -55,6 +55,7 @@ public class Game extends JComponent implements KeyListener {
 	ArrayList<Controller> controllers = new ArrayList<Controller>();
 
 	public Game() {
+		this.setDoubleBuffered(true);
 		hitboxes.add(GROUND_HITBOX);
 		doControllerThings();
 		characters.add(new Character(300, 575, "Xbox 360 Wired Controller", "x", "y", .5, .2, "1", "2", characters));
@@ -281,11 +282,16 @@ public class Game extends JComponent implements KeyListener {
 								else
 									person.setAxisHalfway(false);
 
-								if (comp.getPollData() > 0)
+								if (comp.getPollData() > 0) {
 									person.setAxisRight(true);
+									person.setAxisLeft(false);
+								}
 
-								if (comp.getPollData() < 0)
+								if (comp.getPollData() < 0) {
 									person.setAxisLeft(true);
+									person.setAxisRight(false);
+								}
+
 							} else {
 								person.setAxisRight(false);
 								person.setAxisLeft(false);
@@ -307,24 +313,21 @@ public class Game extends JComponent implements KeyListener {
 								}
 							}
 						}
+						// jump button
 						if (person.getJumpButton().equals(comp.getName())) {
 							boolean hasPressedThisFrame = false;
 							if (comp.getPollData() == 1.0) {
 								person.jump();
-								System.out.println("true");
-								hasPressedThisFrame = true;
-								person.wasJumpKeyDownLastFrame = true;
 								person.cycleArray(true, person.jumpKeyDownHistory);
 							}
 						}
+						// attack button
 						if (person.getAttackButton().equals(comp.getName())) {
 							if (comp.getPollData() == 1.0) {
-								if (!person.getIsAttackButtonDown()) {
-									person.chooseAttack();
-									person.setIsAttackButtonDown(true);
-									// System.out.println(person.getIsAttackButtonDown());
-								}
+								person.chooseAttack();
+								person.cycleArray(true, person.attackKeyDownHistory);
 							}
+
 							if (comp.getPollData() != 1.0)
 								person.setIsAttackButtonDown(false);
 						}

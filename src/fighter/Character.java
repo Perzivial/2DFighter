@@ -31,19 +31,19 @@ public class Character {
 	private double jumpHeight = 7;
 	private double runSpeed = 7;
 	private double horizontalSlowdownFactor = 10;
-	private double horizontalInAirDistance = 2;
+	private double horizontalInAirDistance = 1;
 	private boolean hasDoubleJump = false;
 	private double maxAirSpeed = 10;
 	// State variables
-	private static int STATE_NEUTRAL = 0;
-	private static int STATE_ATTACK = 1;
-	private static int STATE_ATTACKUP = 2;
-	private static int STATE_ATTACKDOWN = 3;
-	private static int STATE_ATTACKLEFT = 4;
-	private static int STATE_ATTACKRIGHT = 5;
-	private static int STATE_HITSTUN = 6;
-	private static int STATE_JUMP = 7;
-	private static int STATE_LANDINGLAG = 8;
+	public static int STATE_NEUTRAL = 0;
+	public static int STATE_ATTACK = 1;
+	public static int STATE_ATTACKUP = 2;
+	public static int STATE_ATTACKDOWN = 3;
+	public static int STATE_ATTACKLEFT = 4;
+	public static int STATE_ATTACKRIGHT = 5;
+	public static int STATE_HITSTUN = 6;
+	public static int STATE_JUMP = 7;
+	public static int STATE_LANDINGLAG = 8;
 	private int direction = 1;
 	public final static int DIRECTION_LEFT = -1;
 	public final static int DIRECTION_RIGHT = 1;
@@ -75,6 +75,7 @@ public class Character {
 	private int jumpTimeBuffer = 0;
 	public boolean wasJumpKeyDownLastFrame = false;
 	public boolean[] jumpKeyDownHistory = new boolean[] { false, false, false };
+	public boolean[] attackKeyDownHistory = new boolean[] { false, false, false };
 	private double lastFrameX;
 	private double lastFrameY;
 	private boolean lastFrameIsGrounded;
@@ -270,7 +271,8 @@ public class Character {
 					jumpTimeBuffer = 2;
 					jumpKeyDownHistory[0] = true;
 				} else if (hasDoubleJump) {
-					velY -= jumpHeight * 2;
+					velY = 0;
+					velY -= jumpHeight * 1.2;
 					hasDoubleJump = false;
 					state = STATE_JUMP;
 					jumpTimeBuffer = 2;
@@ -278,9 +280,22 @@ public class Character {
 					keysPressed.remove(keyJump);
 				}
 			} else {
+				if (isGrounded) {
+					velY -= jumpHeight;
+					keysPressed.remove(keyJump);
+					state = STATE_JUMP;
+					jumpTimeBuffer = 2;
+				} else if (hasDoubleJump) {
+					velY = 0;
+					velY -= jumpHeight * 1.2;
+					hasDoubleJump = false;
+					state = STATE_JUMP;
+					jumpTimeBuffer = 2;
+				}
 
 			}
 		}
+
 	}
 
 	public void recordLastFrameX() {
@@ -315,9 +330,9 @@ public class Character {
 		if (isGrounded) {
 			if (!lastFrameIsGrounded) {
 				if (state == STATE_NEUTRAL)
-					placeInLandingLag(5);
+					placeInLandingLag(3);
 				else if (state == STATE_ATTACK) {
-					placeInLandingLag(10);
+					placeInLandingLag(6);
 					hitboxes.clear();
 				}
 			}
@@ -325,6 +340,8 @@ public class Character {
 	}
 
 	public void placeInLandingLag(int length) {
+		setVelX(0);
+		setVelY(0);
 		landingLagCounter = length;
 		state = STATE_LANDINGLAG;
 	}
@@ -340,6 +357,7 @@ public class Character {
 			hasDoubleJump = true;
 		}
 		cycleArray(false, jumpKeyDownHistory);
+		cycleArray(false, attackKeyDownHistory);
 		if (jumpTimeBuffer > 0)
 			jumpTimeBuffer--;
 		if (state == STATE_JUMP && jumpTimeBuffer == 0)
@@ -361,43 +379,51 @@ public class Character {
 	// position y,width, height, hitstun time, knockbackx, knockbacky, time it
 	// will be out for
 	public void chooseAttack() {
-		if (!isController) {
-			if (isPressing(keyAttack)) {
-				if (isPressing(keyUp)) {
-
-				} else if (isPressing(keyDown)) {
-
-				} else if (isPressing(keyLeft)) {
-
-				} else if (isPressing(keyRight)) {
-
-				} else {
-					jab();
-				}
-				keysPressed.remove(keyAttack);
-			}
-		} else {
-			System.out.println("trying");
-			boolean hasChosenATilt = false;
-			if (isAxisUp) {
-
-				hasChosenATilt = true;
-			} else if (isAxisDown) {
-
-				hasChosenATilt = true;
-			}
-
-			else if (isAxisRight && !hasChosenATilt) {
-
-			} else if (isAxisLeft && !hasChosenATilt) {
-
-			}
-
-			else {
-				jab();
+		boolean canAttack = true;
+		for (boolean bool : attackKeyDownHistory) {
+			if (bool == true) {
+				canAttack = false;
 			}
 		}
+		
+		if (state != STATE_LANDINGLAG) {
+			if (!isController) {
+				if (isPressing(keyAttack)) {
+					if (isPressing(keyUp)) {
 
+					} else if (isPressing(keyDown)) {
+
+					} else if (isPressing(keyLeft)) {
+
+					} else if (isPressing(keyRight)) {
+
+					} else {
+						jab();
+					}
+					keysPressed.remove(keyAttack);
+				}
+			} else if(canAttack){
+				System.out.println("trying");
+				boolean hasChosenATilt = false;
+				if (isAxisUp) {
+
+					hasChosenATilt = true;
+				} else if (isAxisDown) {
+
+					hasChosenATilt = true;
+				}
+
+				else if (isAxisRight && !hasChosenATilt) {
+
+				} else if (isAxisLeft && !hasChosenATilt) {
+
+				}
+
+				else {
+					jab();
+				}
+			}
+		}
 	}
 
 	public void jab() {
@@ -437,6 +463,10 @@ public class Character {
 				break;
 			}
 		}
+	}
+
+	public int getState() {
+		return state;
 	}
 
 	public Hitbox getHurtbox() {
