@@ -57,7 +57,7 @@ public class Game extends JComponent implements KeyListener {
 	public Game() {
 		hitboxes.add(GROUND_HITBOX);
 		doControllerThings();
-		characters.add(new Character(300, 200, "Xbox 360 Wired Controller", "x", "y", .5, .2, "1", "4", characters));
+		characters.add(new Character(300, 575, "Xbox 360 Wired Controller", "x", "y", .5, .2, "1", "2", characters));
 		characters.add(GOE);
 		characters.add(GOE2);
 		for (Controller control : controllers) {
@@ -219,7 +219,7 @@ public class Game extends JComponent implements KeyListener {
 		}
 	}
 
-	public boolean checkCollision(Rectangle rect1, Rectangle rect2) {
+	public static boolean checkCollision(Rectangle rect1, Rectangle rect2) {
 		if (rect1.intersects(rect2))
 			return true;
 		return false;
@@ -306,6 +306,22 @@ public class Game extends JComponent implements KeyListener {
 									person.setAxisDown(false);
 								}
 							}
+						}
+						if (person.getJumpButton().equals(comp.getName())) {
+							if (comp.getPollData() == 1.0) {
+								
+								person.jump();
+							}
+						}
+						if (person.getAttackButton().equals(comp.getName())) {
+							if (comp.getPollData() == 1.0) {
+								if(!person.getIsAttackButtonDown()){
+								person.chooseAttack();
+								person.setIsAttackButtonDown(true);
+								System.out.println(person.getIsAttackButtonDown());
+								}
+							} if (comp.getPollData() != 1.0) 
+								person.setIsAttackButtonDown(false);
 						}
 					}
 				}

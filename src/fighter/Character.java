@@ -42,7 +42,7 @@ public class Character {
 	private static int STATE_ATTACKLEFT = 4;
 	private static int STATE_ATTACKRIGHT = 5;
 	private static int STATE_HITSTUN = 6;
-
+	private static int STATE_JUMP = 7;
 	private int direction = 1;
 	public final static int DIRECTION_LEFT = -1;
 	public final static int DIRECTION_RIGHT = 1;
@@ -68,7 +68,10 @@ public class Character {
 	private double axisDeadZone;
 	private String buttonJump;
 	private String buttonAttack;
+	public boolean isAttackButtonDown;
+	public boolean isJumpButtonDown;
 	private int portNum;
+	private int jumpTimeBuffer = 0;
 
 	public Character(int posx, int posy, int upKey, int downKey, int leftKey, int rightKey, int jumpKey,
 			int attackKey) {
@@ -208,7 +211,8 @@ public class Character {
 			if (isAxisLeft)
 				runLeft();
 		}
-		chooseAttack();
+		if (!isController)
+			chooseAttack();
 	}
 
 	public void runLeft() {
@@ -235,23 +239,43 @@ public class Character {
 	}
 
 	public void jump() {
-		if (isGrounded) {
-			velY -= jumpHeight;
-			keysPressed.remove(keyJump);
-		} else if (hasDoubleJump) {
-			velY -= jumpHeight * 2;
-			hasDoubleJump = false;
+		if (!isController) {
+			if (isGrounded) {
+				velY -= jumpHeight;
+				keysPressed.remove(keyJump);
+				state = STATE_JUMP;
+				jumpTimeBuffer = 2;
+			} else if (hasDoubleJump) {
+				velY -= jumpHeight * 2;
+				hasDoubleJump = false;
+				state = STATE_JUMP;
+				jumpTimeBuffer = 2;
+			}
+		} else {
+
 		}
+
 	}
 
 	public void fall() {
+
 		if (!isGrounded) {
 			velY += fallSpeed;
-		} else
-			velY = 0;
+		} else {
+			if (state != STATE_JUMP)
+				velY = 0;
+		}
 	}
 
 	public void updateStates() {
+		if(isGrounded && state != STATE_JUMP){
+			isJumpButtonDown = false;
+			hasDoubleJump = true;
+		}
+		if (jumpTimeBuffer > 0)
+			jumpTimeBuffer--;
+		if (state == STATE_JUMP && jumpTimeBuffer == 0)
+			state = STATE_NEUTRAL;
 		if (isGrounded && !hasDoubleJump)
 			hasDoubleJump = true;
 		if (hitstunCounter > -1)
@@ -268,24 +292,50 @@ public class Character {
 	// TODO attack locations. syntax is : character, local position x, local
 	// position y,width, height, hitstun time, knockbackx, knockbacky, time it
 	// will be out for
-	private void chooseAttack() {
-		if (isPressing(keyAttack)) {
-			if (isPressing(keyUp)) {
+	public void chooseAttack() {
+		if (!isController) {
+			if (isPressing(keyAttack)) {
+				if (isPressing(keyUp)) {
 
-			} else if (isPressing(keyDown)) {
+				} else if (isPressing(keyDown)) {
 
-			} else if (isPressing(keyLeft)) {
+				} else if (isPressing(keyLeft)) {
 
-			} else if (isPressing(keyRight)) {
+				} else if (isPressing(keyRight)) {
 
-			} else {
-				hitboxes.add(new AttackHitbox(this, 20, 15, 15, 15, .5, -1, 10, 5));
-				state = STATE_ATTACK;
-				velX += direction * 2;
+				} else {
+					jab();
+				}
+				keysPressed.remove(keyAttack);
 			}
-			keysPressed.remove(keyAttack);
+		} else {
+			System.out.println("trying");
+			boolean hasChosenATilt = false;
+			if (isAxisUp) {
+
+				hasChosenATilt = true;
+			} else if (isAxisDown) {
+
+				hasChosenATilt = true;
+			}
+
+			else if (isAxisRight && !hasChosenATilt) {
+
+			} else if (isAxisLeft && !hasChosenATilt) {
+
+			}
+
+			else {
+				jab();
+			}
 		}
 
+	}
+
+	public void jab() {
+		hitboxes.add(new AttackHitbox(this, 20, 15, 15, 15, .5, -1, 10, 5));
+		state = STATE_ATTACK;
+		velX += direction * 2;
 	}
 
 	public boolean checkIfInSpecificHitBox(Hitbox box) {
@@ -490,11 +540,35 @@ public class Character {
 	public void setAxisHalfway(boolean newAxisConfig) {
 		isAxisHalfway = newAxisConfig;
 	}
-	
-	public double getAxisDeadZone(){
+
+	public double getAxisDeadZone() {
 		return axisDeadZone;
 	}
-	
+
+	public String getJumpButton() {
+		return buttonJump;
+	}
+
+	public String getAttackButton() {
+		return buttonAttack;
+	}
+
+	public boolean getIsAttackButtonDown() {
+		return isAttackButtonDown;
+	}
+
+	public void setIsAttackButtonDown(boolean newAttackButtonConfig) {
+		isAttackButtonDown = newAttackButtonConfig;
+	}
+
+	public boolean getIsJumpButtonDown() {
+		return isJumpButtonDown;
+	}
+
+	public void setIsJumpButtonDown(boolean newJumpButtonConfig) {
+		isJumpButtonDown = newJumpButtonConfig;
+	}
+
 	private void setJumpHeight(double newJumpHeight) {
 		jumpHeight = newJumpHeight;
 	}
