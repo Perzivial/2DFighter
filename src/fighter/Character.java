@@ -81,6 +81,7 @@ public class Character {
 	private double lastFrameY;
 	private boolean lastFrameIsGrounded;
 	private int landingLagCounter = 0;
+	private double moveAxisDeadZone;
 
 	public Character(int posx, int posy, int upKey, int downKey, int leftKey, int rightKey, int jumpKey,
 			int attackKey) {
@@ -130,6 +131,7 @@ public class Character {
 		buttonJump = jumpButton;
 		buttonAttack = attackButton;
 		isController = true;
+		controllerName = nameOfController;
 	}
 
 	public void draw(Graphics g) {
@@ -437,20 +439,19 @@ public class Character {
 			}
 		}
 		if (canAttack) {
-			System.out.println("trying");
 			boolean hasChosenATilt = false;
 			if (isAxisUpLocal) {
-				System.out.println("derp0");
+
 				hasChosenATilt = true;
 			} else if (isAxisDownLocal) {
-				System.out.println("derp");
+				
 				hasChosenATilt = true;
 			}
 
 			else if (isAxisRightLocal && !hasChosenATilt) {
-				System.out.println("derp2");
+				
 			} else if (isAxisLeftLocal && !hasChosenATilt) {
-				System.out.println("derp3");
+				
 			}
 
 			else {
@@ -601,11 +602,26 @@ public class Character {
 	public String getAxisNameY() {
 		return moveAxisNameY;
 	}
-
+	
+	public void setAxisNameX(String newName){
+		moveAxisNameX = newName;
+	}
+		
+	public void setAxisNameY(String newName){
+		moveAxisNameY = newName;
+	}
+		
+	public void setNewMidpoint(double newMidPoint){
+		moveAxisMidpoint = newMidPoint;
+	}
+	public void setNewDeadZone(double newDeadZone){
+		moveAxisDeadZone = newDeadZone;
+	}
 	public double getAxisMidpoint() {
 		return moveAxisMidpoint;
 	}
-
+	
+	
 	public void setAxisName(String newAxisName) {
 		moveAxisNameX = newAxisName;
 	}
@@ -642,6 +658,18 @@ public class Character {
 		return isController;
 	}
 
+	public String getControllerName() {
+		return controllerName;
+	}
+
+	public int getPortNum() {
+		return portNum;
+	}
+	//controller change code in debug menu
+	public void changeController(Controller newController){
+		controllerName = newController.getName();
+		portNum = newController.getPortNumber();
+	}
 	public boolean getIsAxisUp() {
 		return isAxisRight;
 	}
@@ -694,6 +722,12 @@ public class Character {
 		return buttonAttack;
 	}
 
+	public void setAttackButton(String newAttackButton){
+		buttonAttack = newAttackButton;
+	}
+	public void setJumpButton(String newJumpButton){
+		buttonJump = newJumpButton;
+	}
 	public boolean getIsAttackButtonDown() {
 		return isAttackButtonDown;
 	}

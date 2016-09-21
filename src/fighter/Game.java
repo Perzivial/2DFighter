@@ -94,15 +94,28 @@ public class Game extends JComponent implements KeyListener {
 			g.drawString("Left and right to change which attribute to edit, then press 3 to edit it", 20, 80);
 			g.drawString("Current amount of characters: " + characters.size()
 					+ ", you are viewing the inputs for number: " + characterSlideNum, 20, 100);
+			g.drawString("Press 0 to erase a character", 20, 120);
 			if (characters.size() > 0) {
-				g.drawString(String.valueOf(characters.get(characterSlideNum).getUpKey()), 60, 200);
-				g.drawString(String.valueOf(characters.get(characterSlideNum).getDownKey()), 120, 200);
-				g.drawString(String.valueOf(characters.get(characterSlideNum).getLeftKey()), 180, 200);
-				g.drawString(String.valueOf(characters.get(characterSlideNum).getRightKey()), 240, 200);
-				g.drawString(String.valueOf(characters.get(characterSlideNum).getJumpKey()), 300, 200);
-				g.drawString(String.valueOf(characters.get(characterSlideNum).getAttackKey()), 360, 200);
+				if (!characters.get(characterSlideNum).getIsUsingController()) {
+					g.drawString(String.valueOf(characters.get(characterSlideNum).getUpKey()), 60, 200);
+					g.drawString(String.valueOf(characters.get(characterSlideNum).getDownKey()), 120, 220);
+					g.drawString(String.valueOf(characters.get(characterSlideNum).getLeftKey()), 180, 240);
+					g.drawString(String.valueOf(characters.get(characterSlideNum).getRightKey()), 240, 260);
+					g.drawString(String.valueOf(characters.get(characterSlideNum).getJumpKey()), 300, 280);
+					g.drawString(String.valueOf(characters.get(characterSlideNum).getAttackKey()), 360, 300);
 
-				g.drawString("^", 60 * characterSlideNum2, 220);
+					g.drawString("^", 60 * characterSlideNum2, 220 + (20 * characterSlideNum2));
+				} else {
+					g.drawString(String.valueOf(characters.get(characterSlideNum).getControllerName()), 60, 200);
+					g.drawString(String.valueOf(characters.get(characterSlideNum).getAxisNameX()), 120, 220);
+					g.drawString(String.valueOf(characters.get(characterSlideNum).getAxisNameY()), 180, 240);
+					g.drawString(String.valueOf(characters.get(characterSlideNum).getAxisDeadZone()), 240, 260);
+					g.drawString(String.valueOf(characters.get(characterSlideNum).getAxisMidpoint()), 300, 280);
+					g.drawString(String.valueOf(characters.get(characterSlideNum).getJumpButton()), 360, 300);
+					g.drawString(String.valueOf(characters.get(characterSlideNum).getAttackButton()), 420, 320);
+					g.drawString("^", 60 * characterSlideNum2, 220 + (20 * characterSlideNum2));
+					controllerConfigChange(characters.get(characterSlideNum));
+				}
 			}
 
 			break;
@@ -274,67 +287,119 @@ public class Game extends JComponent implements KeyListener {
 				// how far a button or axis has been pushed
 				for (Character person : characters) {
 					if (person.getIsUsingController()) {
-						if (person.getAxisNameX().equals(comp.getName())) {
-							// code for the horizontal movement stick
-							if ((Math.abs(comp.getPollData()) > person.getAxisDeadZone())) {
-								if ((Math.abs(comp.getPollData()) < (float) person.getAxisMidpoint()))
-									person.setAxisHalfway(true);
-								else
-									person.setAxisHalfway(false);
+						if (person.getControllerName().equals(currentController.getName())) {
+							if (person.getAxisNameX().equals(comp.getName())) {
+								// code for the horizontal movement stick
+								if ((Math.abs(comp.getPollData()) > person.getAxisDeadZone())) {
+									if ((Math.abs(comp.getPollData()) < (float) person.getAxisMidpoint()))
+										person.setAxisHalfway(true);
+									else
+										person.setAxisHalfway(false);
 
-								if (comp.getPollData() > 0) {
-									person.setAxisRight(true);
+									if (comp.getPollData() > 0) {
+										person.setAxisRight(true);
+										person.setAxisLeft(false);
+									}
+
+									if (comp.getPollData() < 0) {
+										person.setAxisLeft(true);
+										person.setAxisRight(false);
+									}
+
+								} else {
+									person.setAxisRight(false);
 									person.setAxisLeft(false);
 								}
-
-								if (comp.getPollData() < 0) {
-									person.setAxisLeft(true);
-									person.setAxisRight(false);
-								}
-
-							} else {
-								person.setAxisRight(false);
-								person.setAxisLeft(false);
 							}
-						}
-						if (person.getAxisNameY().equals(comp.getName())) {
-							// code for the vertical movement stick
-							if ((Math.abs(comp.getPollData()) > person.getAxisDeadZone())) {
-								if ((Math.abs(comp.getPollData()) > .1)) {
+							if (person.getAxisNameY().equals(comp.getName())) {
+								// code for the vertical movement stick
+								if ((Math.abs(comp.getPollData()) > person.getAxisDeadZone())) {
+									if ((Math.abs(comp.getPollData()) > .1)) {
 
-									if (comp.getPollData() > 0)
-										person.setAxisDown(true);
+										if (comp.getPollData() > 0)
+											person.setAxisDown(true);
 
-									if (comp.getPollData() < 0)
-										person.setAxisUp(true);
-								} else {
-									person.setAxisUp(false);
-									person.setAxisDown(false);
+										if (comp.getPollData() < 0)
+											person.setAxisUp(true);
+									} else {
+										person.setAxisUp(false);
+										person.setAxisDown(false);
+									}
 								}
 							}
-						}
-						// jump button
-						if (person.getJumpButton().equals(comp.getName())) {
-							boolean hasPressedThisFrame = false;
-							if (comp.getPollData() == 1.0) {
-								person.jump();
-								person.cycleArray(true, person.jumpKeyDownHistory);
+							// jump button
+							if (person.getJumpButton().equals(comp.getName())) {
+								boolean hasPressedThisFrame = false;
+								if (comp.getPollData() == 1.0) {
+									person.jump();
+									person.cycleArray(true, person.jumpKeyDownHistory);
+								}
 							}
-						}
-						// attack button
-						if (person.getAttackButton().equals(comp.getName())) {
-							if (comp.getPollData() == 1.0) {
-								person.chooseAttack(currentController);
-								person.cycleArray(true, person.attackKeyDownHistory);
-							}
+							// attack button
+							if (person.getAttackButton().equals(comp.getName())) {
+								if (comp.getPollData() == 1.0) {
+									person.chooseAttack(currentController);
+									person.cycleArray(true, person.attackKeyDownHistory);
+								}
 
-							if (comp.getPollData() != 1.0)
-								person.setIsAttackButtonDown(false);
+								if (comp.getPollData() != 1.0)
+									person.setIsAttackButtonDown(false);
+							}
 						}
 					}
 				}
 			}
 		}
+	}
+
+	public void controllerConfigChange(Character person) {
+		if (isEditing) {
+			for (Controller currentController : controllers) {
+				currentController.poll();
+				for (Component comp : currentController.getComponents()) {
+					switch (characterSlideNum2) {
+					case (1):
+						if (comp.getPollData() > .5) {
+							person.changeController(currentController);
+							isEditing = false;
+						}
+						break;
+					case (2):
+						if (comp.getPollData() > .5) {
+							person.setAxisNameX(comp.getName());
+							isEditing = false;
+						}
+						break;
+					case (3):
+						if (comp.getPollData() > .5) {
+							person.setAxisNameY(comp.getName());
+							isEditing = false;
+						}
+						break;
+					case (4):
+						if (comp.getPollData() > 0) {
+							person.setNewDeadZone(comp.getDeadZone());
+							isEditing = false;
+						}
+						break;
+					case (5):
+						if (comp.getPollData() > 0) {
+							person.setAxisMidpoint(comp.getPollData());
+						}
+						break;
+					case (6):
+						if (comp.getPollData() > 0 && !comp.getName().equals(person.getAxisNameX()) && !comp.getName().equals(person.getAxisNameY()))
+							person.setJumpButton(comp.getName());
+						break;
+					case (7):
+						if (comp.getPollData() > 0 && !comp.getName().equals(person.getAxisNameX()) && !comp.getName().equals(person.getAxisNameY()))
+							person.setAttackButton(comp.getName());
+						break;
+					}
+				}
+			}
+		}
+
 	}
 
 	// TODO key pressing code, should be in it's own area, unbroken
@@ -362,42 +427,63 @@ public class Game extends JComponent implements KeyListener {
 			if (e.getKeyCode() == KeyEvent.VK_1) {
 				characters.add(new Character(500, 400, KeyEvent.VK_UP, KeyEvent.VK_DOWN, KeyEvent.VK_LEFT,
 						KeyEvent.VK_RIGHT, KeyEvent.VK_SPACE, KeyEvent.VK_Q));
+
 				characterSlideNum = 0;
 				characterSlideNum2 = 1;
 			}
-
+			if (e.getKeyCode() == KeyEvent.VK_2) {
+				characters.add(
+						new Character(300, 575, "Xbox 360 Wired Controller", "x", "y", .5, .2, "1", "2", characters));
+				characterSlideNum = 0;
+				characterSlideNum2 = 1;
+			}
+			if (e.getKeyCode() == KeyEvent.VK_0) {
+				characters.remove(characterSlideNum);
+				characterSlideNum = 0;
+				characterSlideNum2 = 1;
+			}
 			if (e.getKeyCode() == KeyEvent.VK_ESCAPE)
 				screenState = SCREEN_STATE_INGAME;
 			if (characters.size() > 0) {
 				if (!isEditing) {
 					if (e.getKeyCode() == KeyEvent.VK_UP && characterSlideNum > 0) {
 						characterSlideNum--;
+						if (!characters.get(characterSlideNum).getIsUsingController() && characterSlideNum2 > 6)
+							characterSlideNum2 = 6;
 					}
 					if (e.getKeyCode() == KeyEvent.VK_DOWN && characterSlideNum < characters.size() - 1) {
 						characterSlideNum++;
+						if (!characters.get(characterSlideNum).getIsUsingController() && characterSlideNum2 > 6)
+							characterSlideNum2 = 6;
 					}
 					if (e.getKeyCode() == KeyEvent.VK_LEFT && characterSlideNum2 > 1) {
 						characterSlideNum2--;
 					}
-					if (e.getKeyCode() == KeyEvent.VK_RIGHT && characterSlideNum2 < 6) {
-						characterSlideNum2++;
+					if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
+
+						if (!characters.get(characterSlideNum).getIsUsingController() && characterSlideNum2 < 6)
+							characterSlideNum2++;
+						if (characters.get(characterSlideNum).getIsUsingController() && characterSlideNum2 < 7)
+							characterSlideNum2++;
 					}
 					if (e.getKeyCode() == KeyEvent.VK_ENTER)
 						isEditing = true;
 				} else {
-					if (characterSlideNum2 == 1)
-						characters.get(characterSlideNum).changecontrols(e.getKeyCode(), -1, -1, -1, -1, -1);
-					if (characterSlideNum2 == 2)
-						characters.get(characterSlideNum).changecontrols(-1, -e.getKeyCode(), -1, -1, -1, -1);
-					if (characterSlideNum2 == 3)
-						characters.get(characterSlideNum).changecontrols(-1, -1, e.getKeyCode(), -1, -1, -1);
-					if (characterSlideNum2 == 4)
-						characters.get(characterSlideNum).changecontrols(-1, -1, -1, e.getKeyCode(), -1, -1);
-					if (characterSlideNum2 == 5)
-						characters.get(characterSlideNum).changecontrols(-1, -1, -1, -1, e.getKeyCode(), -1);
-					if (characterSlideNum2 == 6)
-						characters.get(characterSlideNum).changecontrols(-1, -1, -1, -1, -1, e.getKeyCode());
-					isEditing = false;
+					if (characters.get(characterSlideNum).getIsUsingController()) {
+						if (characterSlideNum2 == 1)
+							characters.get(characterSlideNum).changecontrols(e.getKeyCode(), -1, -1, -1, -1, -1);
+						if (characterSlideNum2 == 2)
+							characters.get(characterSlideNum).changecontrols(-1, -e.getKeyCode(), -1, -1, -1, -1);
+						if (characterSlideNum2 == 3)
+							characters.get(characterSlideNum).changecontrols(-1, -1, e.getKeyCode(), -1, -1, -1);
+						if (characterSlideNum2 == 4)
+							characters.get(characterSlideNum).changecontrols(-1, -1, -1, e.getKeyCode(), -1, -1);
+						if (characterSlideNum2 == 5)
+							characters.get(characterSlideNum).changecontrols(-1, -1, -1, -1, e.getKeyCode(), -1);
+						if (characterSlideNum2 == 6)
+							characters.get(characterSlideNum).changecontrols(-1, -1, -1, -1, -1, e.getKeyCode());
+						isEditing = false;
+					}
 				}
 			}
 			break;
