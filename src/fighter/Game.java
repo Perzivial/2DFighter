@@ -57,7 +57,7 @@ public class Game extends JComponent implements KeyListener {
 	public Game() {
 		hitboxes.add(GROUND_HITBOX);
 		doControllerThings();
-		characters.add(new Character(300, 700, "Xbox 360 Wired Controller", "x", .5, "1", "4", characters));
+		characters.add(new Character(300, 200, "Xbox 360 Wired Controller", "x", "y", .5, .2, "1", "4", characters));
 		characters.add(GOE);
 		characters.add(GOE2);
 		for (Controller control : controllers) {
@@ -262,21 +262,52 @@ public class Game extends JComponent implements KeyListener {
 	public void getControllerInput() {
 		for (Controller currentController : controllers) {
 			Component[] components = currentController.getComponents();
-			currentController.poll();
+
+			boolean shoulddelete = currentController.poll();
+			if (!shoulddelete) {
+				controllers.remove(currentController);
+				break;
+			}
 			for (Component comp : components) {
 				// comp.getPollData() returns an float between 0 and 1 that says
 				// how far a button or axis has been pushed
 				for (Character person : characters) {
-					if (person.getIsUsingController())
-						if (person.getAxisName().equals(comp.getName())) {
-							if ((Math.abs(comp.getPollData()) > .2)
-									&& (Math.abs(comp.getPollData()) < (float) person.getAxisMidpoint())) {
-								if (comp.getPollData() > 0) {
-									//person.runLeft();
-								}
+					if (person.getIsUsingController()) {
+						if (person.getAxisNameX().equals(comp.getName())) {
+							// code for the horizontal movement stick
+							if ((Math.abs(comp.getPollData()) > person.getAxisDeadZone())) {
+								if ((Math.abs(comp.getPollData()) < (float) person.getAxisMidpoint()))
+									person.setAxisHalfway(true);
+								else
+									person.setAxisHalfway(false);
 
+								if (comp.getPollData() > 0)
+									person.setAxisRight(true);
+
+								if (comp.getPollData() < 0)
+									person.setAxisLeft(true);
+							} else {
+								person.setAxisRight(false);
+								person.setAxisLeft(false);
 							}
 						}
+						if (person.getAxisNameY().equals(comp.getName())) {
+							// code for the vertical movement stick
+							if ((Math.abs(comp.getPollData()) > person.getAxisDeadZone())) {
+								if ((Math.abs(comp.getPollData()) > .1)) {
+
+									if (comp.getPollData() > 0)
+										person.setAxisUp(true);
+
+									if (comp.getPollData() < 0)
+										person.setAxisDown(true);
+								} else {
+									person.setAxisUp(false);
+									person.setAxisDown(false);
+								}
+							}
+						}
+					}
 				}
 			}
 		}

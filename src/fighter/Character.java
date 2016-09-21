@@ -57,8 +57,15 @@ public class Character {
 	private final double starty;
 	private boolean isController = false;
 	private String controllerName;
-	private String moveAxisName;
+	private String moveAxisNameX;
+	private String moveAxisNameY;
 	private double moveAxisMidpoint;
+	private boolean isAxisRight = false;
+	private boolean isAxisLeft = false;
+	private boolean isAxisUp = false;
+	private boolean isAxisDown = false;
+	private boolean isAxisHalfway = false;
+	private double axisDeadZone;
 	private String buttonJump;
 	private String buttonAttack;
 	private int portNum;
@@ -78,21 +85,14 @@ public class Character {
 		hurtbox = new Hitbox(this, x, y, w, h, Game.TYPE_HURTBOX);
 	}
 
-	public Character(int posx, int posy, String nameOfController, String axisName, double axisMidpoint,
-			String jumpButton, String attackButton, ArrayList<Character> characters) {
-
-		keyUp = KeyEvent.VK_UP;
-		keyDown = KeyEvent.VK_DOWN;
-		keyLeft = KeyEvent.VK_LEFT;
-		keyRight = KeyEvent.VK_RIGHT;
-		keyJump = KeyEvent.VK_SPACE;
-		keyAttack = KeyEvent.VK_Q;
+	public Character(int posx, int posy, String nameOfController, String axisName, String axisName2,
+			double axisMidpoint, double deadZone, String jumpButton, String attackButton,
+			ArrayList<Character> characters) {
 
 		x = posx;
 		y = posy;
 		startx = x;
 		starty = y;
-
 		hurtbox = new Hitbox(this, x, y, w, h, Game.TYPE_HURTBOX);
 
 		Controller[] ca = ControllerEnvironment.getDefaultEnvironment().getControllers();
@@ -111,24 +111,24 @@ public class Character {
 			}
 
 		}
-		moveAxisName = axisName;
+		axisDeadZone = deadZone;
+		moveAxisNameX = axisName;
+		moveAxisNameY = axisName2;
 		moveAxisMidpoint = axisMidpoint;
 		buttonJump = jumpButton;
 		buttonAttack = attackButton;
 		isController = true;
-
 	}
 
 	public void draw(Graphics g) {
-		g.setColor(Color.black);
-		if (isController)
-			g.fillRect((int) x, (int) y, w, h);
+
 		updateStates();
 		fall();
 		handleInput();
 		move();
-		translateHitboxes();
+
 		blastZone();
+		translateHitboxes();
 
 		drawCorrectSprite(g);
 
@@ -190,37 +190,58 @@ public class Character {
 				if (state == STATE_NEUTRAL) {
 					// Jumping code
 					if (isPressing(keyJump)) {
-						if (isGrounded) {
-							velY -= jumpHeight;
-							keysPressed.remove(keyJump);
-						} else if (hasDoubleJump) {
-							velY -= jumpHeight * 2;
-							hasDoubleJump = false;
-						}
+						jump();
 					}
 					// Horizontal Movement code
 					if (isPressing(keyLeft)) {
 						runLeft();
 					}
 					if (isPressing(keyRight)) {
-						if (isGrounded) {
-							velX = runSpeed;
-							direction = DIRECTION_RIGHT;
-						} else if (Math.abs(velX) < maxAirSpeed)
-							velX += horizontalInAirDistance;
+						runRight();
 					}
 				}
-				chooseAttack();
+
 			}
+		} else {
+			if (isAxisRight)
+				runRight();
+			if (isAxisLeft)
+				runLeft();
 		}
+		chooseAttack();
 	}
 
 	public void runLeft() {
+
 		if (isGrounded) {
-			velX = -runSpeed;
+			if (isAxisHalfway)
+				velX = -runSpeed / 3;
+			else
+				velX = -runSpeed;
 			direction = DIRECTION_LEFT;
 		} else if (Math.abs(velX) < maxAirSpeed)
 			velX -= horizontalInAirDistance;
+	}
+
+	public void runRight() {
+		if (isGrounded) {
+			if (isAxisHalfway)
+				velX = runSpeed / 3;
+			else
+				velX = runSpeed;
+			direction = DIRECTION_RIGHT;
+		} else if (Math.abs(velX) < maxAirSpeed)
+			velX += horizontalInAirDistance;
+	}
+
+	public void jump() {
+		if (isGrounded) {
+			velY -= jumpHeight;
+			keysPressed.remove(keyJump);
+		} else if (hasDoubleJump) {
+			velY -= jumpHeight * 2;
+			hasDoubleJump = false;
+		}
 	}
 
 	public void fall() {
@@ -382,8 +403,12 @@ public class Character {
 		y += velY;
 	}
 
-	public String getAxisName() {
-		return moveAxisName;
+	public String getAxisNameX() {
+		return moveAxisNameX;
+	}
+
+	public String getAxisNameY() {
+		return moveAxisNameY;
 	}
 
 	public double getAxisMidpoint() {
@@ -391,7 +416,7 @@ public class Character {
 	}
 
 	public void setAxisName(String newAxisName) {
-		moveAxisName = newAxisName;
+		moveAxisNameX = newAxisName;
 	}
 
 	public void setAxisMidpoint(double newAxisMidpoint) {
@@ -426,6 +451,50 @@ public class Character {
 		return isController;
 	}
 
+	public boolean getIsAxisUp() {
+		return isAxisRight;
+	}
+
+	public boolean getIsAxisDown() {
+		return isAxisRight;
+	}
+
+	public boolean getIsAxisLeft() {
+		return isAxisRight;
+	}
+
+	public boolean getIsAxisRight() {
+		return isAxisRight;
+	}
+
+	public void setAxisUp(boolean newAxisState) {
+		isAxisUp = newAxisState;
+	}
+
+	public void setAxisDown(boolean newAxisState) {
+		isAxisDown = newAxisState;
+	}
+
+	public void setAxisLeft(boolean newAxisState) {
+		isAxisLeft = newAxisState;
+	}
+
+	public void setAxisRight(boolean newAxisState) {
+		isAxisRight = newAxisState;
+	}
+
+	public boolean getIsAxisHalfway() {
+		return isAxisHalfway;
+	}
+
+	public void setAxisHalfway(boolean newAxisConfig) {
+		isAxisHalfway = newAxisConfig;
+	}
+	
+	public double getAxisDeadZone(){
+		return axisDeadZone;
+	}
+	
 	private void setJumpHeight(double newJumpHeight) {
 		jumpHeight = newJumpHeight;
 	}
