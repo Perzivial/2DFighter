@@ -8,6 +8,7 @@ import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 import java.util.*;
 
+import net.java.games.input.Component;
 import net.java.games.input.Controller;
 import net.java.games.input.ControllerEnvironment;
 
@@ -379,13 +380,7 @@ public class Character {
 	// position y,width, height, hitstun time, knockbackx, knockbacky, time it
 	// will be out for
 	public void chooseAttack() {
-		boolean canAttack = true;
-		for (boolean bool : attackKeyDownHistory) {
-			if (bool == true) {
-				canAttack = false;
-			}
-		}
-		
+
 		if (state != STATE_LANDINGLAG) {
 			if (!isController) {
 				if (isPressing(keyAttack)) {
@@ -402,26 +397,73 @@ public class Character {
 					}
 					keysPressed.remove(keyAttack);
 				}
-			} else if(canAttack){
-				System.out.println("trying");
-				boolean hasChosenATilt = false;
-				if (isAxisUp) {
+			}
+		}
+	}
 
-					hasChosenATilt = true;
-				} else if (isAxisDown) {
+	public void chooseAttack(Controller myController) {
 
-					hasChosenATilt = true;
+		boolean canAttack = true;
+		for (boolean bool : attackKeyDownHistory) {
+			if (bool == true) {
+				canAttack = false;
+			}
+		}
+		boolean isAxisLeftLocal = false;
+		boolean isAxisRightLocal = false;
+		boolean isAxisUpLocal = false;
+		boolean isAxisDownLocal = false;
+		for (Component comp : myController.getComponents()) {
+			if (comp.getName().equals(moveAxisNameX)) {
+				if (Math.abs(comp.getPollData()) > moveAxisMidpoint) {
+					if (comp.getPollData() < 0) {
+						isAxisLeftLocal = true;
+					} else {
+						isAxisRightLocal = true;
+					}
+
 				}
 
-				else if (isAxisRight && !hasChosenATilt) {
-
-				} else if (isAxisLeft && !hasChosenATilt) {
+			}
+			if (comp.getName().equals(moveAxisNameY)) {
+				if (Math.abs(comp.getPollData()) > moveAxisMidpoint) {
+					if (comp.getPollData() < 0) {
+						isAxisDownLocal = true;
+					} else {
+						isAxisUpLocal = true;
+					}
 
 				}
+			}
+		}
+		if (canAttack) {
+			System.out.println("trying");
+			boolean hasChosenATilt = false;
+			if (isAxisUpLocal) {
+				System.out.println("derp0");
+				hasChosenATilt = true;
+			} else if (isAxisDownLocal) {
+				System.out.println("derp");
+				hasChosenATilt = true;
+			}
 
-				else {
-					jab();
-				}
+			else if (isAxisRightLocal && !hasChosenATilt) {
+				System.out.println("derp2");
+			} else if (isAxisLeftLocal && !hasChosenATilt) {
+				System.out.println("derp3");
+			}
+
+			else {
+				jab();
+			}
+
+		}
+	}
+
+	public void getControllerInput(Controller myController) {
+		for (Component comp : myController.getComponents()) {
+			if (comp.getName().equals(moveAxisNameX)) {
+
 			}
 		}
 	}

@@ -303,10 +303,10 @@ public class Game extends JComponent implements KeyListener {
 								if ((Math.abs(comp.getPollData()) > .1)) {
 
 									if (comp.getPollData() > 0)
-										person.setAxisUp(true);
+										person.setAxisDown(true);
 
 									if (comp.getPollData() < 0)
-										person.setAxisDown(true);
+										person.setAxisUp(true);
 								} else {
 									person.setAxisUp(false);
 									person.setAxisDown(false);
@@ -324,7 +324,7 @@ public class Game extends JComponent implements KeyListener {
 						// attack button
 						if (person.getAttackButton().equals(comp.getName())) {
 							if (comp.getPollData() == 1.0) {
-								person.chooseAttack();
+								person.chooseAttack(currentController);
 								person.cycleArray(true, person.attackKeyDownHistory);
 							}
 
