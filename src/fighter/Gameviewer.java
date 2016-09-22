@@ -45,7 +45,7 @@ public class Gameviewer extends JFrame {
 		frame.add(thegame);
 		frame.setSize(1200, 675);
 		frame.setLocationRelativeTo(null);
-		frame.setTitle("Default Project");
+		frame.setTitle("NotSmash");
 		frame.setResizable(false);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		thegame.addKeyListener(thegame);

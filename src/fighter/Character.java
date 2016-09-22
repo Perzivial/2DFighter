@@ -30,11 +30,11 @@ public class Character {
 	private int keyJump;
 	private int keyAttack;
 	private double jumpHeight = 7;
-	private double runSpeed = 7;
+	private double runSpeed = 5;
 	private double horizontalSlowdownFactor = 10;
 	private double horizontalInAirDistance = 1;
 	private boolean hasDoubleJump = false;
-	private double maxAirSpeed = 10;
+	private double maxAirSpeed = 5;
 	// State variables
 	public static int STATE_NEUTRAL = 0;
 	public static int STATE_ATTACK = 1;
@@ -193,15 +193,21 @@ public class Character {
 	}
 
 	public void move() {
-		x += velX;
+		Rectangle sideGroundChecker = new Rectangle((int) x - 1, (int) y, (int) w + 2, (int) h);
+		if (!Game.checkCollision(Game.GROUND_HITBOX.getRect(), sideGroundChecker))
+			x += velX;
 
-		if (new Rectangle((int) x, (int) (y + velY), (int) w, (int) h).intersects(Game.GROUND_HITBOX.getRect())) {
+		if (new Rectangle((int) x, (int) (y + velY), (int) w, (int) h).intersects(Game.GROUND_HITBOX.getRect())
+				&& y < Game.GROUND_HITBOX.getY()) {
 
 			y = (int) Game.GROUND_HITBOX.getRect().getY() - h;
 
 		} else {
 
 			y += velY;
+		}
+		if (Game.checkCollision(Game.GROUND_HITBOX.getRect(), sideGroundChecker) && y > Game.GROUND_HITBOX.getY()) {
+			velY += fallSpeed;
 		}
 		if (state != STATE_HITSTUN)
 			applyFriction();
@@ -251,14 +257,14 @@ public class Character {
 	}
 
 	public void runLeft() {
-		
+
 		if (isGrounded) {
-			if(state == STATE_NEUTRAL){
-			if (isAxisHalfway)
-				velX = -runSpeed / 3;
-			else
-				velX = -runSpeed;
-			direction = DIRECTION_LEFT;
+			if (state == STATE_NEUTRAL) {
+				if (isAxisHalfway)
+					velX = -runSpeed / 3;
+				else
+					velX = -runSpeed;
+				direction = DIRECTION_LEFT;
 			}
 		} else if (Math.abs(velX) < maxAirSpeed)
 			velX -= horizontalInAirDistance;
@@ -291,6 +297,7 @@ public class Character {
 					jumpTimeBuffer = 2;
 					jumpKeyDownHistory[0] = true;
 				} else if (hasDoubleJump) {
+					velX = 0;
 					velY = 0;
 					velY -= jumpHeight * 1.2;
 					hasDoubleJump = false;
@@ -306,6 +313,7 @@ public class Character {
 					state = STATE_JUMP;
 					jumpTimeBuffer = 2;
 				} else if (hasDoubleJump) {
+					velX = 0;
 					velY = 0;
 					velY -= jumpHeight * 1.2;
 					hasDoubleJump = false;
@@ -550,6 +558,14 @@ public class Character {
 		return x;
 	}
 
+	public void setX(double newX) {
+		x = newX;
+	}
+
+	public void setY(double newY) {
+		y = newY;
+	}
+
 	public double getY() {
 		return y;
 	}
@@ -661,13 +677,14 @@ public class Character {
 	}
 
 	public void applyKnockback(double newVelX, double newVelY, int direction) {
-		setVelX(newVelX + percent * direction);
+		double dampenedpercent = percent / 100;
+		setVelX(newVelX + dampenedpercent * direction);
 		if (newVelY < 0)
 			y--;
 		if (newVelY > 0)
-			setVelY(newVelY + percent);
+			setVelY(newVelY + dampenedpercent);
 		else
-			setVelY(newVelY - percent);
+			setVelY(newVelY - dampenedpercent);
 		System.out.println(percent);
 	}
 
@@ -780,6 +797,10 @@ public class Character {
 
 	public void setIsJumpButtonDown(boolean newJumpButtonConfig) {
 		isJumpButtonDown = newJumpButtonConfig;
+	}
+
+	public double getpercentage() {
+		return percent;
 	}
 
 	private void setJumpHeight(double newJumpHeight) {

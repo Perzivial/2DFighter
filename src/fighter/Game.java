@@ -37,7 +37,7 @@ public class Game extends JComponent implements KeyListener {
 
 	boolean shouldShowHitboxes = true;
 	ArrayList<Hitbox> hitboxes = new ArrayList<Hitbox>();
-	public static final Hitbox GROUND_HITBOX = new Hitbox(200, 600, 720, 100, TYPE_GROUND);
+	public static final Hitbox GROUND_HITBOX = new Hitbox(200, 500, 720, 175, TYPE_GROUND);
 
 	ArrayList<Character> characters = new ArrayList<Character>();
 	Character GOE = new Character(500, 400, KeyEvent.VK_UP, KeyEvent.VK_DOWN, KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT,
@@ -58,7 +58,7 @@ public class Game extends JComponent implements KeyListener {
 		this.setDoubleBuffered(true);
 		hitboxes.add(GROUND_HITBOX);
 		doControllerThings();
-		characters.add(new Character(300, 575, "Xbox 360 Wired Controller", "x", "y", .5, .2, "1", "2", characters));
+		characters.add(new Character(300, 450, "Xbox 360 Wired Controller", "x", "y", .5, .2, "1", "2", characters));
 		characters.add(GOE);
 		characters.add(GOE2);
 		for (Controller control : controllers) {
@@ -85,6 +85,7 @@ public class Game extends JComponent implements KeyListener {
 			// draws hitboxes, should be after all other drawing code
 			drawHitBoxes(g, hitboxes);
 			drawPlayerHitboxes(g);
+			drawPlayerPercentage(g);
 			break;
 		case (SCREEN_STATE_ADDCHARACTER):
 			g.setColor(Color.WHITE);
@@ -134,12 +135,23 @@ public class Game extends JComponent implements KeyListener {
 		for (Character person : characters) {
 			Rectangle groundChecker = new Rectangle((int) person.getX(), (int) person.getY() + 1,
 					(int) person.getWidth(), (int) person.getHeight());
-			if (checkCollision(groundChecker, hitboxes.get(0).getRect()))
+			if (checkCollision(groundChecker, hitboxes.get(0).getRect()) && person.getY() < hitboxes.get(0).getY())
 				person.isGrounded = true;
 			else
 				person.isGrounded = false;
+			
+			
 		}
 		checkForAndExecutePlayerHitDectection();
+	}
+
+	public void drawPlayerPercentage(Graphics g) {
+		int getSpaceBetweenNumbers = (int) (screenHeight / characters.size());
+		for (int i = 0; i < characters.size(); i++) {
+			Character person = characters.get(i);
+			g.setColor(Color.red);
+			g.drawString(Double.toString(person.getpercentage()), 20 + (getSpaceBetweenNumbers * i + 1), 600);
+		}
 	}
 
 	public void drawBackground(Graphics g) {
@@ -149,7 +161,8 @@ public class Game extends JComponent implements KeyListener {
 
 	public void drawGround(Graphics g) {
 		g.setColor(Color.black);
-		g.fillRect(200, 600, 720, 100);
+		Graphics2D g2 = (Graphics2D) g;
+		g2.fill(GROUND_HITBOX.getRect());
 	}
 
 	public void drawPlayerHitboxes(Graphics g) {
