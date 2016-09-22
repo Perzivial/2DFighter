@@ -40,11 +40,10 @@ public class Character {
 	public static int STATE_ATTACK = 1;
 	public static int STATE_ATTACKUP = 2;
 	public static int STATE_ATTACKDOWN = 3;
-	public static int STATE_ATTACKLEFT = 4;
-	public static int STATE_ATTACKRIGHT = 5;
-	public static int STATE_HITSTUN = 6;
-	public static int STATE_JUMP = 7;
-	public static int STATE_LANDINGLAG = 8;
+	public static int STATE_ATTACKSIDE = 4;
+	public static int STATE_HITSTUN = 5;
+	public static int STATE_JUMP = 6;
+	public static int STATE_LANDINGLAG = 7;
 	private int direction = 1;
 	public final static int DIRECTION_LEFT = -1;
 	public final static int DIRECTION_RIGHT = 1;
@@ -54,7 +53,9 @@ public class Character {
 	HashSet<Integer> keysPressed = new HashSet<Integer>();
 	BufferedImage neutralImage = new Image("img/stickman_neutral.png").img;
 	BufferedImage jabImage = new Image("img/stickman_attack1.png").img;
+	BufferedImage fTiltImage = new Image("img/stickman_tilt_f.png").img;
 	BufferedImage hitstunImage = new Image("img/stickman_hitstun.png").img;
+
 	private final double startx;
 	private final double starty;
 	private boolean isController = false;
@@ -82,6 +83,7 @@ public class Character {
 	private boolean lastFrameIsGrounded;
 	private int landingLagCounter = 0;
 	private double moveAxisDeadZone;
+	private double percent = 0;
 
 	public Character(int posx, int posy, int upKey, int downKey, int leftKey, int rightKey, int jumpKey,
 			int attackKey) {
@@ -134,6 +136,10 @@ public class Character {
 		controllerName = nameOfController;
 	}
 
+	public void applyDamage(double damageApplied) {
+		percent += damageApplied / 20;
+	}
+
 	public void draw(Graphics g) {
 
 		updateStates();
@@ -165,6 +171,12 @@ public class Character {
 				g.drawImage(jabImage, (int) x, (int) y, (int) (w * 1.6), h, null);
 			if (direction == DIRECTION_LEFT)
 				g.drawImage(jabImage, (int) x + w, (int) y, (int) (-w * 1.6), h, null);
+		}
+		if (state == STATE_ATTACKSIDE) {
+			if (direction == DIRECTION_RIGHT)
+				g.drawImage(fTiltImage, (int) x, (int) y, (int) (w * 1.6), h, null);
+			if (direction == DIRECTION_LEFT)
+				g.drawImage(fTiltImage, (int) x + w, (int) y, (int) (-w * 1.6), h, null);
 		}
 		if (state == STATE_HITSTUN) {
 			if (direction == DIRECTION_RIGHT)
@@ -204,6 +216,9 @@ public class Character {
 		if (x < 0 || x + w > 1200 || y < 0 || y + h > 675) {
 			x = startx;
 			y = starty;
+			velX = 0;
+			velY = 0;
+			percent = 0;
 		}
 	}
 
@@ -236,13 +251,15 @@ public class Character {
 	}
 
 	public void runLeft() {
-
+		
 		if (isGrounded) {
+			if(state == STATE_NEUTRAL){
 			if (isAxisHalfway)
 				velX = -runSpeed / 3;
 			else
 				velX = -runSpeed;
 			direction = DIRECTION_LEFT;
+			}
 		} else if (Math.abs(velX) < maxAirSpeed)
 			velX -= horizontalInAirDistance;
 	}
@@ -391,11 +408,12 @@ public class Character {
 					} else if (isPressing(keyDown)) {
 
 					} else if (isPressing(keyLeft)) {
-
+						fTilt();
 					} else if (isPressing(keyRight)) {
-
+						fTilt();
 					} else {
-						jab();
+						if (Math.abs(velX) < .1 && Math.abs(velY) < .1)
+							jab();
 					}
 					keysPressed.remove(keyAttack);
 				}
@@ -417,7 +435,7 @@ public class Character {
 		boolean isAxisDownLocal = false;
 		for (Component comp : myController.getComponents()) {
 			if (comp.getName().equals(moveAxisNameX)) {
-				if (Math.abs(comp.getPollData()) > moveAxisMidpoint) {
+				if (Math.abs(comp.getPollData()) < moveAxisMidpoint && Math.abs(comp.getPollData()) > axisDeadZone) {
 					if (comp.getPollData() < 0) {
 						isAxisLeftLocal = true;
 					} else {
@@ -428,7 +446,7 @@ public class Character {
 
 			}
 			if (comp.getName().equals(moveAxisNameY)) {
-				if (Math.abs(comp.getPollData()) > moveAxisMidpoint) {
+				if (Math.abs(comp.getPollData()) < moveAxisMidpoint && Math.abs(comp.getPollData()) > axisDeadZone) {
 					if (comp.getPollData() < 0) {
 						isAxisDownLocal = true;
 					} else {
@@ -444,18 +462,19 @@ public class Character {
 
 				hasChosenATilt = true;
 			} else if (isAxisDownLocal) {
-				
+
 				hasChosenATilt = true;
 			}
 
 			else if (isAxisRightLocal && !hasChosenATilt) {
-				
+				fTilt();
 			} else if (isAxisLeftLocal && !hasChosenATilt) {
-				
+				fTilt();
 			}
 
 			else {
-				jab();
+				if (Math.abs(velX) < .1 && Math.abs(velY) < .1)
+					jab();
 			}
 
 		}
@@ -469,10 +488,20 @@ public class Character {
 		}
 	}
 
+	// TODO attack below here
+	// AttackHitbox creation syntax , character, localx,
+	// localy,width,height,xknockback,yknockback,hitstunlen,lifetime, damage
 	public void jab() {
-		hitboxes.add(new AttackHitbox(this, 20, 15, 15, 15, .5, -1, 10, 5));
+		hitboxes.add(new AttackHitbox(this, 20, 15, 15, 15, .5, -1, 10, 5, 10));
 		state = STATE_ATTACK;
 		velX += direction * 2;
+	}
+
+	public void fTilt() {
+		hitboxes.add(new AttackHitbox(this, 20, 20, 20, 15, 3, -3, 10, 5, 20));
+		hitboxes.add(new AttackHitbox(this, 20, 25, 10, 15, 1, -10, 10, 5, 20));
+		state = STATE_ATTACKSIDE;
+		velX += direction * 3;
 	}
 
 	public boolean checkIfInSpecificHitBox(Hitbox box) {
@@ -602,26 +631,27 @@ public class Character {
 	public String getAxisNameY() {
 		return moveAxisNameY;
 	}
-	
-	public void setAxisNameX(String newName){
+
+	public void setAxisNameX(String newName) {
 		moveAxisNameX = newName;
 	}
-		
-	public void setAxisNameY(String newName){
+
+	public void setAxisNameY(String newName) {
 		moveAxisNameY = newName;
 	}
-		
-	public void setNewMidpoint(double newMidPoint){
+
+	public void setNewMidpoint(double newMidPoint) {
 		moveAxisMidpoint = newMidPoint;
 	}
-	public void setNewDeadZone(double newDeadZone){
+
+	public void setNewDeadZone(double newDeadZone) {
 		moveAxisDeadZone = newDeadZone;
 	}
+
 	public double getAxisMidpoint() {
 		return moveAxisMidpoint;
 	}
-	
-	
+
 	public void setAxisName(String newAxisName) {
 		moveAxisNameX = newAxisName;
 	}
@@ -630,11 +660,15 @@ public class Character {
 		moveAxisMidpoint = newAxisMidpoint;
 	}
 
-	public void applyKnockback(double newVelX, double newVelY) {
-		setVelX(newVelX);
+	public void applyKnockback(double newVelX, double newVelY, int direction) {
+		setVelX(newVelX + percent * direction);
 		if (newVelY < 0)
 			y--;
-		setVelY(newVelY);
+		if (newVelY > 0)
+			setVelY(newVelY + percent);
+		else
+			setVelY(newVelY - percent);
+		System.out.println(percent);
 	}
 
 	// changes the controls at runtime
@@ -665,11 +699,13 @@ public class Character {
 	public int getPortNum() {
 		return portNum;
 	}
-	//controller change code in debug menu
-	public void changeController(Controller newController){
+
+	// controller change code in debug menu
+	public void changeController(Controller newController) {
 		controllerName = newController.getName();
 		portNum = newController.getPortNumber();
 	}
+
 	public boolean getIsAxisUp() {
 		return isAxisRight;
 	}
@@ -722,12 +758,14 @@ public class Character {
 		return buttonAttack;
 	}
 
-	public void setAttackButton(String newAttackButton){
+	public void setAttackButton(String newAttackButton) {
 		buttonAttack = newAttackButton;
 	}
-	public void setJumpButton(String newJumpButton){
+
+	public void setJumpButton(String newJumpButton) {
 		buttonJump = newJumpButton;
 	}
+
 	public boolean getIsAttackButtonDown() {
 		return isAttackButtonDown;
 	}

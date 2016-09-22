@@ -89,7 +89,7 @@ public class Game extends JComponent implements KeyListener {
 		case (SCREEN_STATE_ADDCHARACTER):
 			g.setColor(Color.WHITE);
 			g.drawString("Press 1 to add new character(keyboard)", 20, 20);
-			g.drawString("Press 2 to add new control method (controller *not inplemented yet*)", 20, 40);
+			g.drawString("Press 2 to add new control method (controller)", 20, 40);
 			g.drawString("Up and down to choose which character to edit", 20, 60);
 			g.drawString("Left and right to change which attribute to edit, then press 3 to edit it", 20, 80);
 			g.drawString("Current amount of characters: " + characters.size()
@@ -215,16 +215,16 @@ public class Game extends JComponent implements KeyListener {
 		for (Character person1 : characters) {
 			for (Character person2 : characters) {
 				for (AttackHitbox hitbox : person2.hitboxes) {
-
 					if (checkCollision(person1.getHurtbox().getRect(), hitbox.getRect())) {
 						if (!person1.equals(hitbox.getLinkedCharacter())) {
 							// in the scope or this part of the code, person1 is
 							// the person getting hit, and hitbox is the
 							// reference o the hitbox hitting the person
 							person1.applyKnockback(hitbox.getKnockbackX() * person2.getDirection(),
-									hitbox.getKnockbackY());
+									hitbox.getKnockbackY(), person2.getDirection());
 							person1.applyHitstun(hitbox.getHitstunLength());
 							person1.setDirection(hitbox.getLinkedCharacter().getDirection());
+							person1.applyDamage(hitbox.getDamage());
 
 						}
 					}
@@ -345,6 +345,7 @@ public class Game extends JComponent implements KeyListener {
 								if (comp.getPollData() != 1.0)
 									person.setIsAttackButtonDown(false);
 							}
+
 						}
 					}
 				}
@@ -388,11 +389,13 @@ public class Game extends JComponent implements KeyListener {
 						}
 						break;
 					case (6):
-						if (comp.getPollData() > 0 && !comp.getName().equals(person.getAxisNameX()) && !comp.getName().equals(person.getAxisNameY()))
+						if (comp.getPollData() > 0 && !comp.getName().equals(person.getAxisNameX())
+								&& !comp.getName().equals(person.getAxisNameY()))
 							person.setJumpButton(comp.getName());
 						break;
 					case (7):
-						if (comp.getPollData() > 0 && !comp.getName().equals(person.getAxisNameX()) && !comp.getName().equals(person.getAxisNameY()))
+						if (comp.getPollData() > 0 && !comp.getName().equals(person.getAxisNameX())
+								&& !comp.getName().equals(person.getAxisNameY()))
 							person.setAttackButton(comp.getName());
 						break;
 					}

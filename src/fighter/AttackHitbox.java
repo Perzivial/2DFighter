@@ -8,9 +8,9 @@ public class AttackHitbox extends Hitbox {
 	private double knockbackX;
 	private double knockbackY;
 	private int hitstunLength;
-	
+	private double damage;
 	public AttackHitbox(Character boundPlayer, double localposx, double localposy, double width, double height,
-			double xknockback, double yknockback, int hitstunLen,int lifeTime) {
+			double xknockback, double yknockback, int hitstunLen,int lifeTime , double myDamage) {
 		super(boundPlayer, boundPlayer.getX() + localposx, boundPlayer.getVelY() + localposy, width, height,
 				Game.TYPE_ATTACK);
 		localX = localposx;
@@ -19,12 +19,17 @@ public class AttackHitbox extends Hitbox {
 		knockbackY = yknockback;
 		hitstunLength = hitstunLen;
 		lifetime = lifeTime;
+		damage = myDamage;
 	}
 
 	public double getlocalX() {
 		return localX;
 	}
-
+	
+	public double getDamage(){
+		return damage;
+	}
+	
 	public double getlocalY() {
 		return localY;
 	}
