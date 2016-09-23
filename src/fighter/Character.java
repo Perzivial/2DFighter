@@ -43,7 +43,8 @@ public class Character {
 	public static int STATE_ATTACKSIDE = 4;
 	public static int STATE_HITSTUN = 5;
 	public static int STATE_JUMP = 6;
-	public static int STATE_LANDINGLAG = 7;
+	public static int STATE_JUMPSQUAT = 7;
+	public static int STATE_LANDINGLAG = 8;
 	private int direction = 1;
 	public final static int DIRECTION_LEFT = -1;
 	public final static int DIRECTION_RIGHT = 1;
@@ -55,7 +56,8 @@ public class Character {
 	BufferedImage jabImage = new Image("img/stickman_attack1.png").img;
 	BufferedImage fTiltImage = new Image("img/stickman_tilt_f.png").img;
 	BufferedImage hitstunImage = new Image("img/stickman_hitstun.png").img;
-
+	BufferedImage jumpSquatImage = new Image("img/stickman_jumpsquat.png").img;
+	BufferedImage jumpImage = new Image("img/stickman_jump.png").img;
 	private final double startx;
 	private final double starty;
 	private boolean isController = false;
@@ -84,6 +86,8 @@ public class Character {
 	private int landingLagCounter = 0;
 	private double moveAxisDeadZone;
 	private double percent = 0;
+	private int jumpSquatFrames = 6;
+	private int jumpSquatBuffer = 0;
 
 	public Character(int posx, int posy, int upKey, int downKey, int leftKey, int rightKey, int jumpKey,
 			int attackKey) {
@@ -184,6 +188,18 @@ public class Character {
 			if (direction == DIRECTION_LEFT)
 				g.drawImage(hitstunImage, (int) x + w, (int) y, -w, h, null);
 		}
+		if (state == STATE_JUMPSQUAT) {
+			if (direction == DIRECTION_RIGHT)
+				g.drawImage(jumpSquatImage, (int) x, (int) y, w, h, null);
+			if (direction == DIRECTION_LEFT)
+				g.drawImage(jumpSquatImage, (int) x + w, (int) y, -w, h, null);
+		}
+		if (state == STATE_JUMP) {
+			if (direction == DIRECTION_RIGHT)
+				g.drawImage(jumpImage, (int) x, (int) y, w, h, null);
+			if (direction == DIRECTION_LEFT)
+				g.drawImage(jumpImage, (int) x + w, (int) y, -w, h, null);
+		}
 		if (state == STATE_LANDINGLAG) {
 			if (direction == DIRECTION_RIGHT)
 				g.drawImage(neutralImage, (int) x, (int) y + (int) (h / 2), w, (int) (h / 2), null);
@@ -259,19 +275,20 @@ public class Character {
 	public void runLeft() {
 
 		if (isGrounded) {
-			if (state == STATE_NEUTRAL) {
-				if (isAxisHalfway)
-					velX = -runSpeed / 3;
-				else
-					velX = -runSpeed;
-				direction = DIRECTION_LEFT;
-			}
+
+			if (isAxisHalfway)
+				velX = -runSpeed / 3;
+			else
+				velX = -runSpeed;
+			direction = DIRECTION_LEFT;
+
 		} else if (Math.abs(velX) < maxAirSpeed)
 			velX -= horizontalInAirDistance;
 	}
 
 	public void runRight() {
 		if (isGrounded) {
+
 			if (isAxisHalfway)
 				velX = runSpeed / 3;
 			else
@@ -279,6 +296,24 @@ public class Character {
 			direction = DIRECTION_RIGHT;
 		} else if (Math.abs(velX) < maxAirSpeed)
 			velX += horizontalInAirDistance;
+	}
+
+	public boolean isJumpButtonDownController() {
+		for (boolean bool : jumpKeyDownHistory) {
+			if (bool == true) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public boolean isAttackButtonDownController() {
+		for (boolean bool : attackKeyDownHistory) {
+			if (bool == true) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public void jump() {
@@ -291,11 +326,12 @@ public class Character {
 		if (canJump) {
 			if (!isController) {
 				if (isGrounded) {
-					velY -= jumpHeight;
-					keysPressed.remove(keyJump);
-					state = STATE_JUMP;
-					jumpTimeBuffer = 2;
-					jumpKeyDownHistory[0] = true;
+					/*
+					 * velY -= jumpHeight; keysPressed.remove(keyJump); state =
+					 * STATE_JUMP; jumpTimeBuffer = 5; jumpKeyDownHistory[0] =
+					 * true;
+					 */
+					enterJumpSquat();
 				} else if (hasDoubleJump) {
 					velX = 0;
 					velY = 0;
@@ -308,10 +344,11 @@ public class Character {
 				}
 			} else {
 				if (isGrounded) {
-					velY -= jumpHeight;
-					keysPressed.remove(keyJump);
-					state = STATE_JUMP;
-					jumpTimeBuffer = 2;
+					/*
+					 * velY -= jumpHeight; state = STATE_JUMP; jumpTimeBuffer =
+					 * 5;
+					 */
+					enterJumpSquat();
 				} else if (hasDoubleJump) {
 					velX = 0;
 					velY = 0;
@@ -324,6 +361,46 @@ public class Character {
 			}
 		}
 
+	}
+
+	public void enterJumpSquat() {
+		jumpSquatBuffer = jumpSquatFrames + 1;
+		state = STATE_JUMPSQUAT;
+	}
+
+	public void applyJumpWhenRequired() {
+		if (jumpSquatBuffer == 1) {
+			if (isController) {
+				if (!isJumpButtonDownController()) {
+					velY--;
+					velY -= jumpHeight;
+					state = STATE_JUMP;
+					jumpTimeBuffer = 2;
+				} else {
+					velY--;
+					velY -= jumpHeight * 1.5;
+					state = STATE_JUMP;
+					jumpTimeBuffer = 5;
+				}
+			} else {
+				if (!isPressing(keyJump)) {
+					velY -= jumpHeight;
+					keysPressed.remove(keyJump);
+					state = STATE_JUMP;
+					jumpTimeBuffer = 2;
+					jumpKeyDownHistory[0] = true;
+				} else {
+					velY -= jumpHeight * 1.5;
+					keysPressed.remove(keyJump);
+					state = STATE_JUMP;
+					jumpTimeBuffer = 5;
+					jumpKeyDownHistory[0] = true;
+				}	
+			}
+		}
+		if (jumpSquatBuffer > 0) {
+			jumpSquatBuffer--;
+		}
 	}
 
 	public void recordLastFrameX() {
@@ -347,7 +424,9 @@ public class Character {
 	public void fall() {
 
 		if (!isGrounded) {
+
 			velY += fallSpeed;
+
 		} else {
 			if (state != STATE_JUMP)
 				velY = 0;
@@ -375,6 +454,7 @@ public class Character {
 	}
 
 	public void updateStates() {
+		applyJumpWhenRequired();
 		if (landingLagCounter > 0) {
 			landingLagCounter--;
 		} else if (state == STATE_LANDINGLAG) {
@@ -388,8 +468,9 @@ public class Character {
 		cycleArray(false, attackKeyDownHistory);
 		if (jumpTimeBuffer > 0)
 			jumpTimeBuffer--;
-		if (state == STATE_JUMP && jumpTimeBuffer == 0)
+		if (state == STATE_JUMP && jumpTimeBuffer == 0) {
 			state = STATE_NEUTRAL;
+		}
 		if (isGrounded && !hasDoubleJump)
 			hasDoubleJump = true;
 		if (hitstunCounter > -1)
