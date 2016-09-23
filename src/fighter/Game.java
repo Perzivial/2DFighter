@@ -58,7 +58,7 @@ public class Game extends JComponent implements KeyListener {
 		this.setDoubleBuffered(true);
 		hitboxes.add(GROUND_HITBOX);
 		doControllerThings();
-		characters.add(new Character(300, 450, "Xbox 360 Wired Controller", "x", "y", .5, .2, "1", "2", characters));
+		characters.add(new Character(300, 450, "Xbox 360 Wired Controller", "x", "y", .8, .2, "1", "2", characters));
 		characters.add(GOE);
 		characters.add(GOE2);
 		for (Controller control : controllers) {

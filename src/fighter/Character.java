@@ -55,6 +55,7 @@ public class Character {
 	BufferedImage neutralImage = new Image("img/stickman_neutral.png").img;
 	BufferedImage jabImage = new Image("img/stickman_attack1.png").img;
 	BufferedImage fTiltImage = new Image("img/stickman_tilt_f.png").img;
+	BufferedImage uTiltImage = new Image("img/stickman_tilt_u.png").img;
 	BufferedImage hitstunImage = new Image("img/stickman_hitstun.png").img;
 	BufferedImage jumpSquatImage = new Image("img/stickman_jumpsquat.png").img;
 	BufferedImage jumpImage = new Image("img/stickman_jump.png").img;
@@ -395,7 +396,7 @@ public class Character {
 					state = STATE_JUMP;
 					jumpTimeBuffer = 5;
 					jumpKeyDownHistory[0] = true;
-				}	
+				}
 			}
 		}
 		if (jumpSquatBuffer > 0) {
@@ -537,27 +538,27 @@ public class Character {
 			if (comp.getName().equals(moveAxisNameY)) {
 				if (Math.abs(comp.getPollData()) < moveAxisMidpoint && Math.abs(comp.getPollData()) > axisDeadZone) {
 					if (comp.getPollData() < 0) {
-						isAxisDownLocal = true;
-					} else {
 						isAxisUpLocal = true;
+					} else {
+						isAxisDownLocal = true;
 					}
 
 				}
 			}
 		}
+		// actual code starts here
 		if (canAttack) {
-			boolean hasChosenATilt = false;
-			if (isAxisUpLocal) {
 
-				hasChosenATilt = true;
+			if (isAxisUpLocal) {
+				uTilt();
+				
 			} else if (isAxisDownLocal) {
 
-				hasChosenATilt = true;
 			}
 
-			else if (isAxisRightLocal && !hasChosenATilt) {
+			else if (isAxisRightLocal) {
 				fTilt();
-			} else if (isAxisLeftLocal && !hasChosenATilt) {
+			} else if (isAxisLeftLocal) {
 				fTilt();
 			}
 
@@ -593,6 +594,11 @@ public class Character {
 		velX += direction * 3;
 	}
 
+	public void uTilt() {
+		hitboxes.add(new AttackHitbox(this, 0, -20, 45, 25, 3, -3, 10, 5, 20));
+		state = STATE_ATTACKUP;
+	}
+
 	public boolean checkIfInSpecificHitBox(Hitbox box) {
 		if (hurtbox.getRect().intersects(box.getRect()))
 			return true;
@@ -612,7 +618,7 @@ public class Character {
 			if (direction == DIRECTION_RIGHT)
 				box.updateLocation(x + box.getlocalX(), y + box.getlocalY(), box.getWidth(), box.getHeight());
 			if (direction == DIRECTION_LEFT)
-				box.updateLocation(x + box.getlocalX() - (w * 1.75), y + box.getlocalY(), box.getWidth(),
+				box.updateLocation((x + w)  - box.getlocalX() - box.getWidth(), y + box.getlocalY(), box.getWidth(),
 						box.getHeight());
 		}
 		for (AttackHitbox box : hitboxes) {
