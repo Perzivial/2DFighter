@@ -83,15 +83,19 @@ public class Character {
 	public boolean[] attackKeyDownHistory = new boolean[] { false, false, false };
 	private double lastFrameX;
 	private double lastFrameY;
+	private double[] moveAxisHistoryX = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0 };
+	private double[] moveAxisHistoryY = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0 };
 	private boolean lastFrameIsGrounded;
 	private int landingLagCounter = 0;
 	private double moveAxisDeadZone;
 	private double percent = 0;
 	private int jumpSquatFrames = 6;
 	private int jumpSquatBuffer = 0;
+	private Game myGame;
 
-	public Character(int posx, int posy, int upKey, int downKey, int leftKey, int rightKey, int jumpKey,
-			int attackKey) {
+	public Character(int posx, int posy, int upKey, int downKey, int leftKey, int rightKey, int jumpKey, int attackKey,
+			Game gameinstance) {
+		myGame = gameinstance;
 		x = posx;
 		y = posy;
 		startx = x;
@@ -107,8 +111,8 @@ public class Character {
 
 	public Character(int posx, int posy, String nameOfController, String axisName, String axisName2,
 			double axisMidpoint, double deadZone, String jumpButton, String attackButton,
-			ArrayList<Character> characters) {
-
+			ArrayList<Character> characters, Game gameinstance) {
+		myGame = gameinstance;
 		x = posx;
 		y = posy;
 		startx = x;
@@ -160,6 +164,7 @@ public class Character {
 		recordLastFrameX();
 		recordLastFrameY();
 		recordLastFrameIsGrounded();
+		getControllerAxisInformation();
 	}
 
 	public void drawCorrectSprite(Graphics g) {
@@ -182,6 +187,12 @@ public class Character {
 				g.drawImage(fTiltImage, (int) x, (int) y, (int) (w * 1.6), h, null);
 			if (direction == DIRECTION_LEFT)
 				g.drawImage(fTiltImage, (int) x + w, (int) y, (int) (-w * 1.6), h, null);
+		}
+		if (state == STATE_ATTACKUP) {
+			if (direction == DIRECTION_RIGHT)
+				g.drawImage(uTiltImage, (int) x, (int) y, w, h, null);
+			if (direction == DIRECTION_LEFT)
+				g.drawImage(uTiltImage, (int) x + w, (int) y, -w, h, null);
 		}
 		if (state == STATE_HITSTUN) {
 			if (direction == DIRECTION_RIGHT)
@@ -422,6 +433,14 @@ public class Character {
 		array[0] = newBoolean;
 	}
 
+	public void cycleArray(double newDouble, double[] array) {
+		array[4] = array[3];
+		array[3] = array[2];
+		array[2] = array[1];
+		array[1] = array[0];
+		array[0] = newDouble;
+	}
+
 	public void fall() {
 
 		if (!isGrounded) {
@@ -480,6 +499,21 @@ public class Character {
 			state = STATE_NEUTRAL;
 	}
 
+	public void getControllerAxisInformation() {
+		for (Controller controller : myGame.controllers) {
+			if (controller.getPortNumber() == portNum) {
+				for (Component comp : controller.getComponents()) {
+					if (comp.getName() == moveAxisNameX) {
+						cycleArray(comp.getPollData(), moveAxisHistoryX);
+					}
+					if (comp.getName() == moveAxisNameY) {
+						cycleArray(comp.getPollData(), moveAxisHistoryY);
+					}
+				}
+			}
+		}
+	}
+
 	public void applyFriction() {
 		if (isGrounded)
 			velX /= horizontalSlowdownFactor;
@@ -523,8 +557,11 @@ public class Character {
 		boolean isAxisRightLocal = false;
 		boolean isAxisUpLocal = false;
 		boolean isAxisDownLocal = false;
+		boolean shouldbetilt = true;
 		for (Component comp : myController.getComponents()) {
+
 			if (comp.getName().equals(moveAxisNameX)) {
+
 				if (Math.abs(comp.getPollData()) < moveAxisMidpoint && Math.abs(comp.getPollData()) > axisDeadZone) {
 					if (comp.getPollData() < 0) {
 						isAxisLeftLocal = true;
@@ -536,6 +573,7 @@ public class Character {
 
 			}
 			if (comp.getName().equals(moveAxisNameY)) {
+
 				if (Math.abs(comp.getPollData()) < moveAxisMidpoint && Math.abs(comp.getPollData()) > axisDeadZone) {
 					if (comp.getPollData() < 0) {
 						isAxisUpLocal = true;
@@ -544,14 +582,32 @@ public class Character {
 					}
 
 				}
+				boolean shouldTilt = true;
+				for (double currentAxisY : moveAxisHistoryY) {
+					if (Math.abs(currentAxisY) <= moveAxisMidpoint) {
+						shouldTilt = false;
+						break;
+					}
+				}
+				if (Math.abs(comp.getPollData()) > moveAxisMidpoint) {
+					if (comp.getPollData() < 0) {
+
+						if (shouldTilt) {
+							isAxisUpLocal = true;
+						}
+					} else {
+						if (shouldTilt)
+							isAxisDownLocal = true;
+					}
+				}
 			}
 		}
+
 		// actual code starts here
 		if (canAttack) {
-
 			if (isAxisUpLocal) {
 				uTilt();
-				
+
 			} else if (isAxisDownLocal) {
 
 			}
@@ -567,14 +623,6 @@ public class Character {
 					jab();
 			}
 
-		}
-	}
-
-	public void getControllerInput(Controller myController) {
-		for (Component comp : myController.getComponents()) {
-			if (comp.getName().equals(moveAxisNameX)) {
-
-			}
 		}
 	}
 
@@ -595,7 +643,7 @@ public class Character {
 	}
 
 	public void uTilt() {
-		hitboxes.add(new AttackHitbox(this, 0, -20, 45, 25, 3, -3, 10, 5, 20));
+		hitboxes.add(new AttackHitbox(this, 10, -20, 15, 25, 1, -6, 10, 10, 20));
 		state = STATE_ATTACKUP;
 	}
 
@@ -613,12 +661,15 @@ public class Character {
 	}
 
 	public void translateHitboxes() {
-		hurtbox.updateLocation(x, y, w, h);
+		if (state == STATE_LANDINGLAG)
+			hurtbox.updateLocation(x, y + h / 2, w, h / 2);
+		else
+			hurtbox.updateLocation(x, y, w, h);
 		for (AttackHitbox box : hitboxes) {
 			if (direction == DIRECTION_RIGHT)
 				box.updateLocation(x + box.getlocalX(), y + box.getlocalY(), box.getWidth(), box.getHeight());
 			if (direction == DIRECTION_LEFT)
-				box.updateLocation((x + w)  - box.getlocalX() - box.getWidth(), y + box.getlocalY(), box.getWidth(),
+				box.updateLocation((x + w) - box.getlocalX() - box.getWidth(), y + box.getlocalY(), box.getWidth(),
 						box.getHeight());
 		}
 		for (AttackHitbox box : hitboxes) {

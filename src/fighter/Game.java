@@ -41,9 +41,9 @@ public class Game extends JComponent implements KeyListener {
 
 	ArrayList<Character> characters = new ArrayList<Character>();
 	Character GOE = new Character(500, 400, KeyEvent.VK_UP, KeyEvent.VK_DOWN, KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT,
-			KeyEvent.VK_SPACE, KeyEvent.VK_Q);
+			KeyEvent.VK_SPACE, KeyEvent.VK_Q, this);
 	Character GOE2 = new Character(500, 400, KeyEvent.VK_W, KeyEvent.VK_S, KeyEvent.VK_A, KeyEvent.VK_D, KeyEvent.VK_E,
-			KeyEvent.VK_F);
+			KeyEvent.VK_F, this);
 	private int screenState = 0;
 	private final static int SCREEN_STATE_INGAME = 0;
 	private final static int SCREEN_STATE_ADDCHARACTER = 1;
@@ -52,13 +52,13 @@ public class Game extends JComponent implements KeyListener {
 	private int characterSlideNum2 = 1;
 	private boolean isEditing = false;
 	Controller[] ca = ControllerEnvironment.getDefaultEnvironment().getControllers();
-	ArrayList<Controller> controllers = new ArrayList<Controller>();
+	static ArrayList<Controller> controllers = new ArrayList<Controller>();
 
 	public Game() {
 		this.setDoubleBuffered(true);
 		hitboxes.add(GROUND_HITBOX);
 		doControllerThings();
-		characters.add(new Character(300, 450, "Xbox 360 Wired Controller", "x", "y", .8, .2, "1", "2", characters));
+		characters.add(new Character(300, 450, "Xbox 360 Wired Controller", "x", "y", .8, .2, "1", "2", characters, this));
 		characters.add(GOE);
 		characters.add(GOE2);
 		for (Controller control : controllers) {
@@ -442,14 +442,14 @@ public class Game extends JComponent implements KeyListener {
 
 			if (e.getKeyCode() == KeyEvent.VK_1) {
 				characters.add(new Character(500, 400, KeyEvent.VK_UP, KeyEvent.VK_DOWN, KeyEvent.VK_LEFT,
-						KeyEvent.VK_RIGHT, KeyEvent.VK_SPACE, KeyEvent.VK_Q));
+						KeyEvent.VK_RIGHT, KeyEvent.VK_SPACE, KeyEvent.VK_Q, this));
 
 				characterSlideNum = 0;
 				characterSlideNum2 = 1;
 			}
 			if (e.getKeyCode() == KeyEvent.VK_2) {
 				characters.add(
-						new Character(300, 575, "Xbox 360 Wired Controller", "x", "y", .5, .2, "1", "2", characters));
+						new Character(300, 575, "Xbox 360 Wired Controller", "x", "y", .8, .2, "1", "2", characters, this));
 				characterSlideNum = 0;
 				characterSlideNum2 = 1;
 			}
