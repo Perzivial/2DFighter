@@ -56,6 +56,7 @@ public class Character {
 	BufferedImage jabImage = new Image("img/stickman_attack1.png").img;
 	BufferedImage fTiltImage = new Image("img/stickman_tilt_f.png").img;
 	BufferedImage uTiltImage = new Image("img/stickman_tilt_u.png").img;
+	BufferedImage dTiltImage = new Image("img/stickman_tilt_d.png").img;
 	BufferedImage hitstunImage = new Image("img/stickman_hitstun.png").img;
 	BufferedImage jumpSquatImage = new Image("img/stickman_jumpsquat.png").img;
 	BufferedImage jumpImage = new Image("img/stickman_jump.png").img;
@@ -193,6 +194,12 @@ public class Character {
 				g.drawImage(uTiltImage, (int) x, (int) y, w, h, null);
 			if (direction == DIRECTION_LEFT)
 				g.drawImage(uTiltImage, (int) x + w, (int) y, -w, h, null);
+		}
+		if (state == STATE_ATTACKDOWN) {
+			if (direction == DIRECTION_RIGHT)
+				g.drawImage(dTiltImage, (int) x, (int) y, (int) (w * 1.876), h, null);
+			if (direction == DIRECTION_LEFT)
+				g.drawImage(dTiltImage, (int) x + w, (int) y, (int) (-w * 1.876), h, null);
 		}
 		if (state == STATE_HITSTUN) {
 			if (direction == DIRECTION_RIGHT)
@@ -528,9 +535,9 @@ public class Character {
 			if (!isController) {
 				if (isPressing(keyAttack)) {
 					if (isPressing(keyUp)) {
-
+						uTilt();
 					} else if (isPressing(keyDown)) {
-
+						dTilt();
 					} else if (isPressing(keyLeft)) {
 						fTilt();
 					} else if (isPressing(keyRight)) {
@@ -609,7 +616,7 @@ public class Character {
 				uTilt();
 
 			} else if (isAxisDownLocal) {
-
+				dTilt();
 			}
 
 			else if (isAxisRightLocal) {
@@ -647,6 +654,11 @@ public class Character {
 		state = STATE_ATTACKUP;
 	}
 
+	public void dTilt() {
+		hitboxes.add(new AttackHitbox(this, 20, 35, 25, 15, 3, -6, 10, 6, 20));
+		state = STATE_ATTACKDOWN;
+	}
+
 	public boolean checkIfInSpecificHitBox(Hitbox box) {
 		if (hurtbox.getRect().intersects(box.getRect()))
 			return true;
@@ -660,9 +672,12 @@ public class Character {
 		return false;
 	}
 
+	// hitboxes and hurtboxes are updated here
 	public void translateHitboxes() {
 		if (state == STATE_LANDINGLAG)
 			hurtbox.updateLocation(x, y + h / 2, w, h / 2);
+		else if (state == STATE_ATTACKDOWN)
+			hurtbox.updateLocation(x, y + h * .2, w, h * .8);
 		else
 			hurtbox.updateLocation(x, y, w, h);
 		for (AttackHitbox box : hitboxes) {
