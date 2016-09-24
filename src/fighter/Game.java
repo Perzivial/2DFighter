@@ -11,6 +11,8 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.geom.AffineTransform;
 import java.util.ArrayList;
+import java.util.HashSet;
+
 import javax.swing.JComponent;
 import net.java.games.input.*;
 import net.java.games.input.Controller.Type;
@@ -248,7 +250,11 @@ public class Game extends JComponent implements KeyListener {
 			return true;
 		return false;
 	}
-
+	
+	public ArrayList<Character> getCharacters(){
+		return characters;
+	}
+	//below here is all the controlling code keep it that way
 	public void doControllerThings() {
 		for (int i = 0; i < ca.length; i++) {
 			if (ca[i].getType() == Type.GAMEPAD || ca[i].getType() == Type.STICK) {
