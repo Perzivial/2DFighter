@@ -27,6 +27,7 @@ public class Character {
 	private int keyDown;
 	private int keyLeft;
 	private int keyRight;
+	private int keyModifier;
 	private int keyJump;
 	private int keyAttack;
 	private double jumpHeight = 7;
@@ -45,6 +46,7 @@ public class Character {
 	public static int STATE_JUMP = 6;
 	public static int STATE_JUMPSQUAT = 7;
 	public static int STATE_LANDINGLAG = 8;
+	public static int STATE_CROUCH = 9;
 	private int direction = 1;
 	public final static int DIRECTION_LEFT = -1;
 	public final static int DIRECTION_RIGHT = 1;
@@ -94,8 +96,8 @@ public class Character {
 	private int jumpSquatBuffer = 0;
 	private Game myGame;
 
-	public Character(int posx, int posy, int upKey, int downKey, int leftKey, int rightKey, int jumpKey, int attackKey,
-			Game gameinstance) {
+	public Character(int posx, int posy, int upKey, int downKey, int leftKey, int rightKey, int modifierKey,
+			int jumpKey, int attackKey, Game gameinstance) {
 		myGame = gameinstance;
 		x = posx;
 		y = posy;
@@ -209,9 +211,9 @@ public class Character {
 		}
 		if (state == STATE_JUMPSQUAT) {
 			if (direction == DIRECTION_RIGHT)
-				g.drawImage(jumpSquatImage, (int) x, (int) y, w, h, null);
+				g.drawImage(jumpSquatImage, (int) x, (int) y + h / 2, w, h / 2, null);
 			if (direction == DIRECTION_LEFT)
-				g.drawImage(jumpSquatImage, (int) x + w, (int) y, -w, h, null);
+				g.drawImage(jumpSquatImage, (int) x + w, (int) y + h / 2, -w, h / 2, null);
 		}
 		if (state == STATE_JUMP) {
 			if (direction == DIRECTION_RIGHT)
@@ -224,6 +226,12 @@ public class Character {
 				g.drawImage(neutralImage, (int) x, (int) y + (int) (h / 2), w, (int) (h / 2), null);
 			if (direction == DIRECTION_LEFT)
 				g.drawImage(neutralImage, (int) x + w, (int) y + (int) (h / 2), -w, (int) (h / 2), null);
+		}
+		if (state == STATE_CROUCH) {
+			if (direction == DIRECTION_RIGHT)
+				g.drawImage(jumpSquatImage, (int) x, (int) y, w, h, null);
+			if (direction == DIRECTION_LEFT)
+				g.drawImage(jumpSquatImage, (int) x + w, (int) y, -w, h, null);
 		}
 	}
 
@@ -279,23 +287,36 @@ public class Character {
 						runRight();
 					}
 				}
-
+				if (state == STATE_NEUTRAL && isPressing(keyDown)) {
+					state = STATE_CROUCH;
+				}
+				if (state == STATE_CROUCH && !isPressing(keyDown)) {
+					state = STATE_NEUTRAL;
+				}
 			}
+
 		} else {
 			if (isAxisRight)
 				runRight();
 			if (isAxisLeft)
 				runLeft();
+			if (state == STATE_NEUTRAL && isAxisDown) {
+				state = STATE_CROUCH;
+			}
+			if (state == STATE_CROUCH && !isAxisDown) {
+				state = STATE_NEUTRAL;
+			}
 		}
 		if (!isController)
 			chooseAttack();
+
 	}
 
 	public void runLeft() {
 
 		if (isGrounded) {
 
-			if (isAxisHalfway)
+			if (isAxisHalfway || isPressing(keyModifier))
 				velX = -runSpeed / 3;
 			else
 				velX = -runSpeed;
@@ -308,7 +329,7 @@ public class Character {
 	public void runRight() {
 		if (isGrounded) {
 
-			if (isAxisHalfway)
+			if (isAxisHalfway || isPressing(keyModifier))
 				velX = runSpeed / 3;
 			else
 				velX = runSpeed;
@@ -363,10 +384,6 @@ public class Character {
 				}
 			} else {
 				if (isGrounded) {
-					/*
-					 * velY -= jumpHeight; state = STATE_JUMP; jumpTimeBuffer =
-					 * 5;
-					 */
 					enterJumpSquat();
 				} else if (hasDoubleJump) {
 					velX = 0;
@@ -375,6 +392,7 @@ public class Character {
 					hasDoubleJump = false;
 					state = STATE_JUMP;
 					jumpTimeBuffer = 2;
+					keysPressed.remove(keyJump);
 				}
 
 			}
@@ -504,6 +522,25 @@ public class Character {
 			hitstunCounter--;
 		if (hitstunCounter == 0)
 			state = STATE_NEUTRAL;
+		getKeyboardTiltInfo();
+	}
+
+	public void getKeyboardTiltInfo() {
+		if (!isController) {
+			if (isPressing(keyUp))
+				cycleArray(1.0, moveAxisHistoryY);
+			else if (isPressing(keyDown))
+				cycleArray(-1.0, moveAxisHistoryY);
+			else
+				cycleArray(0.0, moveAxisHistoryY);
+
+			if (isPressing(keyLeft))
+				cycleArray(-1.0, moveAxisHistoryX);
+			else if (isPressing(keyRight))
+				cycleArray(1.0, moveAxisHistoryX);
+			else
+				cycleArray(0.0, moveAxisHistoryX);
+		}
 	}
 
 	public void getControllerAxisInformation() {
@@ -533,15 +570,40 @@ public class Character {
 
 		if (state != STATE_LANDINGLAG) {
 			if (!isController) {
+
+				boolean shouldTiltX = true;
+				boolean shouldTiltLeft = true;
+				for (double currentAxisX : moveAxisHistoryX) {
+					if (Math.abs(currentAxisX) == 0) {
+						shouldTiltX = false;
+						break;
+					}
+				}
+				boolean shouldTiltY = true;
+				boolean shouldTiltUp = true;
+				for (double currentAxisY : moveAxisHistoryY) {
+					if (Math.abs(currentAxisY) == 0) {
+						shouldTiltY = false;
+						break;
+					}
+				}
+
 				if (isPressing(keyAttack)) {
 					if (isPressing(keyUp)) {
-						uTilt();
+						if (shouldTiltY && moveAxisHistoryY[0] == 1.0) {
+							uTilt();
+
+						}
 					} else if (isPressing(keyDown)) {
-						dTilt();
+						if (shouldTiltY && moveAxisHistoryY[0] == -1.0) {
+							dTilt();
+						}
 					} else if (isPressing(keyLeft)) {
-						fTilt();
+						if (shouldTiltX)
+							fTilt();
 					} else if (isPressing(keyRight)) {
-						fTilt();
+						if (shouldTiltX)
+							fTilt();
 					} else {
 						if (Math.abs(velX) < .1 && Math.abs(velY) < .1)
 							jab();
@@ -549,6 +611,7 @@ public class Character {
 					keysPressed.remove(keyAttack);
 				}
 			}
+
 		}
 	}
 
@@ -568,7 +631,13 @@ public class Character {
 		for (Component comp : myController.getComponents()) {
 
 			if (comp.getName().equals(moveAxisNameX)) {
-
+				boolean shouldTilt = true;
+				for (double currentAxisX : moveAxisHistoryX) {
+					if (Math.abs(currentAxisX) <= moveAxisMidpoint) {
+						shouldTilt = false;
+						break;
+					}
+				}
 				if (Math.abs(comp.getPollData()) < moveAxisMidpoint && Math.abs(comp.getPollData()) > axisDeadZone) {
 					if (comp.getPollData() < 0) {
 						isAxisLeftLocal = true;
@@ -577,8 +646,20 @@ public class Character {
 					}
 
 				}
+				if (Math.abs(comp.getPollData()) > moveAxisMidpoint) {
+					if (comp.getPollData() < 0) {
+
+						if (shouldTilt) {
+							isAxisLeftLocal = true;
+						}
+					} else {
+						if (shouldTilt)
+							isAxisRightLocal = true;
+					}
+				}
 
 			}
+
 			if (comp.getName().equals(moveAxisNameY)) {
 
 				if (Math.abs(comp.getPollData()) < moveAxisMidpoint && Math.abs(comp.getPollData()) > axisDeadZone) {
@@ -676,7 +757,7 @@ public class Character {
 	public void translateHitboxes() {
 		if (state == STATE_LANDINGLAG)
 			hurtbox.updateLocation(x, y + h / 2, w, h / 2);
-		else if (state == STATE_ATTACKDOWN)
+		else if (state == STATE_ATTACKDOWN || state == STATE_CROUCH)
 			hurtbox.updateLocation(x, y + h * .2, w, h * .8);
 		else
 			hurtbox.updateLocation(x, y, w, h);
@@ -763,6 +844,10 @@ public class Character {
 		return keyAttack;
 	}
 
+	public int getModifierKey() {
+		return keyModifier;
+	}
+
 	public double getJumpHeight() {
 		return jumpHeight;
 	}
@@ -843,7 +928,7 @@ public class Character {
 
 	// changes the controls at runtime
 	public void changecontrols(int newKeyUp, int newKeyDown, int newKeyLeft, int newKeyRight, int newKeyJump,
-			int newKeyAttack) {
+			int newKeyAttack, int newKeyModifier) {
 		if (newKeyUp != -1)
 			keyUp = newKeyUp;
 		if (newKeyDown != -1)
@@ -856,6 +941,8 @@ public class Character {
 			keyJump = newKeyJump;
 		if (newKeyAttack != -1)
 			keyAttack = newKeyAttack;
+		if (newKeyModifier != -1)
+			keyModifier = newKeyModifier;
 	}
 
 	public boolean getIsUsingController() {

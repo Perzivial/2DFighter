@@ -40,10 +40,8 @@ public class Game extends JComponent implements KeyListener {
 	public static final Hitbox GROUND_HITBOX = new Hitbox(200, 500, 720, 175, TYPE_GROUND);
 
 	ArrayList<Character> characters = new ArrayList<Character>();
-	Character GOE = new Character(500, 400, KeyEvent.VK_UP, KeyEvent.VK_DOWN, KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT,
+	Character GOE = new Character(500, 400, KeyEvent.VK_UP, KeyEvent.VK_DOWN, KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT, KeyEvent.VK_RIGHT,
 			KeyEvent.VK_SPACE, KeyEvent.VK_Q, this);
-	Character GOE2 = new Character(500, 400, KeyEvent.VK_W, KeyEvent.VK_S, KeyEvent.VK_A, KeyEvent.VK_D, KeyEvent.VK_E,
-			KeyEvent.VK_F, this);
 	private int screenState = 0;
 	private final static int SCREEN_STATE_INGAME = 0;
 	private final static int SCREEN_STATE_ADDCHARACTER = 1;
@@ -60,7 +58,6 @@ public class Game extends JComponent implements KeyListener {
 		doControllerThings();
 		characters.add(new Character(300, 450, "Xbox 360 Wired Controller", "x", "y", .8, .2, "1", "2", characters, this));
 		characters.add(GOE);
-		characters.add(GOE2);
 		for (Controller control : controllers) {
 			System.out.println(control.getName());
 		}
@@ -442,7 +439,7 @@ public class Game extends JComponent implements KeyListener {
 
 			if (e.getKeyCode() == KeyEvent.VK_1) {
 				characters.add(new Character(500, 400, KeyEvent.VK_UP, KeyEvent.VK_DOWN, KeyEvent.VK_LEFT,
-						KeyEvent.VK_RIGHT, KeyEvent.VK_SPACE, KeyEvent.VK_Q, this));
+						KeyEvent.VK_RIGHT, KeyEvent.VK_SHIFT,KeyEvent.VK_SPACE, KeyEvent.VK_Q, this));
 
 				characterSlideNum = 0;
 				characterSlideNum2 = 1;
@@ -464,20 +461,20 @@ public class Game extends JComponent implements KeyListener {
 				if (!isEditing) {
 					if (e.getKeyCode() == KeyEvent.VK_UP && characterSlideNum > 0) {
 						characterSlideNum--;
-						if (!characters.get(characterSlideNum).getIsUsingController() && characterSlideNum2 > 6)
-							characterSlideNum2 = 6;
+						if (!characters.get(characterSlideNum).getIsUsingController() && characterSlideNum2 > 7)
+							characterSlideNum2 = 7;
 					}
 					if (e.getKeyCode() == KeyEvent.VK_DOWN && characterSlideNum < characters.size() - 1) {
 						characterSlideNum++;
-						if (!characters.get(characterSlideNum).getIsUsingController() && characterSlideNum2 > 6)
-							characterSlideNum2 = 6;
+						if (!characters.get(characterSlideNum).getIsUsingController() && characterSlideNum2 > 7)
+							characterSlideNum2 = 7;
 					}
 					if (e.getKeyCode() == KeyEvent.VK_LEFT && characterSlideNum2 > 1) {
 						characterSlideNum2--;
 					}
 					if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
 
-						if (!characters.get(characterSlideNum).getIsUsingController() && characterSlideNum2 < 6)
+						if (!characters.get(characterSlideNum).getIsUsingController() && characterSlideNum2 < 7)
 							characterSlideNum2++;
 						if (characters.get(characterSlideNum).getIsUsingController() && characterSlideNum2 < 7)
 							characterSlideNum2++;
@@ -487,17 +484,19 @@ public class Game extends JComponent implements KeyListener {
 				} else {
 					if (characters.get(characterSlideNum).getIsUsingController()) {
 						if (characterSlideNum2 == 1)
-							characters.get(characterSlideNum).changecontrols(e.getKeyCode(), -1, -1, -1, -1, -1);
+							characters.get(characterSlideNum).changecontrols(e.getKeyCode(), -1, -1, -1, -1, -1,-1);
 						if (characterSlideNum2 == 2)
-							characters.get(characterSlideNum).changecontrols(-1, -e.getKeyCode(), -1, -1, -1, -1);
+							characters.get(characterSlideNum).changecontrols(-1, -e.getKeyCode(), -1, -1, -1, -1,-1);
 						if (characterSlideNum2 == 3)
-							characters.get(characterSlideNum).changecontrols(-1, -1, e.getKeyCode(), -1, -1, -1);
+							characters.get(characterSlideNum).changecontrols(-1, -1, e.getKeyCode(), -1, -1, -1,-1);
 						if (characterSlideNum2 == 4)
-							characters.get(characterSlideNum).changecontrols(-1, -1, -1, e.getKeyCode(), -1, -1);
+							characters.get(characterSlideNum).changecontrols(-1, -1, -1, e.getKeyCode(), -1, -1,-1);
 						if (characterSlideNum2 == 5)
-							characters.get(characterSlideNum).changecontrols(-1, -1, -1, -1, e.getKeyCode(), -1);
+							characters.get(characterSlideNum).changecontrols(-1, -1, -1, -1, e.getKeyCode(), -1,-1);
 						if (characterSlideNum2 == 6)
-							characters.get(characterSlideNum).changecontrols(-1, -1, -1, -1, -1, e.getKeyCode());
+							characters.get(characterSlideNum).changecontrols(-1, -1, -1, -1, -1, e.getKeyCode(),-1);
+						if (characterSlideNum2 == 7)
+							characters.get(characterSlideNum).changecontrols(-1, -1, -1, -1, -1, -1, e.getKeyCode());
 						isEditing = false;
 					}
 				}
