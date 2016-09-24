@@ -47,7 +47,10 @@ public class Character {
 	public static int STATE_JUMPSQUAT = 7;
 	public static int STATE_LANDINGLAG = 8;
 	public static int STATE_CROUCH = 9;
+	public static int STATE_SMASH_ATTACK_CHARGE = 10;
 	private int direction = 1;
+	private boolean isChargingSmashAttack = false;
+	private double smashAttackChargePercent = 0.0;
 	public final static int DIRECTION_LEFT = -1;
 	public final static int DIRECTION_RIGHT = 1;
 	private int state = 0;
@@ -305,6 +308,7 @@ public class Character {
 			}
 			if (state == STATE_CROUCH && !isAxisDown) {
 				state = STATE_NEUTRAL;
+				
 			}
 		}
 		if (!isController)
