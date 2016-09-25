@@ -13,7 +13,7 @@ import net.java.games.input.Controller;
 import net.java.games.input.ControllerEnvironment;
 
 public class Character {
-	private double fallSpeed = 1;
+	private double fallSpeed = .8;
 	private double velX;
 	private double velY;
 	private double x;
@@ -50,8 +50,7 @@ public class Character {
 	public static int STATE_SMASH_ATTACK_CHARGE = 10;
 	public static int STATE_SMASH_ATTACK_UP = 11;
 	public static int STATE_SMASH_ATTACK_DOWN = 12;
-	public static int STATE_SMASH_ATTACK_LEFT = 13;
-	public static int STATE_SMASH_ATTACK_RIGHT = 14;
+	public static int STATE_SMASH_ATTACK_FORWARD = 13;
 	private int direction = 1;
 	private boolean isChargingSmashAttack = false;
 	private double smashAttackChargePercent = 1.0;
@@ -65,10 +64,19 @@ public class Character {
 
 	HashSet<Integer> keysPressed = new HashSet<Integer>();
 	BufferedImage neutralImage = new Image("img/stickman_neutral.png").img;
+	// jab and tilts
 	BufferedImage jabImage = new Image("img/stickman_attack1.png").img;
 	BufferedImage fTiltImage = new Image("img/stickman_tilt_f.png").img;
 	BufferedImage uTiltImage = new Image("img/stickman_tilt_u.png").img;
 	BufferedImage dTiltImage = new Image("img/stickman_tilt_d.png").img;
+	// smashes
+	BufferedImage uSmashChargeImage = new Image("img/stickman_smash_charge_u.png").img;
+	BufferedImage uSmashImage = new Image("img/stickman_smash_u.png").img;
+	BufferedImage dSmashChargeImage = new Image("img/stickman_smash_charge_d.png").img;
+	BufferedImage dSmashImage = new Image("img/stickman_smash_d.png").img;
+	BufferedImage fSmashChargeImage = new Image("img/stickman_smash_charge_f.png").img;
+	BufferedImage fSmashImage = new Image("img/stickman_smash_f.png").img;
+	// other
 	BufferedImage hitstunImage = new Image("img/stickman_hitstun.png").img;
 	BufferedImage jumpSquatImage = new Image("img/stickman_jumpsquat.png").img;
 	BufferedImage jumpImage = new Image("img/stickman_jump.png").img;
@@ -160,7 +168,7 @@ public class Character {
 	}
 
 	public void applyDamage(double damageApplied) {
-		percent += damageApplied / 20;
+		percent += damageApplied;
 	}
 
 	// unused code that i keep here cause i may need it in future
@@ -191,7 +199,8 @@ public class Character {
 	}
 
 	public void drawCorrectSprite(Graphics g) {
-		// draws the correct sprite given current state, direction and other
+		// TODO draws the correct sprite given current state, direction and
+		// other
 		// factors
 		if (state == STATE_NEUTRAL) {
 			if (direction == DIRECTION_RIGHT)
@@ -222,6 +231,46 @@ public class Character {
 				g.drawImage(dTiltImage, (int) x, (int) y, (int) (w * 1.876), h, null);
 			if (direction == DIRECTION_LEFT)
 				g.drawImage(dTiltImage, (int) x + w, (int) y, (int) (-w * 1.876), h, null);
+		}
+		// smash chargin has a bit of nuances in it so it needs it's own area
+		if (state == STATE_SMASH_ATTACK_CHARGE) {
+			if (smashAttackDirection == DIRECTION_UP) {
+				if (direction == DIRECTION_RIGHT)
+					g.drawImage(uSmashChargeImage, (int) x, (int) y, w, h, null);
+				if (direction == DIRECTION_LEFT)
+					g.drawImage(uSmashChargeImage, (int) x + w, (int) y, -w, h, null);
+			}
+			if (smashAttackDirection == DIRECTION_DOWN) {
+				if (direction == DIRECTION_RIGHT)
+					g.drawImage(dSmashChargeImage, (int) x, (int) y, w, h, null);
+				if (direction == DIRECTION_LEFT)
+					g.drawImage(dSmashChargeImage, (int) x + w, (int) y, -w, h, null);
+			}
+			if (smashAttackDirection == DIRECTION_LEFT || smashAttackDirection == DIRECTION_RIGHT) {
+				if (direction == DIRECTION_RIGHT)
+					g.drawImage(fSmashChargeImage, (int) x, (int) y, w, h, null);
+				if (direction == DIRECTION_LEFT)
+					g.drawImage(fSmashChargeImage, (int) x + w, (int) y, -w, h, null);
+			}
+		}
+		if (state == STATE_SMASH_ATTACK_UP) {
+			if (direction == DIRECTION_RIGHT)
+				g.drawImage(uSmashImage, (int) x, (int) y, w, h, null);
+			if (direction == DIRECTION_LEFT)
+				g.drawImage(uSmashImage, (int) x + w, (int) y, -w, h, null);
+		}
+
+		if (state == STATE_SMASH_ATTACK_DOWN) {
+			if (direction == DIRECTION_RIGHT)
+				g.drawImage(dSmashImage, (int) x, (int) y, w, h, null);
+			if (direction == DIRECTION_LEFT)
+				g.drawImage(dSmashImage, (int) x + w, (int) y, -w, h, null);
+		}
+		if (state == STATE_SMASH_ATTACK_FORWARD) {
+			if (direction == DIRECTION_RIGHT)
+				g.drawImage(fSmashImage, (int) x, (int) y, w, h, null);
+			if (direction == DIRECTION_LEFT)
+				g.drawImage(fSmashImage, (int) x + w, (int) y, -w, h, null);
 		}
 		if (state == STATE_HITSTUN) {
 			if (direction == DIRECTION_RIGHT)
@@ -282,7 +331,7 @@ public class Character {
 	}
 
 	private void blastZone() {
-		if (x < 0 || x + w > 1200 || y < 0 || y + h > 675) {
+		if (x < (0 - 50) || x + w > (1200 + 50) || y < (0 - 50) || y + h > (675 + 50)) {
 			x = startx;
 			y = starty;
 			velX = 0;
@@ -323,12 +372,14 @@ public class Character {
 				if (isAxisLeft)
 					runLeft();
 			}
-			if (state == STATE_NEUTRAL && isAxisDown) {
-				state = STATE_CROUCH;
-			}
-			if (state == STATE_CROUCH && !isAxisDown) {
-				state = STATE_NEUTRAL;
+			if (isGrounded) {
+				if (state == STATE_NEUTRAL && isAxisDown) {
+					state = STATE_CROUCH;
+				}
+				if (state == STATE_CROUCH && !isAxisDown) {
+					state = STATE_NEUTRAL;
 
+				}
 			}
 		}
 		if (!isController)
@@ -345,9 +396,9 @@ public class Character {
 				else
 					velX = -runSpeed;
 				direction = DIRECTION_LEFT;
-
 			} else if (Math.abs(velX) < maxAirSpeed)
 				velX -= horizontalInAirDistance;
+
 		}
 	}
 
@@ -362,6 +413,7 @@ public class Character {
 				direction = DIRECTION_RIGHT;
 			} else if (Math.abs(velX) < maxAirSpeed)
 				velX += horizontalInAirDistance;
+
 		}
 	}
 
@@ -500,7 +552,7 @@ public class Character {
 			velY += fallSpeed;
 
 		} else {
-			if (state != STATE_JUMP)
+			if (state == STATE_NEUTRAL || state == STATE_CROUCH)
 				velY = 0;
 		}
 	}
@@ -553,6 +605,7 @@ public class Character {
 		getKeyboardTiltInfo();
 	}
 
+	// TODO change
 	public void chargeSmashAttack() {
 		if (state == STATE_SMASH_ATTACK_CHARGE) {
 			if (!isController) {
@@ -561,28 +614,49 @@ public class Character {
 					if (isPressing(keyAttack) && smashAttackChargePercent < 1.4) {
 						smashAttackChargePercent += 0.006666666667;
 					} else {
-						hitboxes.add(new AttackHitbox(this, 10, -20, 20, 30, 1, -6, 10, 10,
-								30 * smashAttackChargePercent, 5));
-						state = STATE_SMASH_ATTACK_UP;
-						smashAttackChargePercent = 1.0;
+						upSmash();
+						keysPressed.remove(keyAttack);
+					}
+				} else if (smashAttackDirection == DIRECTION_DOWN) {
+
+					if (isPressing(keyAttack) && smashAttackChargePercent < 1.4) {
+						smashAttackChargePercent += 0.006666666667;
+					} else {
+						downSmash();
+						keysPressed.remove(keyAttack);
+					}
+				} else if (smashAttackDirection == DIRECTION_LEFT || smashAttackDirection == DIRECTION_RIGHT) {
+
+					if (isPressing(keyAttack) && smashAttackChargePercent < 1.4) {
+						smashAttackChargePercent += 0.006666666667;
+					} else {
+						forwardSmash();
 						keysPressed.remove(keyAttack);
 					}
 				}
 
-			}
-		 else {
-			if (smashAttackDirection == DIRECTION_UP) {
-
-				if (isAttackButtonDownController() && smashAttackChargePercent < 1.4) {
-					smashAttackChargePercent += 0.006666666667;
-				} else {
-					hitboxes.add(
-							new AttackHitbox(this, 10, -20, 20, 30, 1, -6, 10, 10, 30 * smashAttackChargePercent, 5));
-					state = STATE_SMASH_ATTACK_UP;
-					smashAttackChargePercent = 1.0;
+			} else {
+				// for controllers
+				if (smashAttackDirection == DIRECTION_UP) {
+					if (isAttackButtonDownController() && smashAttackChargePercent < 1.4) {
+						smashAttackChargePercent += 0.006666666667;
+					} else {
+						upSmash();
+					}
+				} else if (smashAttackDirection == DIRECTION_DOWN) {
+					if (isAttackButtonDownController() && smashAttackChargePercent < 1.4) {
+						smashAttackChargePercent += 0.006666666667;
+					} else {
+						downSmash();
+					}
+				} else if (smashAttackDirection == DIRECTION_LEFT || smashAttackDirection == DIRECTION_RIGHT) {
+					if (isAttackButtonDownController() && smashAttackChargePercent < 1.4) {
+						smashAttackChargePercent += 0.006666666667;
+					} else {
+						forwardSmash();
+					}
 				}
 			}
-		}
 		}
 	}
 
@@ -628,65 +702,74 @@ public class Character {
 	// position y,width, height, hitstun time, knockbackx, knockbacky, time it
 	// will be out for
 	public void chooseAttack() {
+		if (state == STATE_NEUTRAL || state == STATE_CROUCH) {
+			if (state != STATE_LANDINGLAG) {
+				if (!isController) {
 
-		if (state != STATE_LANDINGLAG) {
-			if (!isController) {
-
-				boolean shouldTiltX = true;
-				boolean shouldTiltLeft = true;
-				for (double currentAxisX : moveAxisHistoryX) {
-					if (Math.abs(currentAxisX) == 0 || state == STATE_SMASH_ATTACK_CHARGE) {
-						shouldTiltX = false;
-						break;
-					}
-				}
-				boolean shouldTiltY = true;
-				boolean shouldTiltUp = true;
-				for (double currentAxisY : moveAxisHistoryY) {
-					if (Math.abs(currentAxisY) == 0 || state == STATE_SMASH_ATTACK_CHARGE) {
-						shouldTiltY = false;
-						break;
-					}
-				}
-
-				if (isPressing(keyAttack)) {
-					if (isPressing(keyUp)) {
-						if (shouldTiltY && moveAxisHistoryY[0] == 1.0) {
-							uTilt();
-						} else {
-							state = STATE_SMASH_ATTACK_CHARGE;
-							smashAttackDirection = DIRECTION_UP;
+					boolean shouldTiltX = true;
+					boolean shouldTiltLeft = true;
+					for (double currentAxisX : moveAxisHistoryX) {
+						if (Math.abs(currentAxisX) == 0 || state == STATE_SMASH_ATTACK_CHARGE) {
+							shouldTiltX = false;
+							break;
 						}
-					} else if (isPressing(keyDown)) {
-						if (shouldTiltY && moveAxisHistoryY[0] == -1.0) {
-							dTilt();
-						} else
-							state = STATE_SMASH_ATTACK_CHARGE;
-					} else if (isPressing(keyLeft)) {
-						if (shouldTiltX)
-							fTilt();
-						else
-							state = STATE_SMASH_ATTACK_CHARGE;
-					} else if (isPressing(keyRight)) {
-						if (shouldTiltX)
-							fTilt();
-						else
-							state = STATE_SMASH_ATTACK_CHARGE;
-					} else {
-						if (Math.abs(velX) < .1 && Math.abs(velY) < .1 && state != STATE_SMASH_ATTACK_CHARGE)
-							jab();
 					}
-					if (state != STATE_SMASH_ATTACK_CHARGE) {
-						keysPressed.remove(keyAttack);
+					boolean shouldTiltY = true;
+					boolean shouldTiltUp = true;
+					for (double currentAxisY : moveAxisHistoryY) {
+						if (Math.abs(currentAxisY) == 0 || state == STATE_SMASH_ATTACK_CHARGE) {
+							shouldTiltY = false;
+							break;
+						}
+					}
+
+					if (isPressing(keyAttack)) {
+						if (isPressing(keyUp)) {
+							if (shouldTiltY && moveAxisHistoryY[0] == 1.0) {
+								uTilt();
+							} else {
+								state = STATE_SMASH_ATTACK_CHARGE;
+								smashAttackDirection = DIRECTION_UP;
+							}
+						} else if (isPressing(keyDown)) {
+							if (shouldTiltY && moveAxisHistoryY[0] == -1.0) {
+								dTilt();
+							} else {
+								state = STATE_SMASH_ATTACK_CHARGE;
+								smashAttackDirection = DIRECTION_DOWN;
+							}
+						} else if (isPressing(keyLeft)) {
+							if (shouldTiltX)
+								fTilt();
+							else {
+								state = STATE_SMASH_ATTACK_CHARGE;
+								smashAttackDirection = DIRECTION_LEFT;
+								direction = DIRECTION_LEFT;
+							}
+						} else if (isPressing(keyRight)) {
+							if (shouldTiltX)
+								fTilt();
+							else {
+								state = STATE_SMASH_ATTACK_CHARGE;
+								smashAttackDirection = DIRECTION_RIGHT;
+								direction = DIRECTION_RIGHT;
+							}
+						} else {
+							if (Math.abs(velX) < .1 && Math.abs(velY) < .1 && state != STATE_SMASH_ATTACK_CHARGE)
+								jab();
+						}
+						if (state != STATE_SMASH_ATTACK_CHARGE) {
+							keysPressed.remove(keyAttack);
+						}
 					}
 				}
-			}
 
+			}
 		}
 	}
 
 	public void chooseAttack(Controller myController) {
-		if (state == STATE_NEUTRAL) {
+		if (state == STATE_NEUTRAL || state == STATE_CROUCH) {
 			boolean canAttack = true;
 			for (boolean bool : attackKeyDownHistory) {
 				if (bool == true) {
@@ -727,12 +810,16 @@ public class Character {
 
 							} else {
 								state = STATE_SMASH_ATTACK_CHARGE;
+								smashAttackDirection = DIRECTION_LEFT;
+								direction = DIRECTION_LEFT;
 							}
 						} else {
 							if (shouldTilt) {
 								isAxisRightLocal = true;
 							} else {
 								state = STATE_SMASH_ATTACK_CHARGE;
+								smashAttackDirection = DIRECTION_RIGHT;
+								direction = DIRECTION_RIGHT;
 							}
 						}
 					}
@@ -771,6 +858,7 @@ public class Character {
 
 							} else {
 								state = STATE_SMASH_ATTACK_CHARGE;
+								smashAttackDirection = DIRECTION_DOWN;
 							}
 						}
 					}
@@ -803,30 +891,62 @@ public class Character {
 		}
 	}
 
+	public void applyKnockback(double newVelX, double newVelY, int direction2) {
+		double dampenedpercent = percent / 100;
+		velX = (newVelX * (dampenedpercent + 1));
+		velY = newVelY * (dampenedpercent + 1);
+		System.out.println(direction2);
+	}
+
 	// TODO attack below here
 	// AttackHitbox creation syntax , character, localx,
 	// localy,width,height,xknockback,yknockback,hitstunlen,lifetime, damage
 	public void jab() {
-		hitboxes.add(new AttackHitbox(this, 20, 15, 15, 15, .5, -1, 10, 5, 10, 0));
+		hitboxes.add(new AttackHitbox(this, 20, 15, 15, 15, .5, -1, 10, 5, 3, 3));
 		state = STATE_ATTACK;
 		velX += direction * 2;
 	}
 
 	public void fTilt() {
-		hitboxes.add(new AttackHitbox(this, 20, 20, 20, 15, 3, -3, 10, 5, 20, 0));
-		hitboxes.add(new AttackHitbox(this, 20, 25, 10, 15, 1, -10, 10, 5, 20, 0));
+		hitboxes.add(new AttackHitbox(this, 20, 20, 20, 15, 2, -1, 10, 5, 6, 5));
+		hitboxes.add(new AttackHitbox(this, 20, 25, 10, 15, 1, -3, 10, 5, 8, 5));
 		state = STATE_ATTACKSIDE;
 		velX += direction * 3;
 	}
 
 	public void uTilt() {
-		hitboxes.add(new AttackHitbox(this, 10, -20, 15, 25, 1, -6, 10, 10, 20, 0));
+		hitboxes.add(new AttackHitbox(this, 10, -20, 15, 25, 1, -6, 10, 10, 8, 5));
 		state = STATE_ATTACKUP;
 	}
 
 	public void dTilt() {
-		hitboxes.add(new AttackHitbox(this, 20, 35, 25, 15, 3, -6, 10, 6, 20, 0));
+		hitboxes.add(new AttackHitbox(this, 20, 35, 25, 15, 3, -4, 10, 6, 4, 2));
 		state = STATE_ATTACKDOWN;
+	}
+
+	public void upSmash() {
+		hitboxes.add(new AttackHitbox(this, 10, -20, 20, 30, 1 * smashAttackChargePercent,
+				-10 * smashAttackChargePercent, 30, 10, 15 * smashAttackChargePercent, 20));
+		state = STATE_SMASH_ATTACK_UP;
+		smashAttackChargePercent = 1.0;
+	}
+
+	public void downSmash() {
+		hitboxes.add(new AttackHitbox(this, -w, h - 15, w * 1.5, 15, -10 * smashAttackChargePercent,
+				1 * smashAttackChargePercent, 30, 10, 2 * smashAttackChargePercent, 20));
+
+		hitboxes.add(new AttackHitbox(this, w / 2, h - 15, w * 1.5, 15, 10 * smashAttackChargePercent,
+				1 * smashAttackChargePercent, 10, 10, 2 * smashAttackChargePercent, 20));
+
+		state = STATE_SMASH_ATTACK_DOWN;
+		smashAttackChargePercent = 1.0;
+	}
+
+	public void forwardSmash() {
+		hitboxes.add(new AttackHitbox(this, w, 0, 10, h, 5 * (smashAttackChargePercent * 2),
+				0 * smashAttackChargePercent, (int)(10 * smashAttackChargePercent), 10, 5 * (smashAttackChargePercent * 2), 20));
+		state = STATE_SMASH_ATTACK_FORWARD;
+		smashAttackChargePercent = 1.0;
 	}
 
 	public boolean checkIfInSpecificHitBox(Hitbox box) {
@@ -859,7 +979,7 @@ public class Character {
 		}
 		for (AttackHitbox box : hitboxes) {
 
-			if (!(box.getLifeTime() > 0)) {
+			if (!(box.getEndLag() > 0)) {
 				hitboxes.remove(box);
 				if (state != STATE_LANDINGLAG)
 					state = STATE_NEUTRAL;
@@ -1001,18 +1121,6 @@ public class Character {
 
 	public void setAxisMidpoint(double newAxisMidpoint) {
 		moveAxisMidpoint = newAxisMidpoint;
-	}
-
-	public void applyKnockback(double newVelX, double newVelY, int direction) {
-		double dampenedpercent = percent / 10;
-		setVelX(newVelX + dampenedpercent * direction);
-		if (newVelY < 0)
-			y--;
-		if (newVelY > 0)
-			setVelY(newVelY + dampenedpercent);
-		else
-			setVelY(newVelY - dampenedpercent);
-		System.out.println(percent);
 	}
 
 	// changes the controls at runtime

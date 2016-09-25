@@ -59,7 +59,7 @@ public class Game extends JComponent implements KeyListener {
 		hitboxes.add(GROUND_HITBOX);
 		doControllerThings();
 		characters.add(
-				new Character(300, 450, "Xbox 360 Wired Controller", "x", "y", .8, .2, "1", "2", characters, this));
+				new Character(300, 450, "Xbox 360 Wired Controller", "x", "y", .5, .2, "1", "2", characters, this));
 		characters.add(GOE);
 		for (Controller control : controllers) {
 			System.out.println(control.getName());
@@ -167,12 +167,12 @@ public class Game extends JComponent implements KeyListener {
 	public void drawPlayerHitboxes(Graphics g) {
 		for (Character person : characters) {
 			if (shouldShowHitboxes) {
-
 				for (int i = 0; i < person.hitboxes.size(); i++) {
 					g.setColor(Game.transparentred);
 					AttackHitbox tempbox = person.hitboxes.get(i);
 					Graphics2D g2 = (Graphics2D) g;
-					g2.fill(tempbox.getRect());
+					if (tempbox.isActive)
+						g2.fill(tempbox.getRect());
 				}
 				g.setColor(Game.transparentpurple);
 				Graphics2D g2 = (Graphics2D) g;
@@ -206,43 +206,23 @@ public class Game extends JComponent implements KeyListener {
 
 	// self explanatory naming FTW
 	public void checkForAndExecutePlayerHitDectection() {
-		/*
-		 * for (int j = 0; j < characters.size(); j++) { for (int i = 0; i <
-		 * characters.size(); i++) { for (int o = 0; o <
-		 * characters.get(i).hitboxes.size(); o++) { if
-		 * (checkCollision(characters.get(j).getHurtbox().getRect(),
-		 * characters.get(i).hitboxes.get(o).getRect())) { if
-		 * (!characters.get(i).hitboxes.get(o).getLinkedCharacter()
-		 * .equals(characters.get(j).getHurtbox().getLinkedCharacter())) {
-		 * System.out.println("A collision was detected");
-		 * characters.get(j).applyKnockback(
-		 * (characters.get(i).hitboxes.get(o).getKnockbackX())
-		 * characters.get(i).getDirection(),
-		 * (characters.get(i).hitboxes.get(o).getKnockbackY()));
-		 * characters.get(j).applyHitstun(characters.get(i).hitboxes.get(o).
-		 * getHitstunLength());
-		 * characters.get(j).setDirection(characters.get(i).getDirection()); } }
-		 * } } }
-		 */
-		for (Character person1 : characters) {
-			for (Character person2 : characters) {
-				for (AttackHitbox hitbox : person2.hitboxes) {
-					if (checkCollision(person1.getHurtbox().getRect(), hitbox.getRect())) {
-						if (!person1.equals(hitbox.getLinkedCharacter())) {
-							// in the scope or this part of the code, person1 is
-							// the person getting hit, and hitbox is the
-							// reference o the hitbox hitting the person
-							person1.applyKnockback(hitbox.getKnockbackX() * person2.getDirection(),
-									hitbox.getKnockbackY(), person2.getDirection());
-							person1.applyHitstun(hitbox.getHitstunLength());
-							person1.setDirection(hitbox.getLinkedCharacter().getDirection());
-							person1.applyDamage(hitbox.getDamage());
 
+		// person1 is the person getting hit and hitbox is the hitbox doing the
+		// hitting
+
+		for (Character person1 : characters)
+			for (Character person2 : characters)
+				for (AttackHitbox hitbox : person2.hitboxes)
+					if (checkCollision(person1.getHurtbox().getRect(), hitbox.getRect()))
+						if (!person1.equals(hitbox.getLinkedCharacter()) && !hitbox.playerHitList.contains(person1)) {
+
+							person1.applyKnockback(hitbox.getKnockbackX() * person2.getDirection(),
+									hitbox.getKnockbackY(), hitbox.getLinkedCharacter().getDirection());
+
+							person1.applyHitstun(hitbox.getHitstunLength());
+							person1.applyDamage(hitbox.getDamage());
+							hitbox.playerHitList.add(person1);
 						}
-					}
-				}
-			}
-		}
 	}
 
 	public static boolean checkCollision(Rectangle rect1, Rectangle rect2) {
@@ -250,11 +230,12 @@ public class Game extends JComponent implements KeyListener {
 			return true;
 		return false;
 	}
-	
-	public ArrayList<Character> getCharacters(){
+
+	public ArrayList<Character> getCharacters() {
 		return characters;
 	}
-	//below here is all the controlling code keep it that way
+
+	// below here is all the controlling code keep it that way
 	public void doControllerThings() {
 		for (int i = 0; i < ca.length; i++) {
 			if (ca[i].getType() == Type.GAMEPAD || ca[i].getType() == Type.STICK) {
@@ -290,6 +271,7 @@ public class Game extends JComponent implements KeyListener {
 	}
 
 	public void getControllerInput() {
+		double axisXinput = 0;
 		for (Controller currentController : controllers) {
 			Component[] components = currentController.getComponents();
 
@@ -306,6 +288,7 @@ public class Game extends JComponent implements KeyListener {
 						if (person.getControllerName().equals(currentController.getName())) {
 							if (person.getAxisNameX().equals(comp.getName())) {
 								// code for the horizontal movement stick
+								axisXinput = comp.getPollData();
 								if ((Math.abs(comp.getPollData()) > person.getAxisDeadZone())) {
 									if ((Math.abs(comp.getPollData()) < (float) person.getAxisMidpoint()))
 										person.setAxisHalfway(true);
@@ -315,13 +298,15 @@ public class Game extends JComponent implements KeyListener {
 									if (comp.getPollData() > 0) {
 										person.setAxisRight(true);
 										person.setAxisLeft(false);
+
 									}
 
 									if (comp.getPollData() < 0) {
 										person.setAxisLeft(true);
 										person.setAxisRight(false);
 									}
-
+									if (Math.abs(comp.getPollData()) > person.getAxisMidpoint())
+										person.setAxisDown(false);
 								} else {
 									person.setAxisRight(false);
 									person.setAxisLeft(false);
@@ -331,7 +316,7 @@ public class Game extends JComponent implements KeyListener {
 								// code for the vertical movement stick
 								if ((Math.abs(comp.getPollData()) > person.getAxisDeadZone())) {
 
-									if (comp.getPollData() > 0)
+									if (comp.getPollData() > 0 && Math.abs(axisXinput) < person.getAxisMidpoint())
 										person.setAxisDown(true);
 
 									if (comp.getPollData() < 0)

@@ -1,5 +1,7 @@
 package fighter;
 
+import java.util.ArrayList;
+
 public class AttackHitbox extends Hitbox {
 	private double localX;
 	private double localY;
@@ -9,10 +11,11 @@ public class AttackHitbox extends Hitbox {
 	private double knockbackY;
 	private int hitstunLength;
 	private double damage;
-	private double startupTime;
+	private int endLag;
+	public ArrayList<Character> playerHitList = new ArrayList<Character>();
 
 	public AttackHitbox(Character boundPlayer, double localposx, double localposy, double width, double height,
-			double xknockback, double yknockback, int hitstunLen, int lifeTime, double myDamage, double myStartupTime) {
+			double xknockback, double yknockback, int hitstunLen, int lifeTime, double myDamage, int myStartupTime) {
 		super(boundPlayer, boundPlayer.getX() + localposx, boundPlayer.getVelY() + localposy, width, height,
 				Game.TYPE_ATTACK);
 		localX = localposx;
@@ -22,7 +25,7 @@ public class AttackHitbox extends Hitbox {
 		hitstunLength = hitstunLen;
 		lifetime = lifeTime;
 		damage = myDamage;
-		startupTime = myStartupTime;
+		endLag = myStartupTime;
 	}
 
 	public double getlocalX() {
@@ -48,19 +51,25 @@ public class AttackHitbox extends Hitbox {
 	public int getHitstunLength() {
 		return hitstunLength;
 	}
-	public int getLifeTime(){
+
+	public int getLifeTime() {
 		return lifetime;
 	}
+
+	public int getEndLag() {
+		return endLag;
+	}
+
 	@Override
 	public void updateLocation(double posx, double posy, double width, double height) {
 		super.updateLocation(posx, posy, width, height);
 
-		if (lifetime > 0 && startupTime == 0)
+		if (lifetime > 0)
 			lifetime--;
 		else
 			isActive = false;
-		if (startupTime > 0)
-			startupTime--;
+		if (lifetime == 0)
+			endLag--;
 		else if (lifetime > 0)
 			isActive = true;
 
