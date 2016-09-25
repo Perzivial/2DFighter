@@ -469,6 +469,8 @@ public class Game extends JComponent implements KeyListener {
 						if (characters.get(characterSlideNum).getIsUsingController() && characterSlideNum2 < 7)
 							characterSlideNum2++;
 					}
+					
+					
 					if (e.getKeyCode() == KeyEvent.VK_ENTER)
 						isEditing = true;
 				} else {

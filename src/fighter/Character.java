@@ -683,11 +683,16 @@ public class Character {
 			if (controller.getPortNumber() == portNum) {
 				for (Component comp : controller.getComponents()) {
 					if (comp.getName() == moveAxisNameX) {
-						cycleArray(comp.getPollData(), moveAxisHistoryX);
+						if (Math.abs(comp.getPollData()) > getAxisDeadZone()) {
+							cycleArray(comp.getPollData(), moveAxisHistoryX);
+
+						}
 					}
 					if (comp.getName() == moveAxisNameY) {
-						cycleArray(comp.getPollData(), moveAxisHistoryY);
+						if (Math.abs(comp.getPollData()) > getAxisDeadZone())
+							cycleArray(comp.getPollData(), moveAxisHistoryY);
 					}
+
 				}
 			}
 		}
@@ -790,6 +795,7 @@ public class Character {
 					for (double currentAxisX : moveAxisHistoryX) {
 						if (Math.abs(currentAxisX) <= moveAxisMidpoint) {
 							shouldTilt = false;
+							System.out.println(Arrays.toString(moveAxisHistoryX));
 							break;
 						}
 					}
@@ -943,8 +949,9 @@ public class Character {
 	}
 
 	public void forwardSmash() {
-		hitboxes.add(new AttackHitbox(this, w, 0, 10, h, 5 * (smashAttackChargePercent * 2),
-				0 * smashAttackChargePercent, (int)(10 * smashAttackChargePercent), 10, 5 * (smashAttackChargePercent * 2), 20));
+		hitboxes.add(
+				new AttackHitbox(this, w, 0, 10, h, 5 * (smashAttackChargePercent * 2), 0 * smashAttackChargePercent,
+						(int) (10 * smashAttackChargePercent), 10, 5 * (smashAttackChargePercent * 2), 20));
 		state = STATE_SMASH_ATTACK_FORWARD;
 		smashAttackChargePercent = 1.0;
 	}
