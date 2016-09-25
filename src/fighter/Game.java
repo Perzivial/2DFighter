@@ -37,7 +37,7 @@ public class Game extends JComponent implements KeyListener {
 	public static Color transparentblue = new Color(0, 0, 255, 75);
 	public static Color transparentpurple = new Color(100, 0, 100, 50);
 
-	boolean shouldShowHitboxes = true;
+	boolean shouldShowHitboxes = false;
 	ArrayList<Hitbox> hitboxes = new ArrayList<Hitbox>();
 	public static final Hitbox GROUND_HITBOX = new Hitbox(200, 500, 720, 175, TYPE_GROUND);
 
@@ -58,8 +58,8 @@ public class Game extends JComponent implements KeyListener {
 		this.setDoubleBuffered(true);
 		hitboxes.add(GROUND_HITBOX);
 		doControllerThings();
-		characters.add(
-				new Character(300, 450, "Xbox 360 Wired Controller", "x", "y", .5, .2, "1", "2", characters, this));
+		characters.add(new Character(300, 450, "Xbox 360 Wired Controller", "x", "y", "rx", "ry", .5, .2, "1", "2",
+				characters, this));
 		characters.add(GOE);
 		for (Controller control : controllers) {
 			System.out.println(control.getName());
@@ -166,19 +166,24 @@ public class Game extends JComponent implements KeyListener {
 
 	public void drawPlayerHitboxes(Graphics g) {
 		for (Character person : characters) {
+			Graphics2D g2 = (Graphics2D) g;
 			if (shouldShowHitboxes) {
 				for (int i = 0; i < person.hitboxes.size(); i++) {
 					g.setColor(Game.transparentred);
 					AttackHitbox tempbox = person.hitboxes.get(i);
-					Graphics2D g2 = (Graphics2D) g;
+
 					if (tempbox.isActive)
 						g2.fill(tempbox.getRect());
+
 				}
 				g.setColor(Game.transparentpurple);
-				Graphics2D g2 = (Graphics2D) g;
 				g2.fill(person.getHurtbox().getRect());
-
 			}
+			if (person.isShielding) {
+				g.setColor(Game.transparentblue);
+				g2.fill(person.getShield());
+			}
+
 		}
 	}
 
@@ -345,7 +350,6 @@ public class Game extends JComponent implements KeyListener {
 								if (comp.getPollData() != 1.0)
 									person.setIsAttackButtonDown(false);
 							}
-
 						}
 					}
 				}
@@ -435,8 +439,8 @@ public class Game extends JComponent implements KeyListener {
 				characterSlideNum2 = 1;
 			}
 			if (e.getKeyCode() == KeyEvent.VK_2) {
-				characters.add(new Character(300, 575, "Xbox 360 Wired Controller", "x", "y", .8, .2, "1", "2",
-						characters, this));
+				characters.add(new Character(300, 575, "Xbox 360 Wired Controller", "x", "y", "rx", "ry", .8, .2, "1",
+						"2", characters, this));
 				characterSlideNum = 0;
 				characterSlideNum2 = 1;
 			}
@@ -469,8 +473,7 @@ public class Game extends JComponent implements KeyListener {
 						if (characters.get(characterSlideNum).getIsUsingController() && characterSlideNum2 < 7)
 							characterSlideNum2++;
 					}
-					
-					
+
 					if (e.getKeyCode() == KeyEvent.VK_ENTER)
 						isEditing = true;
 				} else {

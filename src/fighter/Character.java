@@ -5,6 +5,8 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.event.KeyEvent;
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.util.*;
 
@@ -13,6 +15,9 @@ import net.java.games.input.Controller;
 import net.java.games.input.ControllerEnvironment;
 
 public class Character {
+	private Ellipse2D shield;
+	private double shieldWidth = 1.0;
+	boolean isShielding = false;
 	private double fallSpeed = .8;
 	private double velX;
 	private double velY;
@@ -33,7 +38,7 @@ public class Character {
 	private double jumpHeight = 7;
 	private double runSpeed = 5;
 	private double horizontalSlowdownFactor = 10;
-	private double horizontalInAirDistance = 1;
+	private double horizontalInAirDistance = 3;
 	private boolean hasDoubleJump = false;
 	private double maxAirSpeed = 5;
 	// State variables
@@ -51,6 +56,11 @@ public class Character {
 	public static int STATE_SMASH_ATTACK_UP = 11;
 	public static int STATE_SMASH_ATTACK_DOWN = 12;
 	public static int STATE_SMASH_ATTACK_FORWARD = 13;
+	public static int STATE_ATTACK_NAIR = 14;
+	public static int STATE_ATTACK_FAIR = 15;
+	public static int STATE_ATTACK_UAIR = 16;
+	public static int STATE_ATTACK_DAIR = 17;
+	public static int STATE_ATTACK_BAIR = 14;
 	private int direction = 1;
 	private boolean isChargingSmashAttack = false;
 	private double smashAttackChargePercent = 1.0;
@@ -86,6 +96,8 @@ public class Character {
 	private String controllerName;
 	private String moveAxisNameX;
 	private String moveAxisNameY;
+	private String moveAxisNameRX;
+	private String moveAxisNameRY;
 	private double moveAxisMidpoint;
 	private boolean isAxisRight = false;
 	private boolean isAxisLeft = false;
@@ -129,10 +141,12 @@ public class Character {
 		keyJump = jumpKey;
 		keyAttack = attackKey;
 		hurtbox = new Hitbox(this, x, y, w, h, Game.TYPE_HURTBOX);
+
+		placeShield();
 	}
 
-	public Character(int posx, int posy, String nameOfController, String axisName, String axisName2,
-			double axisMidpoint, double deadZone, String jumpButton, String attackButton,
+	public Character(int posx, int posy, String nameOfController, String axisName, String axisName2, String axisName3,
+			String axisName4, double axisMidpoint, double deadZone, String jumpButton, String attackButton,
 			ArrayList<Character> characters, Game gameinstance) {
 		myGame = gameinstance;
 		x = posx;
@@ -160,18 +174,30 @@ public class Character {
 		axisDeadZone = deadZone;
 		moveAxisNameX = axisName;
 		moveAxisNameY = axisName2;
+		moveAxisNameRX = axisName3;
+		moveAxisNameRY = axisName4;
 		moveAxisMidpoint = axisMidpoint;
 		buttonJump = jumpButton;
 		buttonAttack = attackButton;
 		isController = true;
 		controllerName = nameOfController;
+
+		placeShield();
+	}
+
+	public void placeShield() {
+		shield = new Ellipse2D.Double();
+		shield.setFrame((x - w) * shieldWidth, (y - 5) * shieldWidth, (h + 5) * shieldWidth, (h + 5) * shieldWidth);
+	}
+
+	public Ellipse2D getShield() {
+		return shield;
 	}
 
 	public void applyDamage(double damageApplied) {
 		percent += damageApplied;
 	}
 
-	// unused code that i keep here cause i may need it in future
 	public void getController() {
 		for (Controller currentController : myGame.controllers) {
 			if (currentController.getPortNumber() == portNum) {
@@ -181,7 +207,7 @@ public class Character {
 	}
 
 	public void draw(Graphics g) {
-		// getController();
+		getController();
 		updateStates();
 		fall();
 		checkifShouldApplyLandingLag();
@@ -196,6 +222,7 @@ public class Character {
 		recordLastFrameY();
 		recordLastFrameIsGrounded();
 		getControllerAxisInformation();
+		placeShield();
 	}
 
 	public void drawCorrectSprite(Graphics g) {
@@ -356,21 +383,30 @@ public class Character {
 						runRight();
 					}
 				}
-				if (state == STATE_NEUTRAL && isPressing(keyDown)) {
-					state = STATE_CROUCH;
-				}
-				if (state == STATE_CROUCH && !isPressing(keyDown)) {
-					state = STATE_NEUTRAL;
+				if (isGrounded) {
+					if (state == STATE_NEUTRAL && isPressing(keyDown)) {
+						state = STATE_CROUCH;
+					}
+					if (state == STATE_CROUCH && !isPressing(keyDown)) {
+						state = STATE_NEUTRAL;
+					}
 				}
 			}
-
+			if (!isGrounded) {
+				if (Math.abs(velY) < 3) {
+					if (isPressing(keyDown))
+						velY = fallSpeed * 10;
+					System.out.println("derp");
+				}
+			}
 		} else {
 			if (state != STATE_HITSTUN) {
-
-				if (isAxisRight)
-					runRight();
-				if (isAxisLeft)
-					runLeft();
+				if (state == STATE_NEUTRAL) {
+					if (isAxisRight)
+						runRight();
+					if (isAxisLeft)
+						runLeft();
+				}
 			}
 			if (isGrounded) {
 				if (state == STATE_NEUTRAL && isAxisDown) {
@@ -379,6 +415,12 @@ public class Character {
 				if (state == STATE_CROUCH && !isAxisDown) {
 					state = STATE_NEUTRAL;
 
+				}
+			}
+			if (!isGrounded) {
+				if (Math.abs(velY) < 3) {
+					if (isAxisDown)
+						velY = fallSpeed * 10;
 				}
 			}
 		}
@@ -391,7 +433,7 @@ public class Character {
 		if (state == STATE_NEUTRAL) {
 			if (isGrounded) {
 
-				if (isAxisHalfway || isPressing(keyModifier))
+				if (Math.abs(moveAxisHistoryX[0]) < moveAxisMidpoint || isPressing(keyModifier))
 					velX = -runSpeed / 3;
 				else
 					velX = -runSpeed;
@@ -406,7 +448,7 @@ public class Character {
 		if (state == STATE_NEUTRAL) {
 			if (isGrounded) {
 
-				if (isAxisHalfway || isPressing(keyModifier))
+				if (Math.abs(moveAxisHistoryX[0]) < moveAxisMidpoint || isPressing(keyModifier))
 					velX = runSpeed / 3;
 				else
 					velX = runSpeed;
@@ -603,6 +645,7 @@ public class Character {
 		if (hitstunCounter == 0)
 			state = STATE_NEUTRAL;
 		getKeyboardTiltInfo();
+		checkForCStickSmashAttacks();
 	}
 
 	// TODO change
@@ -730,38 +773,58 @@ public class Character {
 
 					if (isPressing(keyAttack)) {
 						if (isPressing(keyUp)) {
-							if (shouldTiltY && moveAxisHistoryY[0] == 1.0) {
-								uTilt();
+							if (isGrounded) {
+								if (shouldTiltY && moveAxisHistoryY[0] == 1.0) {
+									uTilt();
+								} else {
+									state = STATE_SMASH_ATTACK_CHARGE;
+									smashAttackDirection = DIRECTION_UP;
+								}
 							} else {
-								state = STATE_SMASH_ATTACK_CHARGE;
-								smashAttackDirection = DIRECTION_UP;
+
 							}
 						} else if (isPressing(keyDown)) {
-							if (shouldTiltY && moveAxisHistoryY[0] == -1.0) {
-								dTilt();
+							if (isGrounded) {
+								if (shouldTiltY && moveAxisHistoryY[0] == -1.0) {
+									dTilt();
+								} else {
+									state = STATE_SMASH_ATTACK_CHARGE;
+									smashAttackDirection = DIRECTION_DOWN;
+								}
 							} else {
-								state = STATE_SMASH_ATTACK_CHARGE;
-								smashAttackDirection = DIRECTION_DOWN;
+
 							}
 						} else if (isPressing(keyLeft)) {
-							if (shouldTiltX)
-								fTilt();
-							else {
-								state = STATE_SMASH_ATTACK_CHARGE;
-								smashAttackDirection = DIRECTION_LEFT;
-								direction = DIRECTION_LEFT;
+							if (isGrounded) {
+								if (shouldTiltX)
+									fTilt();
+								else {
+									state = STATE_SMASH_ATTACK_CHARGE;
+									smashAttackDirection = DIRECTION_LEFT;
+									direction = DIRECTION_LEFT;
+								}
+							} else {
+
 							}
 						} else if (isPressing(keyRight)) {
-							if (shouldTiltX)
-								fTilt();
-							else {
-								state = STATE_SMASH_ATTACK_CHARGE;
-								smashAttackDirection = DIRECTION_RIGHT;
-								direction = DIRECTION_RIGHT;
+							if (isGrounded) {
+								if (shouldTiltX)
+									fTilt();
+								else {
+									state = STATE_SMASH_ATTACK_CHARGE;
+									smashAttackDirection = DIRECTION_RIGHT;
+									direction = DIRECTION_RIGHT;
+								}
+							} else {
+
 							}
 						} else {
-							if (Math.abs(velX) < .1 && Math.abs(velY) < .1 && state != STATE_SMASH_ATTACK_CHARGE)
-								jab();
+							if (isGrounded) {
+								if (Math.abs(velX) < .1 && Math.abs(velY) < .1 && state != STATE_SMASH_ATTACK_CHARGE)
+									jab();
+							} else {
+								nair();
+							}
 						}
 						if (state != STATE_SMASH_ATTACK_CHARGE) {
 							keysPressed.remove(keyAttack);
@@ -795,7 +858,6 @@ public class Character {
 					for (double currentAxisX : moveAxisHistoryX) {
 						if (Math.abs(currentAxisX) <= moveAxisMidpoint) {
 							shouldTilt = false;
-							System.out.println(Arrays.toString(moveAxisHistoryX));
 							break;
 						}
 					}
@@ -810,22 +872,35 @@ public class Character {
 					}
 					if (Math.abs(comp.getPollData()) > moveAxisMidpoint) {
 						if (comp.getPollData() < 0) {
+							if (isGrounded) {
+								if (shouldTilt) {
+									isAxisLeftLocal = true;
 
-							if (shouldTilt) {
-								isAxisLeftLocal = true;
-
+								} else {
+									state = STATE_SMASH_ATTACK_CHARGE;
+									smashAttackDirection = DIRECTION_LEFT;
+									direction = DIRECTION_LEFT;
+								}
 							} else {
-								state = STATE_SMASH_ATTACK_CHARGE;
-								smashAttackDirection = DIRECTION_LEFT;
-								direction = DIRECTION_LEFT;
+								if (direction == DIRECTION_LEFT)
+									fair();
+								else
+									bair();
 							}
 						} else {
-							if (shouldTilt) {
-								isAxisRightLocal = true;
+							if (isGrounded) {
+								if (shouldTilt) {
+									isAxisRightLocal = true;
+								} else {
+									state = STATE_SMASH_ATTACK_CHARGE;
+									smashAttackDirection = DIRECTION_RIGHT;
+									direction = DIRECTION_RIGHT;
+								}
 							} else {
-								state = STATE_SMASH_ATTACK_CHARGE;
-								smashAttackDirection = DIRECTION_RIGHT;
-								direction = DIRECTION_RIGHT;
+								if (direction == DIRECTION_RIGHT)
+									fair();
+								else
+									bair();
 							}
 						}
 					}
@@ -851,48 +926,93 @@ public class Character {
 					}
 					if (Math.abs(comp.getPollData()) > moveAxisMidpoint) {
 						if (comp.getPollData() < 0) {
-
-							if (shouldTilt) {
-								isAxisUpLocal = true;
+							if (isGrounded) {
+								if (shouldTilt) {
+									isAxisUpLocal = true;
+								} else {
+									state = STATE_SMASH_ATTACK_CHARGE;
+									smashAttackDirection = DIRECTION_UP;
+								}
 							} else {
-								state = STATE_SMASH_ATTACK_CHARGE;
-								smashAttackDirection = DIRECTION_UP;
+								uair();
 							}
 						} else {
-							if (shouldTilt) {
-								isAxisDownLocal = true;
+							if (isGrounded) {
+								if (shouldTilt) {
+									isAxisDownLocal = true;
 
+								} else {
+									state = STATE_SMASH_ATTACK_CHARGE;
+									smashAttackDirection = DIRECTION_DOWN;
+								}
 							} else {
-								state = STATE_SMASH_ATTACK_CHARGE;
-								smashAttackDirection = DIRECTION_DOWN;
+								dair();
 							}
 						}
 					}
+
+					// actual code starts here
+					if (canAttack && state != STATE_SMASH_ATTACK_CHARGE && isGrounded) {
+						if (isAxisUpLocal) {
+							uTilt();
+
+						} else if (isAxisDownLocal) {
+							dTilt();
+						}
+
+						else if (isAxisRightLocal) {
+							fTilt();
+
+						} else if (isAxisLeftLocal) {
+							fTilt();
+						}
+
+						else {
+
+							if (Math.abs(velX) < .1 && Math.abs(velY) < .1)
+								jab();
+						}
+
+					}
 				}
 			}
+		}
+	}
 
-			// actual code starts here
-			if (canAttack && state != STATE_SMASH_ATTACK_CHARGE) {
-				if (isAxisUpLocal) {
-					uTilt();
+	public void checkForCStickSmashAttacks() {
+		if (state == STATE_NEUTRAL || state == STATE_CROUCH) {
+			boolean canAttack = true;
+			for (Component comp : myController.getComponents()) {
+				if (comp.getName().equals(moveAxisNameRX)) {
+					if (Math.abs(comp.getPollData()) > moveAxisMidpoint) {
+						if (comp.getPollData() > 0) {
+							state = STATE_SMASH_ATTACK_CHARGE;
+							smashAttackDirection = DIRECTION_RIGHT;
+							direction = DIRECTION_RIGHT;
+							break;
+						} else {
+							state = STATE_SMASH_ATTACK_CHARGE;
+							smashAttackDirection = DIRECTION_LEFT;
+							direction = DIRECTION_LEFT;
+							break;
+						}
 
-				} else if (isAxisDownLocal) {
-					dTilt();
+					}
 				}
+				if (comp.getName().equals(moveAxisNameRY)) {
+					if (Math.abs(comp.getPollData()) > moveAxisMidpoint) {
+						if (comp.getPollData() > 0) {
+							state = STATE_SMASH_ATTACK_CHARGE;
+							smashAttackDirection = DIRECTION_DOWN;
+							break;
+						} else {
+							state = STATE_SMASH_ATTACK_CHARGE;
+							smashAttackDirection = DIRECTION_UP;
+							break;
+						}
 
-				else if (isAxisRightLocal) {
-					fTilt();
-
-				} else if (isAxisLeftLocal) {
-					fTilt();
+					}
 				}
-
-				else {
-
-					if (Math.abs(velX) < .1 && Math.abs(velY) < .1)
-						jab();
-				}
-
 			}
 		}
 	}
@@ -935,6 +1055,28 @@ public class Character {
 				-10 * smashAttackChargePercent, 30, 10, 15 * smashAttackChargePercent, 20));
 		state = STATE_SMASH_ATTACK_UP;
 		smashAttackChargePercent = 1.0;
+	}
+
+	public void nair() {
+		hitboxes.add(new AttackHitbox(this, 20, 15, 15, 15, .5, -1, 10, 5, 3, 3));
+		state = STATE_ATTACK_NAIR;
+		velX += direction * 2;
+	}
+
+	public void fair() {
+
+	}
+
+	public void bair() {
+
+	}
+
+	public void uair() {
+
+	}
+
+	public void dair() {
+
 	}
 
 	public void downSmash() {
@@ -1102,12 +1244,28 @@ public class Character {
 		return moveAxisNameY;
 	}
 
+	public String getAxisNameRX() {
+		return moveAxisNameRX;
+	}
+
+	public String getAxisNameRY() {
+		return moveAxisNameRY;
+	}
+
 	public void setAxisNameX(String newName) {
 		moveAxisNameX = newName;
 	}
 
 	public void setAxisNameY(String newName) {
 		moveAxisNameY = newName;
+	}
+
+	public void setAxisNameRX(String newName) {
+		moveAxisNameRX = newName;
+	}
+
+	public void setAxisNameRY(String newName) {
+		moveAxisNameRY = newName;
 	}
 
 	public void setNewMidpoint(double newMidPoint) {
@@ -1120,10 +1278,6 @@ public class Character {
 
 	public double getAxisMidpoint() {
 		return moveAxisMidpoint;
-	}
-
-	public void setAxisName(String newAxisName) {
-		moveAxisNameX = newAxisName;
 	}
 
 	public void setAxisMidpoint(double newAxisMidpoint) {
