@@ -62,6 +62,8 @@ public class Character {
 	public static int STATE_ATTACK_UAIR = 16;
 	public static int STATE_ATTACK_DAIR = 17;
 	public static int STATE_ATTACK_BAIR = 18;
+	public static int STATE_SHIELD = 19;
+	public static int STATE_DODGE = 20;
 	private int direction = 1;
 	private boolean isChargingSmashAttack = false;
 	private double smashAttackChargePercent = 1.0;
@@ -105,6 +107,10 @@ public class Character {
 	private String moveAxisNameY;
 	private String moveAxisNameRX;
 	private String moveAxisNameRY;
+	private String moveAxisNameZ;
+	private String moveAxisNameRZ;
+	private String axisShield1;
+	private String axisShield2;
 	private double moveAxisMidpoint;
 	private boolean isAxisRight = false;
 	private boolean isAxisLeft = false;
@@ -153,8 +159,8 @@ public class Character {
 	}
 
 	public Character(int posx, int posy, String nameOfController, String axisName, String axisName2, String axisName3,
-			String axisName4, double axisMidpoint, double deadZone, String jumpButton, String attackButton,
-			ArrayList<Character> characters, Game gameinstance) {
+			String axisName4, String leftTrigger, String rightTrigger, double axisMidpoint, double deadZone,
+			String jumpButton, String attackButton, ArrayList<Character> characters, Game gameinstance) {
 		myGame = gameinstance;
 		x = posx;
 		y = posy;
@@ -183,20 +189,41 @@ public class Character {
 		moveAxisNameY = axisName2;
 		moveAxisNameRX = axisName3;
 		moveAxisNameRY = axisName4;
+		moveAxisNameZ = leftTrigger;
+		moveAxisNameRZ = rightTrigger;
 		moveAxisMidpoint = axisMidpoint;
 		buttonJump = jumpButton;
 		buttonAttack = attackButton;
 		isController = true;
 		controllerName = nameOfController;
-
 		placeShield();
 	}
 
 	public void placeShield() {
+
 		shield = new Ellipse2D.Double();
-		if(isShielding)
-		shield.setFrame((x - w) * shieldWidth, (y - 5) * shieldWidth, (h + 5) * shieldWidth, (h + 5) * shieldWidth);
-		
+		if (isShielding) {
+			// shield.setFrame((x - w) * shieldWidth, (y - 5) * shieldWidth, (h
+			// + 5) * shieldWidth, (h + 5) * shieldWidth);
+			shield.setFrame((x - w) + ((1 - shieldWidth) * w * 1.5) , (y - 5) + ((1 - shieldWidth) * w) , (h + 5) * shieldWidth, (h + 5) * shieldWidth);
+			state = STATE_SHIELD;
+		} else if (state == STATE_SHIELD) {
+			state = STATE_NEUTRAL;
+		}
+		isShielding = false;
+
+	}
+
+	public void attemptToShield() {
+		if (myController != null)
+			for (Component comp : myController.getComponents()) {
+				if (comp.getName().equals(getLeftTrigger()) || comp.getName().equals(getRightTrigger())) {
+					if (comp.getPollData() > getAxisMidpoint() && isGrounded && state != STATE_HITSTUN) {
+						isShielding = true;
+						shieldWidth -= 0.002666666667;
+					}
+				}
+			}
 	}
 
 	public Ellipse2D getShield() {
@@ -231,7 +258,21 @@ public class Character {
 		recordLastFrameY();
 		recordLastFrameIsGrounded();
 		getControllerAxisInformation();
+		attemptToShield();
+		drawShield(g);
 		placeShield();
+	}
+
+	public void drawShield(Graphics g) {
+		if (isShielding) {
+			Graphics2D g2 = (Graphics2D) g;
+			g.setColor(Game.transparentblue);
+			g2.fill(getShield());
+		}
+	}
+
+	public void dodge() {
+
 	}
 
 	public void drawCorrectSprite(Graphics g) {
@@ -437,7 +478,6 @@ public class Character {
 				if (Math.abs(velY) < 3) {
 					if (isPressing(keyDown))
 						velY = fallSpeed * 10;
-					System.out.println("derp");
 				}
 			}
 		} else {
@@ -480,9 +520,8 @@ public class Character {
 					velX = -runSpeed;
 				direction = DIRECTION_LEFT;
 			}
-		} else if (velX > -maxAirSpeed) 
+		} else if (velX > -maxAirSpeed)
 			velX -= horizontalInAirSpeed;
-		
 
 	}
 
@@ -883,8 +922,7 @@ public class Character {
 							if (isGrounded) {
 								if (Math.abs(velX) < .1 && Math.abs(velY) < .1 && state != STATE_SMASH_ATTACK_CHARGE)
 									jab();
-							} else if(state == STATE_NEUTRAL
-									){
+							} else if (state == STATE_NEUTRAL) {
 								nair();
 							}
 						}
@@ -1051,65 +1089,67 @@ public class Character {
 	public void checkForCStickSmashAttacks() {
 		if (state == STATE_NEUTRAL || state == STATE_CROUCH) {
 			boolean canAttack = true;
-			for (Component comp : myController.getComponents()) {
-				if (comp.getName().equals(moveAxisNameRX)) {
-					if (Math.abs(comp.getPollData()) > moveAxisMidpoint) {
-						if (comp.getPollData() > 0) {
-							if (isGrounded) {
-								state = STATE_SMASH_ATTACK_CHARGE;
-								smashAttackDirection = DIRECTION_RIGHT;
-								direction = DIRECTION_RIGHT;
-								break;
-							} else if (canAttack()) {
-								if (direction == DIRECTION_RIGHT)
-									fair();
-								else
-									bair();
-								break;
-							}
-						} else {
-							if (isGrounded) {
-								state = STATE_SMASH_ATTACK_CHARGE;
-								smashAttackDirection = DIRECTION_LEFT;
-								direction = DIRECTION_LEFT;
-								break;
-							} else if (canAttack()) {
-								if (direction == DIRECTION_LEFT)
-									fair();
-								else
-									bair();
-								break;
-							}
-						}
 
+			if (myController != null)
+				for (Component comp : myController.getComponents()) {
+					if (comp.getName().equals(moveAxisNameRX)) {
+						if (Math.abs(comp.getPollData()) > moveAxisMidpoint) {
+							if (comp.getPollData() > 0) {
+								if (isGrounded) {
+									state = STATE_SMASH_ATTACK_CHARGE;
+									smashAttackDirection = DIRECTION_RIGHT;
+									direction = DIRECTION_RIGHT;
+									break;
+								} else if (canAttack()) {
+									if (direction == DIRECTION_RIGHT)
+										fair();
+									else
+										bair();
+									break;
+								}
+							} else {
+								if (isGrounded) {
+									state = STATE_SMASH_ATTACK_CHARGE;
+									smashAttackDirection = DIRECTION_LEFT;
+									direction = DIRECTION_LEFT;
+									break;
+								} else if (canAttack()) {
+									if (direction == DIRECTION_LEFT)
+										fair();
+									else
+										bair();
+									break;
+								}
+							}
+
+						}
+					}
+					if (comp.getName().equals(moveAxisNameRY)) {
+						if (Math.abs(comp.getPollData()) > moveAxisMidpoint) {
+							if (comp.getPollData() > 0) {
+								if (isGrounded) {
+									state = STATE_SMASH_ATTACK_CHARGE;
+									smashAttackDirection = DIRECTION_DOWN;
+									break;
+								} else if (canAttack) {
+									dair();
+									break;
+								}
+
+							} else {
+								if (isGrounded) {
+									state = STATE_SMASH_ATTACK_CHARGE;
+									smashAttackDirection = DIRECTION_UP;
+									break;
+								} else if (canAttack) {
+									uair();
+									break;
+								}
+							}
+
+						}
 					}
 				}
-				if (comp.getName().equals(moveAxisNameRY)) {
-					if (Math.abs(comp.getPollData()) > moveAxisMidpoint) {
-						if (comp.getPollData() > 0) {
-							if (isGrounded) {
-								state = STATE_SMASH_ATTACK_CHARGE;
-								smashAttackDirection = DIRECTION_DOWN;
-								break;
-							} else if (canAttack) {
-								dair();
-								break;
-							}
-
-						} else {
-							if (isGrounded) {
-								state = STATE_SMASH_ATTACK_CHARGE;
-								smashAttackDirection = DIRECTION_UP;
-								break;
-							} else if (canAttack) {
-								uair();
-								break;
-							}
-						}
-
-					}
-				}
-			}
 		}
 	}
 
@@ -1185,7 +1225,6 @@ public class Character {
 		state = STATE_ATTACK_DAIR;
 	}
 
-
 	public void upSmash() {
 		hitboxes.add(new AttackHitbox(this, 10, -20, 20, 30, 1 * smashAttackChargePercent,
 				-10 * smashAttackChargePercent, 30, 10, 15 * smashAttackChargePercent, 20));
@@ -1193,7 +1232,6 @@ public class Character {
 		smashAttackChargePercent = 1.0;
 	}
 
-	
 	public void downSmash() {
 		hitboxes.add(new AttackHitbox(this, -w, h - 15, w * 1.5, 15, -10 * smashAttackChargePercent,
 				1 * smashAttackChargePercent, 30, 10, 2 * smashAttackChargePercent, 20));
@@ -1491,6 +1529,14 @@ public class Character {
 
 	public String getAttackButton() {
 		return buttonAttack;
+	}
+
+	public String getLeftTrigger() {
+		return moveAxisNameZ;
+	}
+
+	public String getRightTrigger() {
+		return moveAxisNameRZ;
 	}
 
 	public void setAttackButton(String newAttackButton) {

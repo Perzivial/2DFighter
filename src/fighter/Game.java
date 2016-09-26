@@ -58,22 +58,25 @@ public class Game extends JComponent implements KeyListener {
 		this.setDoubleBuffered(true);
 		hitboxes.add(GROUND_HITBOX);
 		doControllerThings();
-		characters.add(new Character(300, 450, "Xbox 360 Wired Controller", "x", "y", "rx", "ry", .5, .2, "1", "2",
-				characters, this));
+		characters.add(new Character(300, 450, "Xbox 360 Wired Controller", "x", "y", "rx", "ry", "z", "rz", .5, .2,
+				"1", "2", characters, this));
 		characters.add(GOE);
-		for (Controller control : controllers) {
+		for (Controller control : ca) {
 			System.out.println(control.getName());
 		}
+
 	}
 
 	@Override
 	public void paintComponent(Graphics g) {
+
 		// TODO the paint method
 		getControllerInput();
 		Graphics2D g2 = (Graphics2D) g;
 		AffineTransform oldTransform = g2.getTransform();
-		if (!isnormalscreen)
-			g2.scale(((screenWidth / DEFAULT_SCREEN_SIZE_Y) / 16) * 9, screenHeight / DEFAULT_SCREEN_SIZE_Y);
+		if (!isnormalscreen) {
+			g2.scale(screenWidth / DEFAULT_SCREEN_SIZE_X, (screenHeight / DEFAULT_SCREEN_SIZE_X) / 0.625);
+		}
 		switch (screenState) {
 		case (SCREEN_STATE_INGAME):
 			// basic background stuff to build scene
@@ -179,11 +182,6 @@ public class Game extends JComponent implements KeyListener {
 				g.setColor(Game.transparentpurple);
 				g2.fill(person.getHurtbox().getRect());
 			}
-			if (person.isShielding) {
-				g.setColor(Game.transparentblue);
-				g2.fill(person.getShield());
-			}
-
 		}
 	}
 
@@ -220,15 +218,15 @@ public class Game extends JComponent implements KeyListener {
 				for (AttackHitbox hitbox : person2.hitboxes)
 					if (checkCollision(person1.getHurtbox().getRect(), hitbox.getRect()))
 						if (!person1.equals(hitbox.getLinkedCharacter()) && !hitbox.playerHitList.contains(person1)) {
-							if(!person1.getShield().intersects(hitbox.getRect())){
-							person1.applyKnockback(hitbox.getKnockbackX() * person2.getDirection(),
-									hitbox.getKnockbackY(), hitbox.getLinkedCharacter().getDirection());
+							if (!person1.getShield().intersects(hitbox.getRect())) {
 
-							person1.applyHitstun(hitbox.getHitstunLength());
-							person1.applyDamage(hitbox.getDamage());
-							hitbox.playerHitList.add(person1);
+								person1.applyKnockback(hitbox.getKnockbackX() * person2.getDirection(),
+										hitbox.getKnockbackY(), hitbox.getLinkedCharacter().getDirection());
+
+								person1.applyHitstun(hitbox.getHitstunLength());
+								person1.applyDamage(hitbox.getDamage());
+								hitbox.playerHitList.add(person1);
 							}
-							System.out.println(person1.isShielding);
 						}
 	}
 
@@ -441,8 +439,8 @@ public class Game extends JComponent implements KeyListener {
 				characterSlideNum2 = 1;
 			}
 			if (e.getKeyCode() == KeyEvent.VK_2) {
-				characters.add(new Character(300, 575, "Xbox 360 Wired Controller", "x", "y", "rx", "ry", .8, .2, "1",
-						"2", characters, this));
+				characters.add(new Character(300, 575, "Xbox 360 Wired Controller", "x", "y", "rx", "ry", "z", "rz", .8,
+						.2, "1", "2", characters, this));
 				characterSlideNum = 0;
 				characterSlideNum2 = 1;
 			}
