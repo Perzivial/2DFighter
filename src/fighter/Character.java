@@ -39,7 +39,7 @@ public class Character {
 	private double lowJumpHeight = 6;
 	private double runSpeed = 5;
 	private double horizontalSlowdownFactor = 10;
-	private double horizontalInAirDistance = 3;
+	private double horizontalInAirSpeed = 6;
 	private boolean hasDoubleJump = false;
 	private double maxAirSpeed = 5;
 	// State variables
@@ -409,7 +409,7 @@ public class Character {
 	public void handleInput() {
 		if (!isController) {
 			if (state != STATE_HITSTUN) {
-				if (state == STATE_NEUTRAL) {
+				if (state == STATE_NEUTRAL || !isGrounded) {
 					// Jumping code
 					if (isPressing(keyJump)) {
 						jump();
@@ -440,7 +440,7 @@ public class Character {
 			}
 		} else {
 			if (state != STATE_HITSTUN) {
-				if (state == STATE_NEUTRAL) {
+				if (state == STATE_NEUTRAL || !isGrounded) {
 					if (isAxisRight)
 						runRight();
 					if (isAxisLeft)
@@ -478,9 +478,9 @@ public class Character {
 					velX = -runSpeed;
 				direction = DIRECTION_LEFT;
 			}
-		} else if (Math.abs(velX) < maxAirSpeed) {
-			velX -= horizontalInAirDistance;
-		}
+		} else if (velX > -maxAirSpeed) 
+			velX -= horizontalInAirSpeed;
+		
 
 	}
 
@@ -494,8 +494,8 @@ public class Character {
 					velX = runSpeed;
 				direction = DIRECTION_RIGHT;
 			}
-		} else if (Math.abs(velX) < maxAirSpeed)
-			velX += horizontalInAirDistance;
+		} else if (velX < maxAirSpeed)
+			velX += horizontalInAirSpeed;
 
 	}
 
@@ -946,6 +946,7 @@ public class Character {
 									fair();
 								else
 									bair();
+								break;
 							}
 						} else {
 							if (isGrounded) {
@@ -961,6 +962,7 @@ public class Character {
 									fair();
 								else
 									bair();
+								break;
 							}
 						}
 					}
@@ -995,6 +997,7 @@ public class Character {
 								}
 							} else {
 								uair();
+								break;
 							}
 						} else {
 							if (isGrounded) {
@@ -1007,6 +1010,7 @@ public class Character {
 								}
 							} else {
 								dair();
+								break;
 							}
 						}
 					}
@@ -1172,12 +1176,12 @@ public class Character {
 	}
 
 	public void bair() {
-		hitboxes.add(new AttackHitbox(this, -20, 15, 30, 15, 10, -1, 10, 20, 5, 3));
+		hitboxes.add(new AttackHitbox(this, -20, 15, 30, 15, -10, -1, 10, 20, 5, 3));
 		state = STATE_ATTACK_BAIR;
 	}
 
 	public void uair() {
-		hitboxes.add(new AttackHitbox(this, -10, -10, w + 10, 15, .5, -5, 5, 20, 20, 10));
+		hitboxes.add(new AttackHitbox(this, -5, -10, w + 10, 15, .5, -5, 5, 20, 20, 10));
 		state = STATE_ATTACK_UAIR;
 	}
 
