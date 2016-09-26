@@ -194,7 +194,9 @@ public class Character {
 
 	public void placeShield() {
 		shield = new Ellipse2D.Double();
+		if(isShielding)
 		shield.setFrame((x - w) * shieldWidth, (y - 5) * shieldWidth, (h + 5) * shieldWidth, (h + 5) * shieldWidth);
+		
 	}
 
 	public Ellipse2D getShield() {
@@ -1153,13 +1155,6 @@ public class Character {
 		state = STATE_ATTACKDOWN;
 	}
 
-	public void upSmash() {
-		hitboxes.add(new AttackHitbox(this, 10, -20, 20, 30, 1 * smashAttackChargePercent,
-				-10 * smashAttackChargePercent, 30, 10, 15 * smashAttackChargePercent, 20));
-		state = STATE_SMASH_ATTACK_UP;
-		smashAttackChargePercent = 1.0;
-	}
-
 	public void nair() {
 		hitboxes.add(new AttackHitbox(this, 20, 15, 15, 15, .5, -1, 10, 20, 5, 3));
 		state = STATE_ATTACK_NAIR;
@@ -1190,6 +1185,15 @@ public class Character {
 		state = STATE_ATTACK_DAIR;
 	}
 
+
+	public void upSmash() {
+		hitboxes.add(new AttackHitbox(this, 10, -20, 20, 30, 1 * smashAttackChargePercent,
+				-10 * smashAttackChargePercent, 30, 10, 15 * smashAttackChargePercent, 20));
+		state = STATE_SMASH_ATTACK_UP;
+		smashAttackChargePercent = 1.0;
+	}
+
+	
 	public void downSmash() {
 		hitboxes.add(new AttackHitbox(this, -w, h - 15, w * 1.5, 15, -10 * smashAttackChargePercent,
 				1 * smashAttackChargePercent, 30, 10, 2 * smashAttackChargePercent, 20));

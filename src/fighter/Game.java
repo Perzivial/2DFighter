@@ -220,13 +220,15 @@ public class Game extends JComponent implements KeyListener {
 				for (AttackHitbox hitbox : person2.hitboxes)
 					if (checkCollision(person1.getHurtbox().getRect(), hitbox.getRect()))
 						if (!person1.equals(hitbox.getLinkedCharacter()) && !hitbox.playerHitList.contains(person1)) {
-
+							if(!person1.getShield().intersects(hitbox.getRect())){
 							person1.applyKnockback(hitbox.getKnockbackX() * person2.getDirection(),
 									hitbox.getKnockbackY(), hitbox.getLinkedCharacter().getDirection());
 
 							person1.applyHitstun(hitbox.getHitstunLength());
 							person1.applyDamage(hitbox.getDamage());
 							hitbox.playerHitList.add(person1);
+							}
+							System.out.println(person1.isShielding);
 						}
 	}
 
