@@ -1181,7 +1181,7 @@ public class Character {
 	}
 
 	public void uair() {
-		hitboxes.add(new AttackHitbox(this, -5, -10, w + 10, 15, .5, -5, 5, 20, 20, 10));
+		hitboxes.add(new AttackHitbox(this, -5, -10, w + 10, 15, 0, -5, 5, 20, 20, 10));
 		state = STATE_ATTACK_UAIR;
 	}
 
