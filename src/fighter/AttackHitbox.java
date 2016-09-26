@@ -15,7 +15,7 @@ public class AttackHitbox extends Hitbox {
 	public ArrayList<Character> playerHitList = new ArrayList<Character>();
 
 	public AttackHitbox(Character boundPlayer, double localposx, double localposy, double width, double height,
-			double xknockback, double yknockback, int hitstunLen, int lifeTime, double myDamage, int myStartupTime) {
+			double xknockback, double yknockback, int hitstunLen, int lifeTime, double myDamage, int myEndLag) {
 		super(boundPlayer, boundPlayer.getX() + localposx, boundPlayer.getVelY() + localposy, width, height,
 				Game.TYPE_ATTACK);
 		localX = localposx;
@@ -25,7 +25,7 @@ public class AttackHitbox extends Hitbox {
 		hitstunLength = hitstunLen;
 		lifetime = lifeTime;
 		damage = myDamage;
-		endLag = myStartupTime;
+		endLag = myEndLag;
 	}
 
 	public double getlocalX() {

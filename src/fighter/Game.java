@@ -37,7 +37,7 @@ public class Game extends JComponent implements KeyListener {
 	public static Color transparentblue = new Color(0, 0, 255, 75);
 	public static Color transparentpurple = new Color(100, 0, 100, 50);
 
-	boolean shouldShowHitboxes = false;
+	boolean shouldShowHitboxes = true;
 	ArrayList<Hitbox> hitboxes = new ArrayList<Hitbox>();
 	public static final Hitbox GROUND_HITBOX = new Hitbox(200, 500, 720, 175, TYPE_GROUND);
 

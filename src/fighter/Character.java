@@ -35,7 +35,8 @@ public class Character {
 	private int keyModifier;
 	private int keyJump;
 	private int keyAttack;
-	private double jumpHeight = 7;
+	private double jumpHeight = 9;
+	private double lowJumpHeight = 6;
 	private double runSpeed = 5;
 	private double horizontalSlowdownFactor = 10;
 	private double horizontalInAirDistance = 3;
@@ -60,7 +61,7 @@ public class Character {
 	public static int STATE_ATTACK_FAIR = 15;
 	public static int STATE_ATTACK_UAIR = 16;
 	public static int STATE_ATTACK_DAIR = 17;
-	public static int STATE_ATTACK_BAIR = 14;
+	public static int STATE_ATTACK_BAIR = 18;
 	private int direction = 1;
 	private boolean isChargingSmashAttack = false;
 	private double smashAttackChargePercent = 1.0;
@@ -79,6 +80,12 @@ public class Character {
 	BufferedImage fTiltImage = new Image("img/stickman_tilt_f.png").img;
 	BufferedImage uTiltImage = new Image("img/stickman_tilt_u.png").img;
 	BufferedImage dTiltImage = new Image("img/stickman_tilt_d.png").img;
+	// aerials
+	BufferedImage nairImage = new Image("img/stickman_air_n.png").img;
+	BufferedImage fairImage = new Image("img/stickman_air_f.png").img;
+	BufferedImage bairImage = new Image("img/stickman_air_b.png").img;
+	BufferedImage dairImage = new Image("img/stickman_air_d.png").img;
+	BufferedImage uairImage = new Image("img/stickman_air_u.png").img;
 	// smashes
 	BufferedImage uSmashChargeImage = new Image("img/stickman_smash_charge_u.png").img;
 	BufferedImage uSmashImage = new Image("img/stickman_smash_u.png").img;
@@ -259,8 +266,38 @@ public class Character {
 			if (direction == DIRECTION_LEFT)
 				g.drawImage(dTiltImage, (int) x + w, (int) y, (int) (-w * 1.876), h, null);
 		}
+		if (state == STATE_ATTACK_NAIR) {
+			if (direction == DIRECTION_RIGHT)
+				g.drawImage(nairImage, (int) x, (int) y, (int) (w / 0.704735376), h, null);
+			if (direction == DIRECTION_LEFT)
+				g.drawImage(nairImage, (int) x + w, (int) y, (int) (-w / 0.704735376), h, null);
+		}
+		if (state == STATE_ATTACK_FAIR) {
+			if (direction == DIRECTION_RIGHT)
+				g.drawImage(fairImage, (int) x, (int) y, (int) (w / 0.6203473945), h, null);
+			if (direction == DIRECTION_LEFT)
+				g.drawImage(fairImage, (int) x + w, (int) y, (int) (-w / 0.6203473945), h, null);
+		}
+		if (state == STATE_ATTACK_BAIR) {
+			if (direction == DIRECTION_RIGHT)
+				g.drawImage(bairImage, (int) x, (int) y, (int) (w / 0.6203473945), h, null);
+			if (direction == DIRECTION_LEFT)
+				g.drawImage(bairImage, (int) x + w, (int) y, (int) (-w / 0.6203473945), h, null);
+		}
+		if (state == STATE_ATTACK_DAIR) {
+			if (direction == DIRECTION_RIGHT)
+				g.drawImage(dairImage, (int) x, (int) y, (int) (w / 0.8445945946), h, null);
+			if (direction == DIRECTION_LEFT)
+				g.drawImage(dairImage, (int) x + w, (int) y, (int) (-w / 0.8445945946), h, null);
+		}
+		if (state == STATE_ATTACK_UAIR) {
+			if (direction == DIRECTION_RIGHT)
+				g.drawImage(uairImage, (int) x, (int) y, (int) (w / 0.8445945946), h, null);
+			if (direction == DIRECTION_LEFT)
+				g.drawImage(uairImage, (int) x + w, (int) y, (int) (-w / 0.8445945946), h, null);
+		}
 		// smash chargin has a bit of nuances in it so it needs it's own area
-		if (state == STATE_SMASH_ATTACK_CHARGE) {
+		if (state == STATE_SMASH_ATTACK_CHARGE && isGrounded) {
 			if (smashAttackDirection == DIRECTION_UP) {
 				if (direction == DIRECTION_RIGHT)
 					g.drawImage(uSmashChargeImage, (int) x, (int) y, w, h, null);
@@ -286,7 +323,6 @@ public class Character {
 			if (direction == DIRECTION_LEFT)
 				g.drawImage(uSmashImage, (int) x + w, (int) y, -w, h, null);
 		}
-
 		if (state == STATE_SMASH_ATTACK_DOWN) {
 			if (direction == DIRECTION_RIGHT)
 				g.drawImage(dSmashImage, (int) x, (int) y, w, h, null);
@@ -353,8 +389,11 @@ public class Character {
 	}
 
 	public void applyHitstun(int length) {
-		hitstunCounter = length;
-		state = STATE_HITSTUN;
+		if (length > 0) {
+			hitstunCounter = length;
+			state = STATE_HITSTUN;
+			System.out.println(length);
+		}
 	}
 
 	private void blastZone() {
@@ -392,7 +431,7 @@ public class Character {
 					}
 				}
 			}
-			if (!isGrounded) {
+			if (!isGrounded && !isPressing(keyAttack)) {
 				if (Math.abs(velY) < 3) {
 					if (isPressing(keyDown))
 						velY = fallSpeed * 10;
@@ -417,7 +456,7 @@ public class Character {
 
 				}
 			}
-			if (!isGrounded) {
+			if (!isGrounded && !isAttackButtonDownController()) {
 				if (Math.abs(velY) < 3) {
 					if (isAxisDown)
 						velY = fallSpeed * 10;
@@ -430,33 +469,34 @@ public class Character {
 	}
 
 	public void runLeft() {
-		if (state == STATE_NEUTRAL) {
-			if (isGrounded) {
 
+		if (isGrounded) {
+			if (state == STATE_NEUTRAL) {
 				if (Math.abs(moveAxisHistoryX[0]) < moveAxisMidpoint || isPressing(keyModifier))
 					velX = -runSpeed / 3;
 				else
 					velX = -runSpeed;
 				direction = DIRECTION_LEFT;
-			} else if (Math.abs(velX) < maxAirSpeed)
-				velX -= horizontalInAirDistance;
-
+			}
+		} else if (Math.abs(velX) < maxAirSpeed) {
+			velX -= horizontalInAirDistance;
 		}
+
 	}
 
 	public void runRight() {
-		if (state == STATE_NEUTRAL) {
-			if (isGrounded) {
 
+		if (isGrounded) {
+			if (state == STATE_NEUTRAL) {
 				if (Math.abs(moveAxisHistoryX[0]) < moveAxisMidpoint || isPressing(keyModifier))
 					velX = runSpeed / 3;
 				else
 					velX = runSpeed;
 				direction = DIRECTION_RIGHT;
-			} else if (Math.abs(velX) < maxAirSpeed)
-				velX += horizontalInAirDistance;
+			}
+		} else if (Math.abs(velX) < maxAirSpeed)
+			velX += horizontalInAirDistance;
 
-		}
 	}
 
 	public boolean isJumpButtonDownController() {
@@ -485,40 +525,41 @@ public class Character {
 			}
 		}
 		if (canJump) {
-			if (!isController) {
-				if (isGrounded) {
-					/*
-					 * velY -= jumpHeight; keysPressed.remove(keyJump); state =
-					 * STATE_JUMP; jumpTimeBuffer = 5; jumpKeyDownHistory[0] =
-					 * true;
-					 */
-					enterJumpSquat();
-				} else if (hasDoubleJump) {
-					velX = 0;
-					velY = 0;
-					velY -= jumpHeight * 1.2;
-					hasDoubleJump = false;
-					state = STATE_JUMP;
-					jumpTimeBuffer = 2;
-					jumpKeyDownHistory[0] = true;
-					keysPressed.remove(keyJump);
-				}
-			} else if (state != STATE_SMASH_ATTACK_CHARGE) {
-				if (isGrounded) {
-					enterJumpSquat();
-				} else if (hasDoubleJump) {
-					velX = 0;
-					velY = 0;
-					velY -= jumpHeight * 1.2;
-					hasDoubleJump = false;
-					state = STATE_JUMP;
-					jumpTimeBuffer = 2;
-					keysPressed.remove(keyJump);
-				}
+			if (state == STATE_NEUTRAL || state == STATE_CROUCH) {
+				if (!isController) {
+					if (isGrounded) {
+						/*
+						 * velY -= jumpHeight; keysPressed.remove(keyJump);
+						 * state = STATE_JUMP; jumpTimeBuffer = 5;
+						 * jumpKeyDownHistory[0] = true;
+						 */
+						enterJumpSquat();
+					} else if (hasDoubleJump) {
+						velX = 0;
+						velY = 0;
+						velY -= jumpHeight * 1.2;
+						hasDoubleJump = false;
+						state = STATE_JUMP;
+						jumpTimeBuffer = 2;
+						jumpKeyDownHistory[0] = true;
+						keysPressed.remove(keyJump);
+					}
+				} else if (state != STATE_SMASH_ATTACK_CHARGE) {
+					if (isGrounded) {
+						enterJumpSquat();
+					} else if (hasDoubleJump) {
+						velX = 0;
+						velY = 0;
+						velY -= jumpHeight * 1.2;
+						hasDoubleJump = false;
+						state = STATE_JUMP;
+						jumpTimeBuffer = 2;
+						keysPressed.remove(keyJump);
+					}
 
+				}
 			}
 		}
-
 	}
 
 	public void enterJumpSquat() {
@@ -531,24 +572,24 @@ public class Character {
 			if (isController) {
 				if (!isJumpButtonDownController()) {
 					velY--;
-					velY -= jumpHeight;
+					velY -= lowJumpHeight;
 					state = STATE_JUMP;
 					jumpTimeBuffer = 2;
 				} else {
 					velY--;
-					velY -= jumpHeight * 1.5;
+					velY -= jumpHeight;
 					state = STATE_JUMP;
 					jumpTimeBuffer = 5;
 				}
 			} else {
 				if (!isPressing(keyJump)) {
-					velY -= jumpHeight;
+					velY -= lowJumpHeight;
 					keysPressed.remove(keyJump);
 					state = STATE_JUMP;
 					jumpTimeBuffer = 2;
 					jumpKeyDownHistory[0] = true;
 				} else {
-					velY -= jumpHeight * 1.5;
+					velY -= jumpHeight;
 					keysPressed.remove(keyJump);
 					state = STATE_JUMP;
 					jumpTimeBuffer = 5;
@@ -604,8 +645,20 @@ public class Character {
 			if (!lastFrameIsGrounded) {
 				if (state == STATE_NEUTRAL)
 					placeInLandingLag(3);
-				else if (state == STATE_ATTACK) {
+				else if (state == STATE_ATTACK_NAIR) {
 					placeInLandingLag(6);
+					hitboxes.clear();
+				} else if (state == STATE_ATTACK_FAIR) {
+					placeInLandingLag(4);
+					hitboxes.clear();
+				} else if (state == STATE_ATTACK_BAIR) {
+					placeInLandingLag(10);
+					hitboxes.clear();
+				} else if (state == STATE_ATTACK_UAIR) {
+					placeInLandingLag(4);
+					hitboxes.clear();
+				} else if (state == STATE_ATTACK_DAIR) {
+					placeInLandingLag(15);
 					hitboxes.clear();
 				}
 			}
@@ -781,7 +834,7 @@ public class Character {
 									smashAttackDirection = DIRECTION_UP;
 								}
 							} else {
-
+								uair();
 							}
 						} else if (isPressing(keyDown)) {
 							if (isGrounded) {
@@ -792,7 +845,7 @@ public class Character {
 									smashAttackDirection = DIRECTION_DOWN;
 								}
 							} else {
-
+								dair();
 							}
 						} else if (isPressing(keyLeft)) {
 							if (isGrounded) {
@@ -804,7 +857,10 @@ public class Character {
 									direction = DIRECTION_LEFT;
 								}
 							} else {
-
+								if (direction == DIRECTION_LEFT)
+									fair();
+								else
+									bair();
 							}
 						} else if (isPressing(keyRight)) {
 							if (isGrounded) {
@@ -816,7 +872,10 @@ public class Character {
 									direction = DIRECTION_RIGHT;
 								}
 							} else {
-
+								if (direction == DIRECTION_RIGHT)
+									fair();
+								else
+									bair();
 							}
 						} else {
 							if (isGrounded) {
@@ -837,7 +896,7 @@ public class Character {
 	}
 
 	public void chooseAttack(Controller myController) {
-		if (state == STATE_NEUTRAL || state == STATE_CROUCH) {
+		if (canAttack()) {
 			boolean canAttack = true;
 			for (boolean bool : attackKeyDownHistory) {
 				if (bool == true) {
@@ -974,6 +1033,9 @@ public class Character {
 						}
 
 					}
+					if (state == STATE_NEUTRAL && !isGrounded) {
+						nair();
+					}
 				}
 			}
 		}
@@ -986,15 +1048,31 @@ public class Character {
 				if (comp.getName().equals(moveAxisNameRX)) {
 					if (Math.abs(comp.getPollData()) > moveAxisMidpoint) {
 						if (comp.getPollData() > 0) {
-							state = STATE_SMASH_ATTACK_CHARGE;
-							smashAttackDirection = DIRECTION_RIGHT;
-							direction = DIRECTION_RIGHT;
-							break;
+							if (isGrounded) {
+								state = STATE_SMASH_ATTACK_CHARGE;
+								smashAttackDirection = DIRECTION_RIGHT;
+								direction = DIRECTION_RIGHT;
+								break;
+							} else if (canAttack()) {
+								if (direction == DIRECTION_RIGHT)
+									fair();
+								else
+									bair();
+								break;
+							}
 						} else {
-							state = STATE_SMASH_ATTACK_CHARGE;
-							smashAttackDirection = DIRECTION_LEFT;
-							direction = DIRECTION_LEFT;
-							break;
+							if (isGrounded) {
+								state = STATE_SMASH_ATTACK_CHARGE;
+								smashAttackDirection = DIRECTION_LEFT;
+								direction = DIRECTION_LEFT;
+								break;
+							} else if (canAttack()) {
+								if (direction == DIRECTION_LEFT)
+									fair();
+								else
+									bair();
+								break;
+							}
 						}
 
 					}
@@ -1002,13 +1080,24 @@ public class Character {
 				if (comp.getName().equals(moveAxisNameRY)) {
 					if (Math.abs(comp.getPollData()) > moveAxisMidpoint) {
 						if (comp.getPollData() > 0) {
-							state = STATE_SMASH_ATTACK_CHARGE;
-							smashAttackDirection = DIRECTION_DOWN;
-							break;
+							if (isGrounded) {
+								state = STATE_SMASH_ATTACK_CHARGE;
+								smashAttackDirection = DIRECTION_DOWN;
+								break;
+							} else if (canAttack) {
+								dair();
+								break;
+							}
+
 						} else {
-							state = STATE_SMASH_ATTACK_CHARGE;
-							smashAttackDirection = DIRECTION_UP;
-							break;
+							if (isGrounded) {
+								state = STATE_SMASH_ATTACK_CHARGE;
+								smashAttackDirection = DIRECTION_UP;
+								break;
+							} else if (canAttack) {
+								uair();
+								break;
+							}
 						}
 
 					}
@@ -1022,6 +1111,15 @@ public class Character {
 		velX = (newVelX * (dampenedpercent + 1));
 		velY = newVelY * (dampenedpercent + 1);
 		System.out.println(direction2);
+	}
+
+	public boolean canAttack() {
+		if (hitboxes.isEmpty()) {
+			if (state == STATE_CROUCH || state == STATE_NEUTRAL) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	// TODO attack below here
@@ -1058,25 +1156,33 @@ public class Character {
 	}
 
 	public void nair() {
-		hitboxes.add(new AttackHitbox(this, 20, 15, 15, 15, .5, -1, 10, 5, 3, 3));
+		hitboxes.add(new AttackHitbox(this, 20, 15, 15, 15, .5, -1, 10, 20, 5, 3));
 		state = STATE_ATTACK_NAIR;
 		velX += direction * 2;
 	}
 
 	public void fair() {
-
+		hitboxes.add(new AttackHitbox(this, 20 + 2, 0, 15, 15, .5, -1, 10, 10, 1, 1));
+		hitboxes.add(new AttackHitbox(this, 25 + 2, 6, 15, 15, .5, -1, 10, 10, 1, 1));
+		hitboxes.add(new AttackHitbox(this, 30 + 2, 12, 15, 15, .5, -1, 10, 10, 1, 1));
+		hitboxes.add(new AttackHitbox(this, 25 + 2, 18, 15, 15, .5, -1, 10, 10, 1, 1));
+		hitboxes.add(new AttackHitbox(this, 20 + 2, 24, 15, 15, .5, -1, 10, 10, 1, 1));
+		state = STATE_ATTACK_FAIR;
 	}
 
 	public void bair() {
-
+		hitboxes.add(new AttackHitbox(this, -20, 15, 30, 15, 10, -1, 10, 20, 5, 3));
+		state = STATE_ATTACK_BAIR;
 	}
 
 	public void uair() {
-
+		hitboxes.add(new AttackHitbox(this, -10, -10, w + 10, 15, .5, -5, 5, 20, 20, 10));
+		state = STATE_ATTACK_UAIR;
 	}
 
 	public void dair() {
-
+		hitboxes.add(new AttackHitbox(this, 0, h, w, 15, .5, 50, 5, 20, 5, 10));
+		state = STATE_ATTACK_DAIR;
 	}
 
 	public void downSmash() {
@@ -1117,7 +1223,12 @@ public class Character {
 			hurtbox.updateLocation(x, y + h / 2, w, h / 2);
 		else if (state == STATE_ATTACKDOWN || state == STATE_CROUCH)
 			hurtbox.updateLocation(x, y + h * .2, w, h * .8);
-		else
+		else if (state == STATE_ATTACK_BAIR) {
+			if (direction == DIRECTION_RIGHT)
+				hurtbox.updateLocation(x + w - 5, y, w, h);
+			if (direction == DIRECTION_LEFT)
+				hurtbox.updateLocation(x - w + 5, y, w, h);
+		} else
 			hurtbox.updateLocation(x, y, w, h);
 		for (AttackHitbox box : hitboxes) {
 			if (direction == DIRECTION_RIGHT)
