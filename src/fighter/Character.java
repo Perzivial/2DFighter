@@ -881,7 +881,8 @@ public class Character {
 							if (isGrounded) {
 								if (Math.abs(velX) < .1 && Math.abs(velY) < .1 && state != STATE_SMASH_ATTACK_CHARGE)
 									jab();
-							} else {
+							} else if(state == STATE_NEUTRAL
+									){
 								nair();
 							}
 						}
