@@ -43,7 +43,7 @@ public class Game extends JComponent implements KeyListener {
 
 	ArrayList<Character> characters = new ArrayList<Character>();
 	Character GOE = new Character(500, 400, KeyEvent.VK_UP, KeyEvent.VK_DOWN, KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT,
-			KeyEvent.VK_RIGHT, KeyEvent.VK_SPACE, KeyEvent.VK_Q, this);
+			KeyEvent.VK_RIGHT, KeyEvent.VK_SPACE, KeyEvent.VK_Q, KeyEvent.VK_E, this);
 	private int screenState = 0;
 	private final static int SCREEN_STATE_INGAME = 0;
 	private final static int SCREEN_STATE_ADDCHARACTER = 1;
@@ -221,30 +221,22 @@ public class Game extends JComponent implements KeyListener {
 							if (person1.getState() != Character.STATE_DODGE) {
 
 								boolean shouldapplydamage = false;
-
-								/*
-								 * for (int i = 1; i < 100; i++) { for (int o =
-								 * 1; o < 100; o++) {
-								 * 
-								 * if
-								 * (!person1.getShield().contains(hitbox.getX()
-								 * + (1 / i), hitbox.getY() + (1 / o))) {
-								 * 
-								 * shouldapplydamage = true; break; }
-								 * 
-								 * 
-								 * } }
-								 */
-								if (!person1.getShield().contains(hitbox.getX(), hitbox.getY()))
+								// checks the corners to see if they connect
+								// with
+								if (!person1.getShield().contains(hitbox.getX(), hitbox.getY())) {
 									shouldapplydamage = true;
-								if (!person1.getShield().contains(hitbox.getX() + hitbox.getWidth(), hitbox.getY()))
+								}
+								if (!person1.getShield().contains(hitbox.getX() + hitbox.getWidth(), hitbox.getY())) {
 									shouldapplydamage = true;
+								}
 								if (!person1.getShield().contains(hitbox.getX(),
-										hitbox.getRect().getY() + hitbox.getHeight()))
+										hitbox.getRect().getY() + hitbox.getHeight())) {
 									shouldapplydamage = true;
+								}
 								if (!person1.getShield().contains(hitbox.getX() + hitbox.getWidth(),
-										hitbox.getY() + hitbox.getHeight()))
+										hitbox.getY() + hitbox.getHeight())) {
 									shouldapplydamage = true;
+								}
 
 								if (shouldapplydamage) {
 									person1.applyKnockback(hitbox.getKnockbackX() * person2.getDirection(),
@@ -463,7 +455,7 @@ public class Game extends JComponent implements KeyListener {
 
 			if (e.getKeyCode() == KeyEvent.VK_1) {
 				characters.add(new Character(500, 400, KeyEvent.VK_UP, KeyEvent.VK_DOWN, KeyEvent.VK_LEFT,
-						KeyEvent.VK_RIGHT, KeyEvent.VK_SHIFT, KeyEvent.VK_SPACE, KeyEvent.VK_Q, this));
+						KeyEvent.VK_RIGHT, KeyEvent.VK_SHIFT, KeyEvent.VK_SPACE, KeyEvent.VK_Q, KeyEvent.VK_E, this));
 
 				characterSlideNum = 0;
 				characterSlideNum2 = 1;

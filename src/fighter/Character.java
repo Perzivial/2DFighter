@@ -35,6 +35,7 @@ public class Character {
 	private int keyModifier;
 	private int keyJump;
 	private int keyAttack;
+	private int keyShield;
 	private double jumpHeight = 9;
 	private double lowJumpHeight = 6;
 	private double runSpeed = 5;
@@ -155,7 +156,7 @@ public class Character {
 	private Controller myController;
 
 	public Character(int posx, int posy, int upKey, int downKey, int leftKey, int rightKey, int modifierKey,
-			int jumpKey, int attackKey, Game gameinstance) {
+			int jumpKey, int attackKey, int shieldKey, Game gameinstance) {
 		myGame = gameinstance;
 		x = posx;
 		y = posy;
@@ -167,6 +168,7 @@ public class Character {
 		keyRight = rightKey;
 		keyJump = jumpKey;
 		keyAttack = attackKey;
+		keyShield = shieldKey;
 		hurtbox = new Hitbox(this, x, y, w, h, Game.TYPE_HURTBOX);
 
 		placeShield();
@@ -223,11 +225,11 @@ public class Character {
 					(h + 5) * shieldWidth, (h + 5) * shieldWidth);
 			state = STATE_SHIELD;
 			if (isAxisLeft) {
-				velX -= 5;
+				velX = -5;
 				dodge();
 			}
 			if (isAxisRight) {
-				velX += 5;
+				velX = 5;
 				dodge();
 			}
 		} else if (state == STATE_SHIELD) {
@@ -240,16 +242,31 @@ public class Character {
 	}
 
 	public void attemptToShield() {
-		if (myController != null)
-			for (Component comp : myController.getComponents()) {
-				if (comp.getName().equals(getLeftTrigger()) || comp.getName().equals(getRightTrigger())) {
-					if (comp.getPollData() > getAxisMidpoint() && isGrounded && state != STATE_HITSTUN
-							&& state != STATE_DODGE) {
-						isShielding = true;
-						shieldWidth -= 0.002666666667;
+		if (isController) {
+			if (myController != null)
+				for (Component comp : myController.getComponents()) {
+					if (comp.getName().equals(getLeftTrigger()) || comp.getName().equals(getRightTrigger())) {
+						if (comp.getPollData() > getAxisMidpoint() && isGrounded && state != STATE_HITSTUN
+								&& state != STATE_DODGE) {
+							isShielding = true;
+							shieldWidth -= 0.002666666667;
+						}
 					}
 				}
+		} else {
+			if(isPressing(keyShield) && isGrounded && state != STATE_HITSTUN && state != STATE_DODGE){
+			isShielding = true;
+			shieldWidth -= 0.002666666667;
+			if(isPressing(keyLeft)){
+				velX = -5;
+				dodge();
 			}
+			if(isPressing(keyRight)){
+				velX = 5;
+				dodge();
+			}
+			}
+		}
 	}
 
 	public Ellipse2D getShield() {
@@ -1616,6 +1633,18 @@ public class Character {
 
 	public double getpercentage() {
 		return percent;
+	}
+
+	public void setRollDistance(int newRollDistance) {
+		rollDistance = newRollDistance;
+	}
+
+	public int getShieldKey() {
+		return keyShield;
+	}
+
+	public void setShieldKey(int newShieldKey) {
+		keyShield = newShieldKey;
 	}
 
 	private void setJumpHeight(double newJumpHeight) {
