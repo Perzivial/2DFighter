@@ -104,6 +104,9 @@ public class Character {
 	BufferedImage hitstunImage = new Image("img/stickman_hitstun.png").img;
 	BufferedImage jumpSquatImage = new Image("img/stickman_jumpsquat.png").img;
 	BufferedImage jumpImage = new Image("img/stickman_jump.png").img;
+	// shielding/dodging
+	BufferedImage shieldImage = new Image("img/stickman_shield.png").img;
+	BufferedImage dodgeImage = new Image("img/stickman_dodge.png").img;
 
 	private final double startx;
 	private final double starty;
@@ -254,17 +257,17 @@ public class Character {
 					}
 				}
 		} else {
-			if(isPressing(keyShield) && isGrounded && state != STATE_HITSTUN && state != STATE_DODGE){
-			isShielding = true;
-			shieldWidth -= 0.002666666667;
-			if(isPressing(keyLeft)){
-				velX = -5;
-				dodge();
-			}
-			if(isPressing(keyRight)){
-				velX = 5;
-				dodge();
-			}
+			if (isPressing(keyShield) && isGrounded && state != STATE_HITSTUN && state != STATE_DODGE) {
+				if (isPressing(keyLeft)) {
+					velX = -5;
+					dodge();
+				} else if (isPressing(keyRight)) {
+					velX = 5;
+					dodge();
+				} else {
+					isShielding = true;
+					shieldWidth -= 0.002666666667;
+				}
 			}
 		}
 	}
@@ -330,7 +333,7 @@ public class Character {
 		// TODO draws the correct sprite given current state, direction and
 		// other
 		// factors
-		if (state == STATE_NEUTRAL) {
+		if (state == STATE_NEUTRAL || state == STATE_LAG) {
 			if (direction == DIRECTION_RIGHT)
 				g.drawImage(neutralImage, (int) x, (int) y, w, h, null);
 			if (direction == DIRECTION_LEFT)
@@ -449,15 +452,27 @@ public class Character {
 		}
 		if (state == STATE_LANDINGLAG) {
 			if (direction == DIRECTION_RIGHT)
-				g.drawImage(neutralImage, (int) x, (int) y + (int) (h / 2), w, (int) (h / 2), null);
+				g.drawImage(jumpSquatImage, (int) x, (int) y, w, (int) (h), null);
 			if (direction == DIRECTION_LEFT)
-				g.drawImage(neutralImage, (int) x + w, (int) y + (int) (h / 2), -w, (int) (h / 2), null);
+				g.drawImage(jumpSquatImage, (int) x + w, (int) y, -w, (int) (h), null);
 		}
 		if (state == STATE_CROUCH) {
 			if (direction == DIRECTION_RIGHT)
 				g.drawImage(jumpSquatImage, (int) x, (int) y, w, h, null);
 			if (direction == DIRECTION_LEFT)
 				g.drawImage(jumpSquatImage, (int) x + w, (int) y, -w, h, null);
+		}
+		if (state == STATE_SHIELD) {
+			if (direction == DIRECTION_RIGHT)
+				g.drawImage(shieldImage, (int) x, (int) y, w, h, null);
+			if (direction == DIRECTION_LEFT)
+				g.drawImage(shieldImage, (int) x + w, (int) y, -w, h, null);
+		}
+		if (state == STATE_DODGE) {
+			if (direction == DIRECTION_RIGHT)
+				g.drawImage(dodgeImage, (int) x, (int) y, w, h, null);
+			if (direction == DIRECTION_LEFT)
+				g.drawImage(dodgeImage, (int) x + w, (int) y, -w, h, null);
 		}
 	}
 
@@ -1334,9 +1349,7 @@ public class Character {
 
 	// hitboxes and hurtboxes are updated here
 	public void translateHitboxes() {
-		if (state == STATE_LANDINGLAG)
-			hurtbox.updateLocation(x, y + h / 2, w, h / 2);
-		else if (state == STATE_ATTACKDOWN || state == STATE_CROUCH)
+		if (state == STATE_ATTACKDOWN || state == STATE_CROUCH || state == STATE_LANDINGLAG)
 			hurtbox.updateLocation(x, y + h * .2, w, h * .8);
 		else if (state == STATE_ATTACK_BAIR) {
 			if (direction == DIRECTION_RIGHT)
