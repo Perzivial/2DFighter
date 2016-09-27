@@ -218,14 +218,44 @@ public class Game extends JComponent implements KeyListener {
 				for (AttackHitbox hitbox : person2.hitboxes)
 					if (checkCollision(person1.getHurtbox().getRect(), hitbox.getRect()))
 						if (!person1.equals(hitbox.getLinkedCharacter()) && !hitbox.playerHitList.contains(person1)) {
-							if (!person1.getShield().intersects(hitbox.getRect())) {
+							if (person1.getState() != Character.STATE_DODGE) {
 
-								person1.applyKnockback(hitbox.getKnockbackX() * person2.getDirection(),
-										hitbox.getKnockbackY(), hitbox.getLinkedCharacter().getDirection());
+								boolean shouldapplydamage = false;
 
-								person1.applyHitstun(hitbox.getHitstunLength());
-								person1.applyDamage(hitbox.getDamage());
-								hitbox.playerHitList.add(person1);
+								/*
+								 * for (int i = 1; i < 100; i++) { for (int o =
+								 * 1; o < 100; o++) {
+								 * 
+								 * if
+								 * (!person1.getShield().contains(hitbox.getX()
+								 * + (1 / i), hitbox.getY() + (1 / o))) {
+								 * 
+								 * shouldapplydamage = true; break; }
+								 * 
+								 * 
+								 * } }
+								 */
+								if (!person1.getShield().contains(hitbox.getX(), hitbox.getY()))
+									shouldapplydamage = true;
+								if (!person1.getShield().contains(hitbox.getX() + hitbox.getWidth(), hitbox.getY()))
+									shouldapplydamage = true;
+								if (!person1.getShield().contains(hitbox.getX(),
+										hitbox.getRect().getY() + hitbox.getHeight()))
+									shouldapplydamage = true;
+								if (!person1.getShield().contains(hitbox.getX() + hitbox.getWidth(),
+										hitbox.getY() + hitbox.getHeight()))
+									shouldapplydamage = true;
+
+								if (shouldapplydamage) {
+									person1.applyKnockback(hitbox.getKnockbackX() * person2.getDirection(),
+											hitbox.getKnockbackY(), hitbox.getLinkedCharacter().getDirection());
+
+									person1.applyHitstun(hitbox.getHitstunLength());
+									person1.applyDamage(hitbox.getDamage());
+									hitbox.playerHitList.add(person1);
+								} else {
+									System.out.println("WTF");
+								}
 							}
 						}
 	}

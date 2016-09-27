@@ -42,6 +42,7 @@ public class Character {
 	private double horizontalInAirSpeed = 6;
 	private boolean hasDoubleJump = false;
 	private double maxAirSpeed = 5;
+
 	// State variables
 	public static int STATE_NEUTRAL = 0;
 	public static int STATE_ATTACK = 1;
@@ -64,10 +65,13 @@ public class Character {
 	public static int STATE_ATTACK_BAIR = 18;
 	public static int STATE_SHIELD = 19;
 	public static int STATE_DODGE = 20;
+	public static int STATE_LAG = 21;
+
 	private int direction = 1;
 	private boolean isChargingSmashAttack = false;
 	private double smashAttackChargePercent = 1.0;
 	private int smashAttackDirection = 1;
+
 	public final static int DIRECTION_LEFT = -1;
 	public final static int DIRECTION_RIGHT = 1;
 	public final static int DIRECTION_DOWN = -2;
@@ -99,9 +103,11 @@ public class Character {
 	BufferedImage hitstunImage = new Image("img/stickman_hitstun.png").img;
 	BufferedImage jumpSquatImage = new Image("img/stickman_jumpsquat.png").img;
 	BufferedImage jumpImage = new Image("img/stickman_jump.png").img;
+
 	private final double startx;
 	private final double starty;
 	private boolean isController = false;
+
 	private String controllerName;
 	private String moveAxisNameX;
 	private String moveAxisNameY;
@@ -111,6 +117,7 @@ public class Character {
 	private String moveAxisNameRZ;
 	private String axisShield1;
 	private String axisShield2;
+
 	private double moveAxisMidpoint;
 	private boolean isAxisRight = false;
 	private boolean isAxisLeft = false;
@@ -125,6 +132,7 @@ public class Character {
 	private int portNum;
 	private int jumpTimeBuffer = 0;
 	public boolean wasJumpKeyDownLastFrame = false;
+
 	public boolean[] jumpKeyDownHistory = new boolean[] { false, false, false };
 	public boolean[] attackKeyDownHistory = new boolean[] { false, false, false };
 	private double lastFrameX;
@@ -133,6 +141,12 @@ public class Character {
 	private double[] moveAxisHistoryY = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0 };
 	private boolean lastFrameIsGrounded;
 	private int landingLagCounter = 0;
+
+	private int rollDistance = 10;
+	private int rollCounter = 0;
+	private int lagCounter = 0;
+	private int rollLag = 10;
+
 	private double moveAxisDeadZone;
 	private double percent = 0;
 	private int jumpSquatFrames = 6;
@@ -202,13 +216,24 @@ public class Character {
 	public void placeShield() {
 
 		shield = new Ellipse2D.Double();
-		if (isShielding) {
+		if (isShielding && state != STATE_DODGE && state != STATE_LAG) {
 			// shield.setFrame((x - w) * shieldWidth, (y - 5) * shieldWidth, (h
 			// + 5) * shieldWidth, (h + 5) * shieldWidth);
-			shield.setFrame((x - w) + ((1 - shieldWidth) * w * 1.5) , (y - 5) + ((1 - shieldWidth) * w) , (h + 5) * shieldWidth, (h + 5) * shieldWidth);
+			shield.setFrame((x - w) + ((1 - shieldWidth) * w * 1.5), (y - 5) + ((1 - shieldWidth) * w),
+					(h + 5) * shieldWidth, (h + 5) * shieldWidth);
 			state = STATE_SHIELD;
+			if (isAxisLeft) {
+				velX -= 5;
+				dodge();
+			}
+			if (isAxisRight) {
+				velX += 5;
+				dodge();
+			}
 		} else if (state == STATE_SHIELD) {
 			state = STATE_NEUTRAL;
+		} else if (shieldWidth <= 1.0) {
+			shieldWidth += 0.002083333333;
 		}
 		isShielding = false;
 
@@ -218,7 +243,8 @@ public class Character {
 		if (myController != null)
 			for (Component comp : myController.getComponents()) {
 				if (comp.getName().equals(getLeftTrigger()) || comp.getName().equals(getRightTrigger())) {
-					if (comp.getPollData() > getAxisMidpoint() && isGrounded && state != STATE_HITSTUN) {
+					if (comp.getPollData() > getAxisMidpoint() && isGrounded && state != STATE_HITSTUN
+							&& state != STATE_DODGE) {
 						isShielding = true;
 						shieldWidth -= 0.002666666667;
 					}
@@ -228,6 +254,18 @@ public class Character {
 
 	public Ellipse2D getShield() {
 		return shield;
+	}
+
+	public void dodge() {
+		if (state == STATE_SHIELD) {
+			rollCounter = rollDistance;
+			state = STATE_DODGE;
+		}
+	}
+
+	public void putIntoLag(int lagAmount) {
+		lagCounter = lagAmount;
+		state = STATE_LAG;
 	}
 
 	public void applyDamage(double damageApplied) {
@@ -269,10 +307,6 @@ public class Character {
 			g.setColor(Game.transparentblue);
 			g2.fill(getShield());
 		}
-	}
-
-	public void dodge() {
-
 	}
 
 	public void drawCorrectSprite(Graphics g) {
@@ -716,6 +750,23 @@ public class Character {
 	public void updateStates() {
 		applyJumpWhenRequired();
 		chargeSmashAttack();
+
+		if (state == STATE_LAG) {
+			if (lagCounter > 0) {
+				lagCounter--;
+			} else {
+				state = STATE_NEUTRAL;
+			}
+		}
+
+		if (state == STATE_DODGE) {
+			if (rollCounter > 0) {
+				rollCounter--;
+			} else {
+				velX = 0;
+				putIntoLag(rollLag);
+			}
+		}
 		if (landingLagCounter > 0) {
 			landingLagCounter--;
 		} else if (state == STATE_LANDINGLAG) {
@@ -836,7 +887,7 @@ public class Character {
 	}
 
 	public void applyFriction() {
-		if (isGrounded)
+		if (isGrounded && state != STATE_DODGE)
 			velX /= horizontalSlowdownFactor;
 	}
 
