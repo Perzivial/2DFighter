@@ -67,7 +67,8 @@ public class Character {
 	public static int STATE_SHIELD = 19;
 	public static int STATE_DODGE = 20;
 	public static int STATE_LAG = 21;
-
+	public static int STATE_AIRDODGE = 22;
+	public static int STATE_LANDFALLSPECIAL = 23;
 	private int direction = 1;
 	private boolean isChargingSmashAttack = false;
 	private double smashAttackChargePercent = 1.0;
@@ -107,6 +108,9 @@ public class Character {
 	// shielding/dodging
 	BufferedImage shieldImage = new Image("img/stickman_shield.png").img;
 	BufferedImage dodgeImage = new Image("img/stickman_dodge.png").img;
+	BufferedImage airdodgeImage = new Image("img/stickman_airdodge.png").img;
+	// lag
+	BufferedImage lagImage = new Image("img/stickman_endlag.png").img;
 
 	private final double startx;
 	private final double starty;
@@ -153,8 +157,11 @@ public class Character {
 
 	private double moveAxisDeadZone;
 	private double percent = 0;
-	private int jumpSquatFrames = 6;
+	private int jumpSquatFrames = 8;
 	private int jumpSquatBuffer = 0;
+	private int waveDashLength = 7;
+	private int waveDashCounter = 0;
+	private int waveDashSpeed = 3;
 	private Game myGame;
 	private Controller myController;
 
@@ -221,27 +228,34 @@ public class Character {
 	public void placeShield() {
 
 		shield = new Ellipse2D.Double();
-		if (isShielding && state != STATE_DODGE && state != STATE_LAG) {
-			// shield.setFrame((x - w) * shieldWidth, (y - 5) * shieldWidth, (h
-			// + 5) * shieldWidth, (h + 5) * shieldWidth);
-			shield.setFrame((x - w) + ((1 - shieldWidth) * w * 1.5), (y - 5) + ((1 - shieldWidth) * w),
-					(h + 5) * shieldWidth, (h + 5) * shieldWidth);
-			state = STATE_SHIELD;
-			if (isAxisLeft) {
-				velX = -5;
-				dodge();
-			}
-			if (isAxisRight) {
-				velX = 5;
-				dodge();
-			}
-		} else if (state == STATE_SHIELD) {
-			state = STATE_NEUTRAL;
-		} else if (shieldWidth <= 1.0) {
-			shieldWidth += 0.002083333333;
-		}
-		isShielding = false;
+		if (!isJumpButtonDownController() && state != STATE_JUMPSQUAT && state != STATE_JUMP && state != STATE_LANDFALLSPECIAL) {
+			if (isShielding && state != STATE_DODGE && state != STATE_LAG) {
+				shield.setFrame((x - w) + ((1 - shieldWidth) * w * 1.5), (y - 5) + ((1 - shieldWidth) * w),
+						(h + 5) * shieldWidth, (h + 5) * shieldWidth);
 
+				state = STATE_SHIELD;
+				if (isAxisLeft) {
+					velX = -5;
+					dodge();
+				}
+				if (isAxisRight) {
+					velX = 5;
+					dodge();
+				}
+			} else if (state == STATE_SHIELD) {
+				state = STATE_NEUTRAL;
+			} else if (shieldWidth <= 1.0) {
+				shieldWidth += 0.002083333333;
+			}
+			isShielding = false;
+		}
+	}
+
+	public void breakShield() {
+		if (shieldWidth <= .4) {
+			isShielding = false;
+			putIntoLag(4 * 60);
+		}
 	}
 
 	public void attemptToShield() {
@@ -249,11 +263,37 @@ public class Character {
 			if (myController != null)
 				for (Component comp : myController.getComponents()) {
 					if (comp.getName().equals(getLeftTrigger()) || comp.getName().equals(getRightTrigger())) {
-						if (comp.getPollData() > getAxisMidpoint() && isGrounded && state != STATE_HITSTUN
-								&& state != STATE_DODGE) {
-							isShielding = true;
-							shieldWidth -= 0.002666666667;
+						if (comp.getPollData() > getAxisMidpoint()) {
+							if (isGrounded && state != STATE_JUMPSQUAT) {
+								if (isGrounded && state != STATE_HITSTUN && state != STATE_DODGE) {
+									isShielding = true;
+									shieldWidth -= 0.002666666667;
+									breakShield();
+								}
+							} else if (state != STATE_HITSTUN && state != STATE_AIRDODGE) {
+								velX = 0;
+								velY = 0;
+								//TODO wavedash code
+								if (state != STATE_JUMPSQUAT && waveDashCounter > 0) {
+									if (isAxisLeft)
+										velX -= waveDashSpeed;
+									if (isAxisRight)
+										velX += waveDashSpeed;
+									if (isAxisUp)
+										velY -= waveDashSpeed;
+									if (isAxisDown)
+										velY += waveDashSpeed;
+									System.out.println(state);
+								} else {
+									if (isAxisLeft)
+										velX -= 10;
+									if (isAxisRight)
+										velX += 10;
+									waveDash();
+								}
+							}
 						}
+
 					}
 				}
 		} else {
@@ -267,19 +307,33 @@ public class Character {
 				} else {
 					isShielding = true;
 					shieldWidth -= 0.002666666667;
+					breakShield();
 				}
 			}
 		}
+
 	}
 
 	public Ellipse2D getShield() {
 		return shield;
 	}
 
+	public void waveDash() {
+		waveDashCounter = waveDashLength;
+		state = STATE_LANDFALLSPECIAL;
+		removeJumpButtonHistory();
+		jumpSquatBuffer = 0;
+	}
+
 	public void dodge() {
-		if (state == STATE_SHIELD) {
+		if (isGrounded) {
+			if (state == STATE_SHIELD) {
+				rollCounter = rollDistance;
+				state = STATE_DODGE;
+			}
+		} else {
 			rollCounter = rollDistance;
-			state = STATE_DODGE;
+			state = STATE_AIRDODGE;
 		}
 	}
 
@@ -321,6 +375,12 @@ public class Character {
 		placeShield();
 	}
 
+	public void removeJumpButtonHistory() {
+		for (boolean mybool : jumpKeyDownHistory) {
+			mybool = false;
+		}
+	}
+
 	public void drawShield(Graphics g) {
 		if (isShielding) {
 			Graphics2D g2 = (Graphics2D) g;
@@ -333,7 +393,7 @@ public class Character {
 		// TODO draws the correct sprite given current state, direction and
 		// other
 		// factors
-		if (state == STATE_NEUTRAL || state == STATE_LAG) {
+		if (state == STATE_NEUTRAL) {
 			if (direction == DIRECTION_RIGHT)
 				g.drawImage(neutralImage, (int) x, (int) y, w, h, null);
 			if (direction == DIRECTION_LEFT)
@@ -474,6 +534,12 @@ public class Character {
 			if (direction == DIRECTION_LEFT)
 				g.drawImage(dodgeImage, (int) x + w, (int) y, -w, h, null);
 		}
+		if (state == STATE_LAG) {
+			if (direction == DIRECTION_RIGHT)
+				g.drawImage(lagImage, (int) x, (int) y, w, h, null);
+			if (direction == DIRECTION_LEFT)
+				g.drawImage(lagImage, (int) x + w, (int) y, -w, h, null);
+		}
 	}
 
 	public void move() {
@@ -540,7 +606,7 @@ public class Character {
 					}
 				}
 			}
-			if (!isGrounded && !isPressing(keyAttack)) {
+			if (!isGrounded && !isPressing(keyAttack) && state == STATE_NEUTRAL) {
 				if (Math.abs(velY) < 3) {
 					if (isPressing(keyDown))
 						velY = fallSpeed * 10;
@@ -564,7 +630,7 @@ public class Character {
 
 				}
 			}
-			if (!isGrounded && !isAttackButtonDownController()) {
+			if (!isGrounded && !isAttackButtonDownController() && state == STATE_NEUTRAL) {
 				if (Math.abs(velY) < 3) {
 					if (isAxisDown)
 						velY = fallSpeed * 10;
@@ -586,7 +652,7 @@ public class Character {
 					velX = -runSpeed;
 				direction = DIRECTION_LEFT;
 			}
-		} else if (velX > -maxAirSpeed)
+		} else if (velX > -maxAirSpeed && state != STATE_AIRDODGE)
 			velX -= horizontalInAirSpeed;
 
 	}
@@ -601,7 +667,7 @@ public class Character {
 					velX = runSpeed;
 				direction = DIRECTION_RIGHT;
 			}
-		} else if (velX < maxAirSpeed)
+		} else if (velX < maxAirSpeed && state != STATE_AIRDODGE)
 			velX += horizontalInAirSpeed;
 
 	}
@@ -625,6 +691,7 @@ public class Character {
 	}
 
 	public void jump() {
+
 		boolean canJump = true;
 		for (boolean bool : jumpKeyDownHistory) {
 			if (bool == true) {
@@ -632,7 +699,7 @@ public class Character {
 			}
 		}
 		if (canJump) {
-			if (state == STATE_NEUTRAL || state == STATE_CROUCH) {
+			if (state == STATE_NEUTRAL || state == STATE_CROUCH || state == STATE_LANDFALLSPECIAL) {
 				if (!isController) {
 					if (isGrounded) {
 						/*
@@ -667,6 +734,7 @@ public class Character {
 				}
 			}
 		}
+
 	}
 
 	public void enterJumpSquat() {
@@ -736,14 +804,15 @@ public class Character {
 	}
 
 	public void fall() {
+		if (state != STATE_DODGE) {
+			if (!isGrounded) {
 
-		if (!isGrounded) {
+				velY += fallSpeed;
 
-			velY += fallSpeed;
-
-		} else {
-			if (state == STATE_NEUTRAL || state == STATE_CROUCH)
-				velY = 0;
+			} else {
+				if (state == STATE_NEUTRAL || state == STATE_CROUCH)
+					velY = 0;
+			}
 		}
 	}
 
@@ -787,6 +856,15 @@ public class Character {
 			if (lagCounter > 0) {
 				lagCounter--;
 			} else {
+				state = STATE_NEUTRAL;
+			}
+		}
+
+		if (state == STATE_LANDFALLSPECIAL) {
+			if (waveDashCounter > 0) {
+				waveDashCounter--;
+			} else {
+				velX = 0;
 				state = STATE_NEUTRAL;
 			}
 		}
@@ -919,7 +997,7 @@ public class Character {
 	}
 
 	public void applyFriction() {
-		if (isGrounded && state != STATE_DODGE)
+		if (isGrounded && state != STATE_DODGE && state != STATE_LANDFALLSPECIAL && state != STATE_JUMPSQUAT)
 			velX /= horizontalSlowdownFactor;
 	}
 
