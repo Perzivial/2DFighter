@@ -39,7 +39,7 @@ public class Character {
 	private double jumpHeight = 9;
 	private double lowJumpHeight = 6;
 	private double runSpeed = 5;
-	private double horizontalSlowdownFactor = 10;
+	private double horizontalSlowdownFactor = 1.3;
 	private double horizontalInAirSpeed = 6;
 	private boolean hasDoubleJump = false;
 	private double maxAirSpeed = 5;
@@ -804,7 +804,7 @@ public class Character {
 	}
 
 	public void fall() {
-		if (state != STATE_DODGE) {
+		if (state != STATE_AIRDODGE) {
 			if (!isGrounded) {
 
 				velY += fallSpeed;

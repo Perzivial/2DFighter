@@ -10,6 +10,8 @@ import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.HashSet;
 
@@ -82,7 +84,7 @@ public class Game extends JComponent implements KeyListener {
 			// basic background stuff to build scene
 			drawBackground(g);
 			drawGround(g);
-			doPlayerPhysics();
+			doPlayerPhysics(g);
 			doPlayerDrawing(g);
 
 			// draws hitboxes, should be after all other drawing code
@@ -134,7 +136,7 @@ public class Game extends JComponent implements KeyListener {
 		}
 	}
 
-	public void doPlayerPhysics() {
+	public void doPlayerPhysics(Graphics g) {
 		for (Character person : characters) {
 			Rectangle groundChecker = new Rectangle((int) person.getX(), (int) person.getY() + 1,
 					(int) person.getWidth(), (int) person.getHeight());
@@ -144,7 +146,7 @@ public class Game extends JComponent implements KeyListener {
 				person.isGrounded = false;
 
 		}
-		checkForAndExecutePlayerHitDectection();
+		checkForAndExecutePlayerHitDectection((Graphics2D) g);
 	}
 
 	public void drawPlayerPercentage(Graphics g) {
@@ -208,7 +210,7 @@ public class Game extends JComponent implements KeyListener {
 	}
 
 	// self explanatory naming FTW
-	public void checkForAndExecutePlayerHitDectection() {
+	public void checkForAndExecutePlayerHitDectection(Graphics2D g2) {
 
 		// person1 is the person getting hit and hitbox is the hitbox doing the
 		// hitting
@@ -221,21 +223,24 @@ public class Game extends JComponent implements KeyListener {
 							if (person1.getState() != Character.STATE_DODGE) {
 
 								boolean shouldapplydamage = false;
-								// checks the corners to see if they connect
-								// with
-								if (!person1.getShield().contains(hitbox.getX(), hitbox.getY())) {
-									shouldapplydamage = true;
-								}
-								if (!person1.getShield().contains(hitbox.getX() + hitbox.getWidth(), hitbox.getY())) {
-									shouldapplydamage = true;
-								}
-								if (!person1.getShield().contains(hitbox.getX(),
-										hitbox.getRect().getY() + hitbox.getHeight())) {
-									shouldapplydamage = true;
-								}
-								if (!person1.getShield().contains(hitbox.getX() + hitbox.getWidth(),
-										hitbox.getY() + hitbox.getHeight())) {
-									shouldapplydamage = true;
+								// new approach, divides the hitbox into 6, each
+								// of which check first if they are intersecting with the hitbox
+								// then check if it is not colliding with the shield
+								for (int i = 1; i < 6; i++) {
+									for (int o = 1; o < 6; o++) {
+
+										Rectangle2D miniRect = new Rectangle2D.Double(
+												(hitbox.getX() + (hitbox.getWidth() * i) / 6) - hitbox.getWidth() / 6,
+												(hitbox.getY() + (hitbox.getHeight() * o) / 6) - hitbox.getHeight() / 6,
+												hitbox.getWidth() / 6, hitbox.getHeight() / 6);
+										
+										if (miniRect.intersects(hitbox.getRect())) {
+
+											if (!person1.getShield().intersects(miniRect)) {
+												shouldapplydamage = true;
+											}
+										}
+									}
 								}
 
 								if (shouldapplydamage) {
@@ -245,8 +250,6 @@ public class Game extends JComponent implements KeyListener {
 									person1.applyHitstun(hitbox.getHitstunLength());
 									person1.applyDamage(hitbox.getDamage());
 									hitbox.playerHitList.add(person1);
-								} else {
-									System.out.println("WTF");
 								}
 							}
 						}
