@@ -38,7 +38,7 @@ public class Character {
 	private int keyShield;
 	private double jumpHeight = 9;
 	private double lowJumpHeight = 6;
-	private double runSpeed = 5;
+	private double runSpeed = 6;
 	private double horizontalSlowdownFactor = 1.3;
 	private double horizontalInAirSpeed = 6;
 	private boolean hasDoubleJump = false;
@@ -229,7 +229,7 @@ public class Character {
 
 		shield = new Ellipse2D.Double();
 		if (!isJumpButtonDownController() && state != STATE_JUMPSQUAT && state != STATE_JUMP && state != STATE_LANDFALLSPECIAL) {
-			if (isShielding && state != STATE_DODGE && state != STATE_LAG) {
+			if (isShielding && state != STATE_DODGE && state != STATE_LAG && !isJumpButtonDownController()){
 				shield.setFrame((x - w) + ((1 - shieldWidth) * w * 1.5), (y - 5) + ((1 - shieldWidth) * w),
 						(h + 5) * shieldWidth, (h + 5) * shieldWidth);
 
@@ -270,11 +270,11 @@ public class Character {
 									shieldWidth -= 0.002666666667;
 									breakShield();
 								}
-							} else if (state != STATE_HITSTUN && state != STATE_AIRDODGE) {
+							} else if (state != STATE_HITSTUN && state != STATE_AIRDODGE && state != STATE_LANDFALLSPECIAL) {
 								velX = 0;
 								velY = 0;
 								//TODO wavedash code
-								if (state != STATE_JUMPSQUAT && waveDashCounter > 0) {
+								if (state != STATE_JUMPSQUAT) {
 									if (isAxisLeft)
 										velX -= waveDashSpeed;
 									if (isAxisRight)
@@ -286,9 +286,9 @@ public class Character {
 									System.out.println(state);
 								} else {
 									if (isAxisLeft)
-										velX -= 10;
+										velX -= waveDashSpeed;
 									if (isAxisRight)
-										velX += 10;
+										velX += waveDashSpeed;
 									waveDash();
 								}
 							}
@@ -864,7 +864,6 @@ public class Character {
 			if (waveDashCounter > 0) {
 				waveDashCounter--;
 			} else {
-				velX = 0;
 				state = STATE_NEUTRAL;
 			}
 		}
@@ -997,8 +996,11 @@ public class Character {
 	}
 
 	public void applyFriction() {
-		if (isGrounded && state != STATE_DODGE && state != STATE_LANDFALLSPECIAL && state != STATE_JUMPSQUAT)
+		if (isGrounded && state != STATE_DODGE && state != STATE_JUMPSQUAT)
 			velX /= horizontalSlowdownFactor;
+		if(state == STATE_LANDFALLSPECIAL){
+			velX /= horizontalSlowdownFactor / 2;
+		}
 	}
 
 	// TODO attack locations. syntax is : character, local position x, local
