@@ -45,7 +45,7 @@ public class Game extends JComponent implements KeyListener {
 
 	ArrayList<Character> characters = new ArrayList<Character>();
 	Character GOE = new Character(500, 400, KeyEvent.VK_UP, KeyEvent.VK_DOWN, KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT,
-			KeyEvent.VK_RIGHT, KeyEvent.VK_SPACE, KeyEvent.VK_Q, KeyEvent.VK_E, this);
+			KeyEvent.VK_RIGHT, KeyEvent.VK_SPACE, KeyEvent.VK_Q, KeyEvent.VK_E, KeyEvent.VK_R, this);
 	private int screenState = 0;
 	private final static int SCREEN_STATE_INGAME = 0;
 	private final static int SCREEN_STATE_ADDCHARACTER = 1;
@@ -61,7 +61,7 @@ public class Game extends JComponent implements KeyListener {
 		hitboxes.add(GROUND_HITBOX);
 		doControllerThings();
 		characters.add(new Character(300, 450, "Xbox 360 Wired Controller", "x", "y", "rx", "ry", "z", "rz", .5, .2,
-				"1", "2", characters, this));
+				"1", "2", "5", characters, this));
 		characters.add(GOE);
 		for (Controller control : ca) {
 			System.out.println(control.getName());
@@ -224,8 +224,10 @@ public class Game extends JComponent implements KeyListener {
 
 								boolean shouldapplydamage = false;
 								// new approach, divides the hitbox into 6, each
-								// of which check first if they are intersecting with the hitbox
-								// then check if it is not colliding with the shield
+								// of which check first if they are intersecting
+								// with the hitbox
+								// then check if it is not colliding with the
+								// shield
 								for (int i = 1; i < 6; i++) {
 									for (int o = 1; o < 6; o++) {
 
@@ -233,7 +235,7 @@ public class Game extends JComponent implements KeyListener {
 												(hitbox.getX() + (hitbox.getWidth() * i) / 6) - hitbox.getWidth() / 6,
 												(hitbox.getY() + (hitbox.getHeight() * o) / 6) - hitbox.getHeight() / 6,
 												hitbox.getWidth() / 6, hitbox.getHeight() / 6);
-										
+
 										if (miniRect.intersects(hitbox.getRect())) {
 
 											if (!person1.getShield().intersects(miniRect)) {
@@ -375,6 +377,12 @@ public class Game extends JComponent implements KeyListener {
 								if (comp.getPollData() != 1.0)
 									person.setIsAttackButtonDown(false);
 							}
+							if (person.getButtonGrab().equals(comp.getName())) {
+								if (comp.getPollData() == 1 && person.isGrounded) {
+									if(person.getState() == Character.STATE_NEUTRAL)
+									person.grab();
+								}
+							}
 						}
 					}
 				}
@@ -458,14 +466,15 @@ public class Game extends JComponent implements KeyListener {
 
 			if (e.getKeyCode() == KeyEvent.VK_1) {
 				characters.add(new Character(500, 400, KeyEvent.VK_UP, KeyEvent.VK_DOWN, KeyEvent.VK_LEFT,
-						KeyEvent.VK_RIGHT, KeyEvent.VK_SHIFT, KeyEvent.VK_SPACE, KeyEvent.VK_Q, KeyEvent.VK_E, this));
+						KeyEvent.VK_RIGHT, KeyEvent.VK_SHIFT, KeyEvent.VK_SPACE, KeyEvent.VK_Q, KeyEvent.VK_R,
+						KeyEvent.VK_E, this));
 
 				characterSlideNum = 0;
 				characterSlideNum2 = 1;
 			}
 			if (e.getKeyCode() == KeyEvent.VK_2) {
 				characters.add(new Character(300, 575, "Xbox 360 Wired Controller", "x", "y", "rx", "ry", "z", "rz", .8,
-						.2, "1", "2", characters, this));
+						.2, "1", "2", "5", characters, this));
 				characterSlideNum = 0;
 				characterSlideNum2 = 1;
 			}

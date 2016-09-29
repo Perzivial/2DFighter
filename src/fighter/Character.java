@@ -36,6 +36,7 @@ public class Character {
 	private int keyJump;
 	private int keyAttack;
 	private int keyShield;
+	private int keyGrab;
 	private double jumpHeight = 9;
 	private double lowJumpHeight = 6;
 	private double runSpeed = 6;
@@ -69,6 +70,7 @@ public class Character {
 	public static int STATE_LAG = 21;
 	public static int STATE_AIRDODGE = 22;
 	public static int STATE_LANDFALLSPECIAL = 23;
+	public static int STATE_GRAB = 24;
 	private int direction = 1;
 	private boolean isChargingSmashAttack = false;
 	private double smashAttackChargePercent = 1.0;
@@ -135,6 +137,7 @@ public class Character {
 	private double axisDeadZone;
 	private String buttonJump;
 	private String buttonAttack;
+	private String buttonGrab;
 	public boolean isAttackButtonDown;
 	public boolean isJumpButtonDown;
 	private int portNum;
@@ -159,14 +162,14 @@ public class Character {
 	private double percent = 0;
 	private int jumpSquatFrames = 8;
 	private int jumpSquatBuffer = 0;
-	private int waveDashLength = 7;
-	private int waveDashCounter = 0;
-	private int waveDashSpeed = 3;
+	private boolean canAirDodge = true;
+	private int grabCounter = 0;
+	private int grabLength = 10;
 	private Game myGame;
 	private Controller myController;
 
 	public Character(int posx, int posy, int upKey, int downKey, int leftKey, int rightKey, int modifierKey,
-			int jumpKey, int attackKey, int shieldKey, Game gameinstance) {
+			int jumpKey, int attackKey, int shieldKey, int grabKey, Game gameinstance) {
 		myGame = gameinstance;
 		x = posx;
 		y = posy;
@@ -179,14 +182,15 @@ public class Character {
 		keyJump = jumpKey;
 		keyAttack = attackKey;
 		keyShield = shieldKey;
+		keyGrab = grabKey;
 		hurtbox = new Hitbox(this, x, y, w, h, Game.TYPE_HURTBOX);
-
 		placeShield();
 	}
 
 	public Character(int posx, int posy, String nameOfController, String axisName, String axisName2, String axisName3,
 			String axisName4, String leftTrigger, String rightTrigger, double axisMidpoint, double deadZone,
-			String jumpButton, String attackButton, ArrayList<Character> characters, Game gameinstance) {
+			String jumpButton, String attackButton, String grabButton, ArrayList<Character> characters,
+			Game gameinstance) {
 		myGame = gameinstance;
 		x = posx;
 		y = posy;
@@ -220,16 +224,17 @@ public class Character {
 		moveAxisMidpoint = axisMidpoint;
 		buttonJump = jumpButton;
 		buttonAttack = attackButton;
+		buttonGrab = grabButton;
 		isController = true;
 		controllerName = nameOfController;
 		placeShield();
 	}
 
 	public void placeShield() {
-
 		shield = new Ellipse2D.Double();
-		if (!isJumpButtonDownController() && state != STATE_JUMPSQUAT && state != STATE_JUMP && state != STATE_LANDFALLSPECIAL) {
-			if (isShielding && state != STATE_DODGE && state != STATE_LAG && !isJumpButtonDownController()){
+		if (!isJumpButtonDownController() && state != STATE_JUMPSQUAT && state != STATE_JUMP
+				&& state != STATE_LANDFALLSPECIAL) {
+			if (isShielding && state != STATE_DODGE && state != STATE_LAG && !isJumpButtonDownController()) {
 				shield.setFrame((x - w) + ((1 - shieldWidth) * w * 1.5), (y - 5) + ((1 - shieldWidth) * w),
 						(h + 5) * shieldWidth, (h + 5) * shieldWidth);
 
@@ -251,6 +256,10 @@ public class Character {
 		}
 	}
 
+	public void setShield(Ellipse2D shield) {
+		this.shield = shield;
+	}
+
 	public void breakShield() {
 		if (shieldWidth <= .4) {
 			isShielding = false;
@@ -259,37 +268,23 @@ public class Character {
 	}
 
 	public void attemptToShield() {
+
 		if (isController) {
 			if (myController != null)
 				for (Component comp : myController.getComponents()) {
 					if (comp.getName().equals(getLeftTrigger()) || comp.getName().equals(getRightTrigger())) {
 						if (comp.getPollData() > getAxisMidpoint()) {
-							if (isGrounded && state != STATE_JUMPSQUAT) {
+							if (isGrounded) {
 								if (isGrounded && state != STATE_HITSTUN && state != STATE_DODGE) {
 									isShielding = true;
 									shieldWidth -= 0.002666666667;
 									breakShield();
 								}
-							} else if (state != STATE_HITSTUN && state != STATE_AIRDODGE && state != STATE_LANDFALLSPECIAL) {
-								velX = 0;
-								velY = 0;
-								//TODO wavedash code
+							} else if (state != STATE_HITSTUN && state != STATE_DODGE && canAirDodge) {
+								// velX = 0;
+								// velY = 0;
 								if (state != STATE_JUMPSQUAT) {
-									if (isAxisLeft)
-										velX -= waveDashSpeed;
-									if (isAxisRight)
-										velX += waveDashSpeed;
-									if (isAxisUp)
-										velY -= waveDashSpeed;
-									if (isAxisDown)
-										velY += waveDashSpeed;
-									System.out.println(state);
-								} else {
-									if (isAxisLeft)
-										velX -= waveDashSpeed;
-									if (isAxisRight)
-										velX += waveDashSpeed;
-									waveDash();
+									dodge();
 								}
 							}
 						}
@@ -297,17 +292,30 @@ public class Character {
 					}
 				}
 		} else {
-			if (isPressing(keyShield) && isGrounded && state != STATE_HITSTUN && state != STATE_DODGE) {
-				if (isPressing(keyLeft)) {
-					velX = -5;
-					dodge();
-				} else if (isPressing(keyRight)) {
-					velX = 5;
-					dodge();
+			if (isPressing(keyShield) && state != STATE_HITSTUN && state != STATE_DODGE && state != STATE_CROUCH) {
+				if (isGrounded && state != STATE_JUMPSQUAT) {
+					if (isPressing(keyLeft)) {
+						velX = -5;
+						dodge();
+					} else if (isPressing(keyRight)) {
+						velX = 5;
+						dodge();
+					} else {
+						isShielding = true;
+						shieldWidth -= 0.002666666667;
+						breakShield();
+					}
+
 				} else {
-					isShielding = true;
-					shieldWidth -= 0.002666666667;
-					breakShield();
+					if (state != STATE_JUMPSQUAT) {
+						/*
+						 * if (isPressing(keyLeft)) velX -= waveDashSpeed; if
+						 * (isPressing(keyRight)) velX += waveDashSpeed; if
+						 * (isPressing(keyUp)) velY -= waveDashSpeed; if
+						 * (isPressing(keyDown)) velY += waveDashSpeed;
+						 */
+						dodge();
+					}
 				}
 			}
 		}
@@ -318,22 +326,18 @@ public class Character {
 		return shield;
 	}
 
-	public void waveDash() {
-		waveDashCounter = waveDashLength;
-		state = STATE_LANDFALLSPECIAL;
-		removeJumpButtonHistory();
-		jumpSquatBuffer = 0;
-	}
-
 	public void dodge() {
+
 		if (isGrounded) {
 			if (state == STATE_SHIELD) {
 				rollCounter = rollDistance;
 				state = STATE_DODGE;
 			}
-		} else {
+
+		} else if (canAirDodge) {
 			rollCounter = rollDistance;
-			state = STATE_AIRDODGE;
+			state = STATE_DODGE;
+			canAirDodge = false;
 		}
 	}
 
@@ -355,13 +359,14 @@ public class Character {
 	}
 
 	public void draw(Graphics g) {
+
 		getController();
 		updateStates();
 		fall();
 		checkifShouldApplyLandingLag();
 		handleInput();
+		tryGrab();
 		move();
-
 		blastZone();
 		translateHitboxes();
 
@@ -652,7 +657,7 @@ public class Character {
 					velX = -runSpeed;
 				direction = DIRECTION_LEFT;
 			}
-		} else if (velX > -maxAirSpeed && state != STATE_AIRDODGE)
+		} else if (velX > -maxAirSpeed && state != STATE_AIRDODGE && canAirDodge)
 			velX -= horizontalInAirSpeed;
 
 	}
@@ -667,7 +672,7 @@ public class Character {
 					velX = runSpeed;
 				direction = DIRECTION_RIGHT;
 			}
-		} else if (velX < maxAirSpeed && state != STATE_AIRDODGE)
+		} else if (velX < maxAirSpeed && state != STATE_AIRDODGE && canAirDodge)
 			velX += horizontalInAirSpeed;
 
 	}
@@ -699,7 +704,7 @@ public class Character {
 			}
 		}
 		if (canJump) {
-			if (state == STATE_NEUTRAL || state == STATE_CROUCH || state == STATE_LANDFALLSPECIAL) {
+			if (state == STATE_NEUTRAL || state == STATE_CROUCH) {
 				if (!isController) {
 					if (isGrounded) {
 						/*
@@ -804,16 +809,15 @@ public class Character {
 	}
 
 	public void fall() {
-		if (state != STATE_AIRDODGE) {
-			if (!isGrounded) {
+		if (!isGrounded) {
 
-				velY += fallSpeed;
+			velY += fallSpeed;
 
-			} else {
-				if (state == STATE_NEUTRAL || state == STATE_CROUCH)
-					velY = 0;
-			}
+		} else {
+			if (state == STATE_NEUTRAL || state == STATE_CROUCH)
+				velY = 0;
 		}
+
 	}
 
 	public void checkifShouldApplyLandingLag() {
@@ -852,6 +856,15 @@ public class Character {
 		applyJumpWhenRequired();
 		chargeSmashAttack();
 
+		if (grabCounter > 0) {
+			grabCounter--;
+		} else if (state == STATE_GRAB) {
+			state = STATE_NEUTRAL;
+		}
+
+		if (!canAirDodge && isGrounded) {
+			canAirDodge = true;
+		}
 		if (state == STATE_LAG) {
 			if (lagCounter > 0) {
 				lagCounter--;
@@ -859,21 +872,17 @@ public class Character {
 				state = STATE_NEUTRAL;
 			}
 		}
-
-		if (state == STATE_LANDFALLSPECIAL) {
-			if (waveDashCounter > 0) {
-				waveDashCounter--;
-			} else {
-				state = STATE_NEUTRAL;
-			}
-		}
-
 		if (state == STATE_DODGE) {
 			if (rollCounter > 0) {
 				rollCounter--;
 			} else {
-				velX = 0;
-				putIntoLag(rollLag);
+
+				if (isGrounded) {
+					putIntoLag(rollLag);
+					velX = 0;
+				} else {
+					putIntoLag(rollLag * 3);
+				}
 			}
 		}
 		if (landingLagCounter > 0) {
@@ -998,7 +1007,7 @@ public class Character {
 	public void applyFriction() {
 		if (isGrounded && state != STATE_DODGE && state != STATE_JUMPSQUAT)
 			velX /= horizontalSlowdownFactor;
-		if(state == STATE_LANDFALLSPECIAL){
+		if (state == STATE_LANDFALLSPECIAL) {
 			velX /= horizontalSlowdownFactor / 2;
 		}
 	}
@@ -1323,6 +1332,17 @@ public class Character {
 		System.out.println(direction2);
 	}
 
+	public void tryGrab() {
+		if (isGrounded) {
+			if (!isController) {
+				if (isPressing(keyGrab)) {
+					if (state == STATE_NEUTRAL)
+						grab();
+				}
+			}
+		}
+	}
+
 	public boolean canAttack() {
 		if (hitboxes.isEmpty()) {
 			if (state == STATE_CROUCH || state == STATE_NEUTRAL) {
@@ -1330,6 +1350,11 @@ public class Character {
 			}
 		}
 		return false;
+	}
+
+	public void grab() {
+		state = STATE_GRAB;
+		grabCounter = grabLength;
 	}
 
 	// TODO attack below here
@@ -1365,11 +1390,11 @@ public class Character {
 	}
 
 	public void fair() {
-		hitboxes.add(new AttackHitbox(this, 20 + 2, 0, 15, 15, .5, -1, 10, 10, 1, 1));
-		hitboxes.add(new AttackHitbox(this, 25 + 2, 6, 15, 15, .5, -1, 10, 10, 1, 1));
-		hitboxes.add(new AttackHitbox(this, 30 + 2, 12, 15, 15, .5, -1, 10, 10, 1, 1));
-		hitboxes.add(new AttackHitbox(this, 25 + 2, 18, 15, 15, .5, -1, 10, 10, 1, 1));
-		hitboxes.add(new AttackHitbox(this, 20 + 2, 24, 15, 15, .5, -1, 10, 10, 1, 1));
+		hitboxes.add(new AttackHitbox(this, 20 + 2, 0, 15, 15, .5, -1, 10, 10, 5, 1));
+		hitboxes.add(new AttackHitbox(this, 25 + 2, 6, 15, 15, .5, -1, 10, 10, 5, 1));
+		hitboxes.add(new AttackHitbox(this, 30 + 2, 12, 15, 15, .5, -1, 10, 10, 5, 1));
+		hitboxes.add(new AttackHitbox(this, 25 + 2, 18, 15, 15, .5, -1, 10, 10, 5, 1));
+		hitboxes.add(new AttackHitbox(this, 20 + 2, 24, 15, 15, .5, -1, 10, 10, 5, 1));
 		state = STATE_ATTACK_FAIR;
 	}
 
@@ -1740,6 +1765,14 @@ public class Character {
 		keyShield = newShieldKey;
 	}
 
+	public int getKeyGrab() {
+		return keyGrab;
+	}
+
+	public void setKeyGrab(int keyGrab) {
+		this.keyGrab = keyGrab;
+	}
+
 	private void setJumpHeight(double newJumpHeight) {
 		jumpHeight = newJumpHeight;
 	}
@@ -1751,4 +1784,13 @@ public class Character {
 	private void setMaxAirSpeed(double newMaxAirSpeed) {
 		maxAirSpeed = newMaxAirSpeed;
 	}
+
+	public String getButtonGrab() {
+		return buttonGrab;
+	}
+
+	public void setButtonGrab(String buttonGrab) {
+		this.buttonGrab = buttonGrab;
+	}
+
 }
