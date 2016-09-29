@@ -77,6 +77,7 @@ public class Game extends JComponent implements KeyListener {
 		Graphics2D g2 = (Graphics2D) g;
 		AffineTransform oldTransform = g2.getTransform();
 		if (!isnormalscreen) {
+
 			g2.scale(screenWidth / DEFAULT_SCREEN_SIZE_X, (screenHeight / DEFAULT_SCREEN_SIZE_X) / 0.625);
 		}
 		switch (screenState) {

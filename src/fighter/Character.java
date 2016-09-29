@@ -165,6 +165,7 @@ public class Character {
 	private boolean canAirDodge = true;
 	private int grabCounter = 0;
 	private int grabLength = 10;
+	private Rectangle grabBox;
 	private Game myGame;
 	private Controller myController;
 
@@ -1353,10 +1354,16 @@ public class Character {
 	}
 
 	public void grab() {
-		state = STATE_GRAB;
-		grabCounter = grabLength;
+		if (state != STATE_GRAB) {
+			state = STATE_GRAB;
+			grabCounter = grabLength;
+		}else{
+			placeGrabBox();
+		}
 	}
-
+	public void placeGrabBox(){
+		
+	}
 	// TODO attack below here
 	// AttackHitbox creation syntax , character, localx,
 	// localy,width,height,xknockback,yknockback,hitstunlen,lifetime, damage
