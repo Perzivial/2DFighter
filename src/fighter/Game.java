@@ -77,8 +77,9 @@ public class Game extends JComponent implements KeyListener {
 		Graphics2D g2 = (Graphics2D) g;
 		AffineTransform oldTransform = g2.getTransform();
 		if (!isnormalscreen) {
-
+			g2.translate(0, (screenWidth / (screenHeight / DEFAULT_SCREEN_SIZE_X) - DEFAULT_SCREEN_SIZE_Y) / 16);
 			g2.scale(screenWidth / DEFAULT_SCREEN_SIZE_X, (screenHeight / DEFAULT_SCREEN_SIZE_X) / 0.625);
+
 		}
 		switch (screenState) {
 		case (SCREEN_STATE_INGAME):
@@ -184,6 +185,9 @@ public class Game extends JComponent implements KeyListener {
 				}
 				g.setColor(Game.transparentpurple);
 				g2.fill(person.getHurtbox().getRect());
+				g2.setColor(new Color(255, 0, 0, 30));
+				if (person.getGrabBox() != null)
+					g2.fill(person.getGrabBox());
 			}
 		}
 	}
@@ -380,8 +384,8 @@ public class Game extends JComponent implements KeyListener {
 							}
 							if (person.getButtonGrab().equals(comp.getName())) {
 								if (comp.getPollData() == 1 && person.isGrounded) {
-									if(person.getState() == Character.STATE_NEUTRAL)
-									person.grab();
+									if (person.getState() == Character.STATE_NEUTRAL)
+										person.grab();
 								}
 							}
 						}

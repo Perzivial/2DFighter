@@ -110,10 +110,11 @@ public class Character {
 	// shielding/dodging
 	BufferedImage shieldImage = new Image("img/stickman_shield.png").img;
 	BufferedImage dodgeImage = new Image("img/stickman_dodge.png").img;
-	BufferedImage airdodgeImage = new Image("img/stickman_airdodge.png").img;
 	// lag
 	BufferedImage lagImage = new Image("img/stickman_endlag.png").img;
 
+	// grab
+	BufferedImage grabImage = new Image("img/stickman_grab.png").img;
 	private final double startx;
 	private final double starty;
 	private boolean isController = false;
@@ -363,6 +364,7 @@ public class Character {
 
 		getController();
 		updateStates();
+		placeGrabBox();
 		fall();
 		checkifShouldApplyLandingLag();
 		handleInput();
@@ -545,6 +547,12 @@ public class Character {
 				g.drawImage(lagImage, (int) x, (int) y, w, h, null);
 			if (direction == DIRECTION_LEFT)
 				g.drawImage(lagImage, (int) x + w, (int) y, -w, h, null);
+		}
+		if (state == STATE_GRAB) {
+			if (direction == DIRECTION_RIGHT)
+				g.drawImage(grabImage, (int) x, (int) y, (int) (w * 1.66), h, null);
+			if (direction == DIRECTION_LEFT)
+				g.drawImage(grabImage, (int) x + w, (int) y, (int) (-w * 1.66), h, null);
 		}
 	}
 
@@ -861,6 +869,7 @@ public class Character {
 			grabCounter--;
 		} else if (state == STATE_GRAB) {
 			state = STATE_NEUTRAL;
+			putIntoLag(8);
 		}
 
 		if (!canAirDodge && isGrounded) {
@@ -1357,13 +1366,20 @@ public class Character {
 		if (state != STATE_GRAB) {
 			state = STATE_GRAB;
 			grabCounter = grabLength;
-		}else{
-			placeGrabBox();
 		}
 	}
-	public void placeGrabBox(){
-		
+
+	public void placeGrabBox() {
+		if (state == STATE_GRAB) {
+			if (direction == DIRECTION_RIGHT)
+				grabBox = new Rectangle((int) x + w, (int) y + 5, 20, 30);
+			else
+				grabBox = new Rectangle((int) (x + w) - (w) - w, (int) y + 5, 20, 30);
+		} else {
+			grabBox = null;
+		}
 	}
+
 	// TODO attack below here
 	// AttackHitbox creation syntax , character, localx,
 	// localy,width,height,xknockback,yknockback,hitstunlen,lifetime, damage
@@ -1798,6 +1814,14 @@ public class Character {
 
 	public void setButtonGrab(String buttonGrab) {
 		this.buttonGrab = buttonGrab;
+	}
+
+	public Rectangle getGrabBox() {
+		return grabBox;
+	}
+
+	public void setGrabBox(Rectangle grabBox) {
+		this.grabBox = grabBox;
 	}
 
 }
