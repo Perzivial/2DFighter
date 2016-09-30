@@ -6,6 +6,7 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
+import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -45,7 +46,7 @@ public class Game extends JComponent implements KeyListener {
 
 	ArrayList<Character> characters = new ArrayList<Character>();
 	Character GOE = new Character(500, 400, KeyEvent.VK_UP, KeyEvent.VK_DOWN, KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT,
-			KeyEvent.VK_RIGHT, KeyEvent.VK_SPACE, KeyEvent.VK_Q, KeyEvent.VK_E, KeyEvent.VK_R, this);
+			KeyEvent.VK_RIGHT, KeyEvent.VK_SPACE, KeyEvent.VK_Q, KeyEvent.VK_W, KeyEvent.VK_E, KeyEvent.VK_R, this);
 	private int screenState = 0;
 	private final static int SCREEN_STATE_INGAME = 0;
 	private final static int SCREEN_STATE_ADDCHARACTER = 1;
@@ -61,7 +62,7 @@ public class Game extends JComponent implements KeyListener {
 		hitboxes.add(GROUND_HITBOX);
 		doControllerThings();
 		characters.add(new Character(300, 450, "Xbox 360 Wired Controller", "x", "y", "rx", "ry", "z", "rz", .5, .2,
-				"1", "2", "5", characters, this));
+				"1", "2", "3", "5",this));
 		characters.add(GOE);
 		for (Controller control : ca) {
 			System.out.println(control.getName());
@@ -76,6 +77,7 @@ public class Game extends JComponent implements KeyListener {
 		getControllerInput();
 		Graphics2D g2 = (Graphics2D) g;
 		AffineTransform oldTransform = g2.getTransform();
+		graphicsSettings(g2);
 		if (!isnormalscreen) {
 			g2.translate(0, (screenWidth / (screenHeight / DEFAULT_SCREEN_SIZE_X) - DEFAULT_SCREEN_SIZE_Y) / 16);
 			g2.scale(screenWidth / DEFAULT_SCREEN_SIZE_X, (screenHeight / DEFAULT_SCREEN_SIZE_X) / 0.625);
@@ -129,6 +131,19 @@ public class Game extends JComponent implements KeyListener {
 			break;
 		}
 		g2.setTransform(oldTransform);
+	}
+
+	public void graphicsSettings(Graphics2D g2) {
+
+		g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+		g2.setRenderingHint(RenderingHints.KEY_DITHERING, RenderingHints.VALUE_DITHER_ENABLE);
+		g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		g2.setRenderingHint(RenderingHints.KEY_TEXT_LCD_CONTRAST, 100);
+		g2.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
+		g2.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
+		g2.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_QUALITY);
+		g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
 	}
 
 	public void doPlayerDrawing(Graphics g) {
@@ -388,6 +403,10 @@ public class Game extends JComponent implements KeyListener {
 										person.grab();
 								}
 							}
+							if (comp.getName() == person.getButtonSpecial()) {
+								if (Math.abs(comp.getPollData()) > person.getAxisDeadZone())
+									person.cycleArray(true, person.specialKeyDownHistory);
+							}
 						}
 					}
 				}
@@ -471,15 +490,15 @@ public class Game extends JComponent implements KeyListener {
 
 			if (e.getKeyCode() == KeyEvent.VK_1) {
 				characters.add(new Character(500, 400, KeyEvent.VK_UP, KeyEvent.VK_DOWN, KeyEvent.VK_LEFT,
-						KeyEvent.VK_RIGHT, KeyEvent.VK_SHIFT, KeyEvent.VK_SPACE, KeyEvent.VK_Q, KeyEvent.VK_R,
-						KeyEvent.VK_E, this));
+						KeyEvent.VK_RIGHT, KeyEvent.VK_SHIFT, KeyEvent.VK_SPACE, KeyEvent.VK_Q, KeyEvent.VK_W,
+						KeyEvent.VK_R, KeyEvent.VK_E, this));
 
 				characterSlideNum = 0;
 				characterSlideNum2 = 1;
 			}
 			if (e.getKeyCode() == KeyEvent.VK_2) {
 				characters.add(new Character(300, 575, "Xbox 360 Wired Controller", "x", "y", "rx", "ry", "z", "rz", .8,
-						.2, "1", "2", "5", characters, this));
+						.2, "1", "2", "3", "5" ,this));
 				characterSlideNum = 0;
 				characterSlideNum2 = 1;
 			}
