@@ -1472,7 +1472,7 @@ public class Character {
 			if (grabbedTime <= 0) {
 				grabbedPlayer.state = STATE_NEUTRAL;
 				grabbedPlayer = null;
-
+				grabCounter = 0;
 			} else {
 				grabbedTime--;
 				if (isController) {
@@ -1658,7 +1658,7 @@ public class Character {
 	}
 
 	public void uThrow() {
-		grabbedPlayer.velY = (-10 * (grabbedPlayer.percent / 5)) + 5;
+		grabbedPlayer.velY = (-5 + (grabbedPlayer.percent / 20)) + 10;
 		grabbedPlayer.applyDamage(5);
 	}
 
