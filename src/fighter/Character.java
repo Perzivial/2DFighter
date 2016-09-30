@@ -95,42 +95,42 @@ public class Character {
 	private int hitstunCounter = 0;
 
 	HashSet<Integer> keysPressed = new HashSet<Integer>();
-	BufferedImage neutralImage = new Image("img/stickman_neutral.png").img;
+	BufferedImage neutralImage = new Image("img/" + name + "/neutral.png").img;
 	// jab and tilts
-	BufferedImage jabImage = new Image("img/stickman_attack1.png").img;
-	BufferedImage fTiltImage = new Image("img/stickman_tilt_f.png").img;
-	BufferedImage uTiltImage = new Image("img/stickman_tilt_u.png").img;
-	BufferedImage dTiltImage = new Image("img/stickman_tilt_d.png").img;
+	BufferedImage jabImage = new Image("img/" + name + "/attack1.png").img;
+	BufferedImage fTiltImage = new Image("img/" + name + "/tilt_f.png").img;
+	BufferedImage uTiltImage = new Image("img/" + name + "/tilt_u.png").img;
+	BufferedImage dTiltImage = new Image("img/" + name + "/tilt_d.png").img;
 	// aerials
-	BufferedImage nairImage = new Image("img/stickman_air_n.png").img;
-	BufferedImage fairImage = new Image("img/stickman_air_f.png").img;
-	BufferedImage bairImage = new Image("img/stickman_air_b.png").img;
-	BufferedImage dairImage = new Image("img/stickman_air_d.png").img;
-	BufferedImage uairImage = new Image("img/stickman_air_u.png").img;
+	BufferedImage nairImage = new Image("img/" + name + "/air_n.png").img;
+	BufferedImage fairImage = new Image("img/" + name + "/air_f.png").img;
+	BufferedImage bairImage = new Image("img/" + name + "/air_b.png").img;
+	BufferedImage dairImage = new Image("img/" + name + "/air_d.png").img;
+	BufferedImage uairImage = new Image("img/" + name + "/air_u.png").img;
 	// smashes
-	BufferedImage uSmashChargeImage = new Image("img/stickman_smash_charge_u.png").img;
-	BufferedImage uSmashImage = new Image("img/stickman_smash_u.png").img;
-	BufferedImage dSmashChargeImage = new Image("img/stickman_smash_charge_d.png").img;
-	BufferedImage dSmashImage = new Image("img/stickman_smash_d.png").img;
-	BufferedImage fSmashChargeImage = new Image("img/stickman_smash_charge_f.png").img;
-	BufferedImage fSmashImage = new Image("img/stickman_smash_f.png").img;
+	BufferedImage uSmashChargeImage = new Image("img/" + name + "/smash_charge_u.png").img;
+	BufferedImage uSmashImage = new Image("img/" + name + "/smash_u.png").img;
+	BufferedImage dSmashChargeImage = new Image("img/" + name + "/smash_charge_d.png").img;
+	BufferedImage dSmashImage = new Image("img/" + name + "/smash_d.png").img;
+	BufferedImage fSmashChargeImage = new Image("img/" + name + "/smash_charge_f.png").img;
+	BufferedImage fSmashImage = new Image("img/" + name + "/smash_f.png").img;
 	// other
-	BufferedImage hitstunImage = new Image("img/stickman_hitstun.png").img;
-	BufferedImage jumpSquatImage = new Image("img/stickman_jumpsquat.png").img;
-	BufferedImage jumpImage = new Image("img/stickman_jump.png").img;
+	BufferedImage hitstunImage = new Image("img/" + name + "/hitstun.png").img;
+	BufferedImage jumpSquatImage = new Image("img/" + name + "/jumpsquat.png").img;
+	BufferedImage jumpImage = new Image("img/" + name + "/jump.png").img;
 	// shielding/dodging
-	BufferedImage shieldImage = new Image("img/stickman_shield.png").img;
-	BufferedImage dodgeImage = new Image("img/stickman_dodge.png").img;
+	BufferedImage shieldImage = new Image("img/" + name + "/shield.png").img;
+	BufferedImage dodgeImage = new Image("img/" + name + "/dodge.png").img;
 	// lag
-	BufferedImage lagImage = new Image("img/stickman_endlag.png").img;
+	BufferedImage lagImage = new Image("img/" + name + "/endlag.png").img;
 
 	// grab
-	BufferedImage grabImage = new Image("img/stickman_grab.png").img;
-	BufferedImage grabbedImage = new Image("img/stickman_grabbed.png").img;
-	BufferedImage uThrowImage = new Image("img/stickman_throw_u.png").img;
-	BufferedImage dThrowImage = new Image("img/stickman_throw_d.png").img;
-	BufferedImage fThrowImage = new Image("img/stickman_throw_f.png").img;
-	BufferedImage bThrowImage = new Image("img/stickman_throw_b.png").img;
+	BufferedImage grabImage = new Image("img/" + name + "/grab.png").img;
+	BufferedImage grabbedImage = new Image("img/" + name + "/grabbed.png").img;
+	BufferedImage uThrowImage = new Image("img/" + name + "/throw_u.png").img;
+	BufferedImage dThrowImage = new Image("img/" + name + "/throw_d.png").img;
+	BufferedImage fThrowImage = new Image("img/" + name + "/throw_f.png").img;
+	BufferedImage bThrowImage = new Image("img/" + name + "/throw_b.png").img;
 
 	private final double startx;
 	private final double starty;
