@@ -225,7 +225,7 @@ public class Game extends JComponent implements KeyListener {
 				for (AttackHitbox hitbox : person2.hitboxes)
 					if (checkCollision(person1.getHurtbox().getRect(), hitbox.getRect()))
 						if (!person1.equals(hitbox.getLinkedCharacter()) && !hitbox.playerHitList.contains(person1)) {
-							if (person1.getState() != Character.STATE_DODGE) {
+							if (person1.getState() != Character.STATE_DODGE && person2.getGrabBox() == null) {
 
 								boolean shouldapplydamage = false;
 								// new approach, divides the hitbox into 6, each

@@ -71,6 +71,7 @@ public class Character {
 	public static int STATE_AIRDODGE = 22;
 	public static int STATE_LANDFALLSPECIAL = 23;
 	public static int STATE_GRAB = 24;
+	public static int STATE_GRABBED = 25;
 	private int direction = 1;
 	private boolean isChargingSmashAttack = false;
 	private double smashAttackChargePercent = 1.0;
@@ -166,9 +167,12 @@ public class Character {
 	private boolean canAirDodge = true;
 	private int grabCounter = 0;
 	private int grabLength = 10;
+	private int grabbedTime = 0;
+	private final int grabbedTimeDefault = 60;
 	private Rectangle grabBox;
 	private Game myGame;
 	private Controller myController;
+	private Character grabbedPlayer = null;
 
 	public Character(int posx, int posy, int upKey, int downKey, int leftKey, int rightKey, int modifierKey,
 			int jumpKey, int attackKey, int shieldKey, int grabKey, Game gameinstance) {
@@ -232,6 +236,30 @@ public class Character {
 		placeShield();
 	}
 
+	public void draw(Graphics g) {
+
+		getController();
+		updateStates();
+		placeGrabBox();
+		testForGrabAndDoGrabbedPlayerThings();
+		fall();
+		shouldBounceOffGround();
+		checkifShouldApplyLandingLag();
+		handleInput();
+		tryGrab();
+		move();
+		blastZone();
+		translateHitboxes();
+		drawCorrectSprite(g);
+		recordLastFrameX();
+		recordLastFrameY();
+		recordLastFrameIsGrounded();
+		getControllerAxisInformation();
+		attemptToShield();
+		drawShield(g);
+		placeShield();
+	}
+
 	public void placeShield() {
 		shield = new Ellipse2D.Double();
 		if (!isJumpButtonDownController() && state != STATE_JUMPSQUAT && state != STATE_JUMP
@@ -270,58 +298,58 @@ public class Character {
 	}
 
 	public void attemptToShield() {
-
-		if (isController) {
-			if (myController != null)
-				for (Component comp : myController.getComponents()) {
-					if (comp.getName().equals(getLeftTrigger()) || comp.getName().equals(getRightTrigger())) {
-						if (comp.getPollData() > getAxisMidpoint()) {
-							if (isGrounded) {
-								if (isGrounded && state != STATE_HITSTUN && state != STATE_DODGE) {
-									isShielding = true;
-									shieldWidth -= 0.002666666667;
-									breakShield();
-								}
-							} else if (state != STATE_HITSTUN && state != STATE_DODGE && canAirDodge) {
-								// velX = 0;
-								// velY = 0;
-								if (state != STATE_JUMPSQUAT) {
-									dodge();
+		if (state != STATE_GRABBED && state != STATE_GRAB) {
+			if (isController) {
+				if (myController != null)
+					for (Component comp : myController.getComponents()) {
+						if (comp.getName().equals(getLeftTrigger()) || comp.getName().equals(getRightTrigger())) {
+							if (comp.getPollData() > getAxisMidpoint()) {
+								if (isGrounded) {
+									if (isGrounded && state != STATE_HITSTUN && state != STATE_DODGE) {
+										isShielding = true;
+										shieldWidth -= 0.002666666667;
+										breakShield();
+									}
+								} else if (state != STATE_HITSTUN && state != STATE_DODGE && canAirDodge) {
+									// velX = 0;
+									// velY = 0;
+									if (state != STATE_JUMPSQUAT) {
+										dodge();
+									}
 								}
 							}
+
+						}
+					}
+			} else {
+				if (isPressing(keyShield) && state != STATE_HITSTUN && state != STATE_DODGE && state != STATE_CROUCH) {
+					if (isGrounded && state != STATE_JUMPSQUAT) {
+						if (isPressing(keyLeft)) {
+							velX = -5;
+							dodge();
+						} else if (isPressing(keyRight)) {
+							velX = 5;
+							dodge();
+						} else {
+							isShielding = true;
+							shieldWidth -= 0.002666666667;
+							breakShield();
 						}
 
-					}
-				}
-		} else {
-			if (isPressing(keyShield) && state != STATE_HITSTUN && state != STATE_DODGE && state != STATE_CROUCH) {
-				if (isGrounded && state != STATE_JUMPSQUAT) {
-					if (isPressing(keyLeft)) {
-						velX = -5;
-						dodge();
-					} else if (isPressing(keyRight)) {
-						velX = 5;
-						dodge();
 					} else {
-						isShielding = true;
-						shieldWidth -= 0.002666666667;
-						breakShield();
-					}
-
-				} else {
-					if (state != STATE_JUMPSQUAT) {
-						/*
-						 * if (isPressing(keyLeft)) velX -= waveDashSpeed; if
-						 * (isPressing(keyRight)) velX += waveDashSpeed; if
-						 * (isPressing(keyUp)) velY -= waveDashSpeed; if
-						 * (isPressing(keyDown)) velY += waveDashSpeed;
-						 */
-						dodge();
+						if (state != STATE_JUMPSQUAT) {
+							/*
+							 * if (isPressing(keyLeft)) velX -= waveDashSpeed;
+							 * if (isPressing(keyRight)) velX += waveDashSpeed;
+							 * if (isPressing(keyUp)) velY -= waveDashSpeed; if
+							 * (isPressing(keyDown)) velY += waveDashSpeed;
+							 */
+							dodge();
+						}
 					}
 				}
 			}
 		}
-
 	}
 
 	public Ellipse2D getShield() {
@@ -358,29 +386,6 @@ public class Character {
 				myController = currentController;
 			}
 		}
-	}
-
-	public void draw(Graphics g) {
-
-		getController();
-		updateStates();
-		placeGrabBox();
-		fall();
-		checkifShouldApplyLandingLag();
-		handleInput();
-		tryGrab();
-		move();
-		blastZone();
-		translateHitboxes();
-
-		drawCorrectSprite(g);
-		recordLastFrameX();
-		recordLastFrameY();
-		recordLastFrameIsGrounded();
-		getControllerAxisInformation();
-		attemptToShield();
-		drawShield(g);
-		placeShield();
 	}
 
 	public void removeJumpButtonHistory() {
@@ -818,15 +823,16 @@ public class Character {
 	}
 
 	public void fall() {
-		if (!isGrounded) {
+		if (state != STATE_GRABBED) {
+			if (!isGrounded) {
 
-			velY += fallSpeed;
+				velY += fallSpeed;
 
-		} else {
-			if (state == STATE_NEUTRAL || state == STATE_CROUCH)
-				velY = 0;
+			} else {
+				if (state == STATE_NEUTRAL || state == STATE_CROUCH)
+					velY = 0;
+			}
 		}
-
 	}
 
 	public void checkifShouldApplyLandingLag() {
@@ -867,9 +873,9 @@ public class Character {
 
 		if (grabCounter > 0) {
 			grabCounter--;
-		} else if (state == STATE_GRAB) {
+		} else if (state == STATE_GRAB && grabbedPlayer == null) {
 			state = STATE_NEUTRAL;
-			putIntoLag(8);
+			putIntoLag(20);
 		}
 
 		if (!canAirDodge && isGrounded) {
@@ -1342,6 +1348,12 @@ public class Character {
 		System.out.println(direction2);
 	}
 
+	public void shouldBounceOffGround() {
+		if (isGrounded && velY > 0 && state == STATE_HITSTUN) {
+			velY = -velY;
+		}
+	}
+
 	public void tryGrab() {
 		if (isGrounded) {
 			if (!isController) {
@@ -1363,20 +1375,131 @@ public class Character {
 	}
 
 	public void grab() {
-		if (state != STATE_GRAB) {
+		if (state == STATE_NEUTRAL) {	
 			state = STATE_GRAB;
 			grabCounter = grabLength;
 		}
 	}
 
 	public void placeGrabBox() {
-		if (state == STATE_GRAB) {
+
+		if (state == STATE_GRAB && grabbedPlayer == null) {
 			if (direction == DIRECTION_RIGHT)
 				grabBox = new Rectangle((int) x + w, (int) y + 5, 20, 30);
 			else
 				grabBox = new Rectangle((int) (x + w) - (w) - w, (int) y + 5, 20, 30);
 		} else {
 			grabBox = null;
+		}
+	}
+
+	// self explanatory naming FTW
+	public void testForGrabAndDoGrabbedPlayerThings() {
+
+		for (Character person : myGame.characters) {
+			if (grabBox != null)
+				if (person.getHurtbox().getRect().intersects(grabBox) && person.getState() != STATE_GRAB) {
+					velX = 0;
+					velY = 0;
+					grabbedPlayer = person;
+					grabbedPlayer.velX = 0;
+					grabbedPlayer.velY = 0;
+					grabbedTime = (int) (grabbedTimeDefault + (grabbedPlayer.percent));
+					if (direction == DIRECTION_RIGHT) {
+						grabbedPlayer.x = x + w + 5;
+						grabbedPlayer.y = y - 5;
+						grabbedPlayer.direction = DIRECTION_LEFT;
+					} else {
+						grabbedPlayer.x = x - w - 5;
+						grabbedPlayer.y = y - 5;
+						grabbedPlayer.direction = DIRECTION_RIGHT;
+					}
+					break;
+				}
+		}
+		if (grabbedPlayer != null) {
+			if (grabbedPlayer.state != STATE_GRABBED)
+				grabbedPlayer.state = STATE_GRABBED;
+
+			if (grabbedTime <= 0) {
+				grabbedPlayer.state = STATE_NEUTRAL;
+				grabbedPlayer = null;
+
+			} else {
+				grabbedTime--;
+				if (isController) {
+
+					// each throw should in future set the player who is
+					// throwing into a specific state to show a new image
+					if (isAxisUp && grabbedPlayer != null) {
+						uThrow();
+						grabbedPlayer.applyHitstun((int) (10 + grabbedPlayer.percent / 10));
+						grabbedPlayer = null;
+					}
+					if (isAxisDown && grabbedPlayer != null) {
+						dThrow();
+						grabbedPlayer.applyHitstun((int) (10 + grabbedPlayer.percent / 10));
+						grabbedPlayer = null;
+					}
+					if (isAxisLeft && grabbedPlayer != null) {
+						if (direction == DIRECTION_LEFT) {
+							fThrow();
+							grabbedPlayer.applyHitstun((int) (10 + grabbedPlayer.percent / 10));
+							grabbedPlayer = null;
+						} else {
+							bThrow();
+							grabbedPlayer.applyHitstun((int) (10 + grabbedPlayer.percent / 10));
+							grabbedPlayer = null;
+						}
+					}
+					if (isAxisRight && grabbedPlayer != null) {
+						if (direction == DIRECTION_RIGHT) {
+							fThrow();
+							grabbedPlayer.applyHitstun((int) (10 + grabbedPlayer.percent / 10));
+							grabbedPlayer = null;
+						} else {
+							bThrow();
+							grabbedPlayer.applyHitstun((int) (10 + grabbedPlayer.percent / 10));
+							grabbedPlayer = null;
+						}
+					}
+				} else {
+					// each throw should in future set the player who is
+					// throwing into a specific state to show a new image
+					if (isPressing(keyUp) && grabbedPlayer != null) {
+						uThrow();
+						grabbedPlayer.applyHitstun((int) (10 + grabbedPlayer.percent / 10));
+						grabbedPlayer = null;
+					}
+					if (isPressing(keyDown) && grabbedPlayer != null) {
+						dThrow();
+						grabbedPlayer.applyHitstun((int) (10 + grabbedPlayer.percent / 10));
+						grabbedPlayer = null;
+					}
+					if (isPressing(keyLeft) && grabbedPlayer != null) {
+						if (direction == DIRECTION_LEFT) {
+							fThrow();
+							grabbedPlayer.applyHitstun((int) (10 + grabbedPlayer.percent / 10));
+							grabbedPlayer = null;
+						} else {
+							bThrow();
+							grabbedPlayer.applyHitstun((int) (10 + grabbedPlayer.percent / 10));
+							grabbedPlayer = null;
+						}
+					}
+					if (isPressing(keyRight) && grabbedPlayer != null) {
+						if (direction == DIRECTION_RIGHT) {
+							fThrow();
+							grabbedPlayer.applyHitstun((int) (10 + grabbedPlayer.percent / 10));
+							grabbedPlayer = null;
+						} else {
+							bThrow();
+							grabbedPlayer.applyHitstun((int) (10 + grabbedPlayer.percent / 10));
+							grabbedPlayer = null;
+						}
+					}
+				}
+			}
 		}
 	}
 
@@ -1432,7 +1555,7 @@ public class Character {
 	}
 
 	public void dair() {
-		hitboxes.add(new AttackHitbox(this, 0, h, w, 15, .5, 50, 5, 20, 5, 10));
+		hitboxes.add(new AttackHitbox(this, 0, h, w, 15, .5, 5, 5, 20, 5, 10));
 		state = STATE_ATTACK_DAIR;
 	}
 
@@ -1460,6 +1583,25 @@ public class Character {
 						(int) (10 * smashAttackChargePercent), 10, 5 * (smashAttackChargePercent * 2), 20));
 		state = STATE_SMASH_ATTACK_FORWARD;
 		smashAttackChargePercent = 1.0;
+	}
+
+	public void fThrow() {
+		grabbedPlayer.velX = (5 + grabbedPlayer.percent / 8) * direction;
+		grabbedPlayer.velY = -8 + percent / 10;
+	}
+
+	public void bThrow() {
+		grabbedPlayer.velX = (5 + grabbedPlayer.percent / 10) * -direction;
+		grabbedPlayer.velY = -10 + percent / 10;
+	}
+
+	public void uThrow() {
+		grabbedPlayer.velY = -10 + percent / 20;
+	}
+
+	public void dThrow() {
+		grabbedPlayer.velX = (5) * -direction;
+		grabbedPlayer.velY = 2 + percent / 20;
 	}
 
 	public boolean checkIfInSpecificHitBox(Hitbox box) {
@@ -1822,6 +1964,14 @@ public class Character {
 
 	public void setGrabBox(Rectangle grabBox) {
 		this.grabBox = grabBox;
+	}
+
+	public Character getGrabbedPlayer() {
+		return grabbedPlayer;
+	}
+
+	public void setGrabbedPlayer(Character grabbedPlayer) {
+		this.grabbedPlayer = grabbedPlayer;
 	}
 
 }
