@@ -72,6 +72,11 @@ public class Character {
 	public static int STATE_LANDFALLSPECIAL = 23;
 	public static int STATE_GRAB = 24;
 	public static int STATE_GRABBED = 25;
+	public static int STATE_UTHROW = 26;
+	public static int STATE_DTHROW = 27;
+	public static int STATE_FTHROW = 28;
+	public static int STATE_BTHROW = 29;
+
 	private int direction = 1;
 	private boolean isChargingSmashAttack = false;
 	private double smashAttackChargePercent = 1.0;
@@ -116,6 +121,12 @@ public class Character {
 
 	// grab
 	BufferedImage grabImage = new Image("img/stickman_grab.png").img;
+	BufferedImage grabbedImage = new Image("img/stickman_grabbed.png").img;
+	BufferedImage uThrowImage = new Image("img/stickman_throw_u.png").img;
+	BufferedImage dThrowImage = new Image("img/stickman_throw_d.png").img;
+	BufferedImage fThrowImage = new Image("img/stickman_throw_f.png").img;
+	BufferedImage bThrowImage = new Image("img/stickman_throw_b.png").img;
+
 	private final double startx;
 	private final double starty;
 	private boolean isController = false;
@@ -166,7 +177,7 @@ public class Character {
 	private int jumpSquatBuffer = 0;
 	private boolean canAirDodge = true;
 	private int grabCounter = 0;
-	private int grabLength = 10;
+	private int grabLength = 20;
 	private int grabbedTime = 0;
 	private final int grabbedTimeDefault = 60;
 	private Rectangle grabBox;
@@ -239,7 +250,8 @@ public class Character {
 	public void draw(Graphics g) {
 
 		getController();
-		updateStates();
+		if (state != STATE_GRABBED)
+			updateStates();
 		placeGrabBox();
 		testForGrabAndDoGrabbedPlayerThings();
 		fall();
@@ -559,6 +571,38 @@ public class Character {
 			if (direction == DIRECTION_LEFT)
 				g.drawImage(grabImage, (int) x + w, (int) y, (int) (-w * 1.66), h, null);
 		}
+		if (state == STATE_GRABBED) {
+			if (direction == DIRECTION_RIGHT)
+				g.drawImage(grabbedImage, (int) x, (int) y, w, h, null);
+			if (direction == DIRECTION_LEFT)
+				g.drawImage(grabbedImage, (int) x + w, (int) y, -w, h, null);
+		}
+		if (state == STATE_UTHROW) {
+			if (direction == DIRECTION_RIGHT)
+				g.drawImage(uThrowImage, (int) x, (int) y, (int) (w * 1.068), h, null);
+			if (direction == DIRECTION_LEFT)
+				g.drawImage(uThrowImage, (int) x + w, (int) y, (int) (-w * 1.068), h, null);
+		}
+		if (state == STATE_DTHROW) {
+			if (direction == DIRECTION_RIGHT)
+				g.drawImage(dThrowImage, (int) x, (int) y, w, h, null);
+			if (direction == DIRECTION_LEFT)
+				g.drawImage(dThrowImage, (int) x + w, (int) y, -w, h, null);
+		}
+		if (state == STATE_FTHROW) {
+			if (direction == DIRECTION_RIGHT)
+				g.drawImage(fThrowImage, (int) x, (int) y, (int) (w * 1.376), h, null);
+			if (direction == DIRECTION_LEFT)
+				g.drawImage(fThrowImage, (int) x + w, (int) y, (int) (-w * 1.376), h, null);
+		}
+		if (state == STATE_BTHROW) {
+			if (direction == DIRECTION_RIGHT)
+				g.drawImage(bThrowImage, (int) x, (int) y - (int) (h * 1.1456) + h, (int) (w * 1.068),
+						(int) (h * 1.1456), null);
+			if (direction == DIRECTION_LEFT)
+				g.drawImage(bThrowImage, (int) x + w, (int) y - (int) (h * 1.1456) + h, (int) (-w * 1.068),
+						(int) (h * 1.1456), null);
+		}
 	}
 
 	public void move() {
@@ -872,10 +916,14 @@ public class Character {
 		chargeSmashAttack();
 
 		if (grabCounter > 0) {
-			grabCounter--;
-		} else if (state == STATE_GRAB && grabbedPlayer == null) {
-			state = STATE_NEUTRAL;
-			putIntoLag(20);
+			if (grabbedPlayer == null)
+				grabCounter--;
+		} else if (state == STATE_GRAB || state == STATE_BTHROW || state == STATE_UTHROW || state == STATE_FTHROW
+				|| state == STATE_DTHROW) {
+			if (grabbedPlayer == null) {
+				state = STATE_NEUTRAL;
+				putIntoLag(10);
+			}
 		}
 
 		if (!canAirDodge && isGrounded) {
@@ -1375,7 +1423,7 @@ public class Character {
 	}
 
 	public void grab() {
-		if (state == STATE_NEUTRAL) {	
+		if (state == STATE_NEUTRAL) {
 			state = STATE_GRAB;
 			grabCounter = grabLength;
 		}
@@ -1398,7 +1446,7 @@ public class Character {
 
 		for (Character person : myGame.characters) {
 			if (grabBox != null)
-				if (person.getHurtbox().getRect().intersects(grabBox) && person.getState() != STATE_GRAB) {
+				if (person.getHurtbox().getRect().intersects(grabBox) && person.getState() != STATE_GRAB && person.getState() != STATE_DODGE) {
 					velX = 0;
 					velY = 0;
 					grabbedPlayer = person;
@@ -1435,21 +1483,25 @@ public class Character {
 						uThrow();
 						grabbedPlayer.applyHitstun((int) (10 + grabbedPlayer.percent / 10));
 						grabbedPlayer = null;
+						state = STATE_UTHROW;
 					}
 					if (isAxisDown && grabbedPlayer != null) {
 						dThrow();
 						grabbedPlayer.applyHitstun((int) (10 + grabbedPlayer.percent / 10));
 						grabbedPlayer = null;
+						state = STATE_DTHROW;
 					}
 					if (isAxisLeft && grabbedPlayer != null) {
 						if (direction == DIRECTION_LEFT) {
 							fThrow();
 							grabbedPlayer.applyHitstun((int) (10 + grabbedPlayer.percent / 10));
 							grabbedPlayer = null;
+							state = STATE_FTHROW;
 						} else {
 							bThrow();
 							grabbedPlayer.applyHitstun((int) (10 + grabbedPlayer.percent / 10));
 							grabbedPlayer = null;
+							state = STATE_BTHROW;
 						}
 					}
 					if (isAxisRight && grabbedPlayer != null) {
@@ -1457,10 +1509,12 @@ public class Character {
 							fThrow();
 							grabbedPlayer.applyHitstun((int) (10 + grabbedPlayer.percent / 10));
 							grabbedPlayer = null;
+							state = STATE_FTHROW;
 						} else {
 							bThrow();
 							grabbedPlayer.applyHitstun((int) (10 + grabbedPlayer.percent / 10));
 							grabbedPlayer = null;
+							state = STATE_BTHROW;
 						}
 					}
 				} else {
@@ -1470,21 +1524,25 @@ public class Character {
 						uThrow();
 						grabbedPlayer.applyHitstun((int) (10 + grabbedPlayer.percent / 10));
 						grabbedPlayer = null;
+						state = STATE_UTHROW;
 					}
 					if (isPressing(keyDown) && grabbedPlayer != null) {
 						dThrow();
 						grabbedPlayer.applyHitstun((int) (10 + grabbedPlayer.percent / 10));
 						grabbedPlayer = null;
+						state = STATE_DTHROW;
 					}
 					if (isPressing(keyLeft) && grabbedPlayer != null) {
 						if (direction == DIRECTION_LEFT) {
 							fThrow();
 							grabbedPlayer.applyHitstun((int) (10 + grabbedPlayer.percent / 10));
 							grabbedPlayer = null;
+							state = STATE_FTHROW;
 						} else {
 							bThrow();
 							grabbedPlayer.applyHitstun((int) (10 + grabbedPlayer.percent / 10));
 							grabbedPlayer = null;
+							state = STATE_BTHROW;
 						}
 					}
 					if (isPressing(keyRight) && grabbedPlayer != null) {
@@ -1492,10 +1550,12 @@ public class Character {
 							fThrow();
 							grabbedPlayer.applyHitstun((int) (10 + grabbedPlayer.percent / 10));
 							grabbedPlayer = null;
+							state = STATE_FTHROW;
 						} else {
 							bThrow();
 							grabbedPlayer.applyHitstun((int) (10 + grabbedPlayer.percent / 10));
 							grabbedPlayer = null;
+							state = STATE_BTHROW;
 						}
 					}
 				}
@@ -1588,20 +1648,24 @@ public class Character {
 	public void fThrow() {
 		grabbedPlayer.velX = (5 + grabbedPlayer.percent / 8) * direction;
 		grabbedPlayer.velY = -8 + percent / 10;
+		grabbedPlayer.applyDamage(7);
 	}
 
 	public void bThrow() {
 		grabbedPlayer.velX = (5 + grabbedPlayer.percent / 10) * -direction;
 		grabbedPlayer.velY = -10 + percent / 10;
+		grabbedPlayer.applyDamage(3);
 	}
 
 	public void uThrow() {
-		grabbedPlayer.velY = -10 + percent / 20;
+		grabbedPlayer.velY = (-10 * (grabbedPlayer.percent / 5)) + 5;
+		grabbedPlayer.applyDamage(5);
 	}
 
 	public void dThrow() {
 		grabbedPlayer.velX = (5) * -direction;
 		grabbedPlayer.velY = 2 + percent / 20;
+		grabbedPlayer.applyDamage(2);
 	}
 
 	public boolean checkIfInSpecificHitBox(Hitbox box) {
