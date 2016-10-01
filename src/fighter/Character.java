@@ -324,11 +324,12 @@ public class Character {
 			return buff;
 		} catch (NullPointerException e) {
 			System.out.println("error");
-			
-				return null;
+
+			return null;
 		}
 
 	}
+
 	public void initializeImages() {
 		neutralImage = initializeImage("img/" + name + "/neutral.png");
 		run1Image = initializeImage("img/" + name + "/run1.png");
@@ -354,10 +355,10 @@ public class Character {
 		// smashes
 		uSmashChargeImage = initializeImage("img/" + name + "/smash_charge_u.png");
 		uSmashImage = initializeImage("img/" + name + "/smash_u.png");
-		
+
 		dSmashChargeImage = initializeImage("img/" + name + "/smash_charge_d.png");
 		dSmashImage = initializeImage("img/" + name + "/smash_d.png");
-		
+
 		fSmashChargeImage = initializeImage("img/" + name + "/smash_charge_f.png");
 		fSmashImage = initializeImage("img/" + name + "/smash_f.png");
 
@@ -818,11 +819,15 @@ public class Character {
 		if (!isJumpButtonDownController() && state != STATE_JUMPSQUAT && state != STATE_JUMP
 				&& state != STATE_LANDFALLSPECIAL) {
 			if (isShielding && state != STATE_DODGE && state != STATE_LAG && !isJumpButtonDownController()) {
-				/*
-				shield.setFrame((x - w + w/10) + ((1 - (shieldWidth)) * (getW() * (1.5))), (y - 5) + ((1 - shieldWidth) * w),
-						(h + (5 * w/10)) * shieldWidth, (h + (5 * w/10)) * shieldWidth);
-	*/	
 
+				// shield.setFrame((x - w + w / 10) + ((1 - (shieldWidth)) *
+				// (getW() * (1.5))),
+				// (y - 5) + ((1 - shieldWidth) * w), (h + (5 * w / 10)) *
+				// shieldWidth,
+				// (h + (5 * w / 10)) * shieldWidth);
+				//hopefuly this new method works
+
+				shield.setFrameFromCenter(x + w/2, y + h/2, (x+w*1.5) - 1/shieldWidth * (w/3), (y+h*1.3) - 1/shieldWidth * (w/2.5));
 				state = STATE_SHIELD;
 				if (isAxisLeft) {
 					velX = -5;
@@ -2314,7 +2319,6 @@ public class Character {
 		controllerName = newController.getName();
 		portNum = newController.getPortNumber();
 	}
-
 
 	public boolean getIsAxisUp() {
 		return isAxisUp;
