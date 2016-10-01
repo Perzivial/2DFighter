@@ -12,10 +12,11 @@ public class AttackHitbox extends Hitbox {
 	private int hitstunLength;
 	private double damage;
 	private int endLag;
+	private double shieldDamage;
 	public ArrayList<Character> playerHitList = new ArrayList<Character>();
 
 	public AttackHitbox(Character boundPlayer, double localposx, double localposy, double width, double height,
-			double xknockback, double yknockback, int hitstunLen, int lifeTime, double myDamage, int myEndLag) {
+			double xknockback, double yknockback, int hitstunLen, int lifeTime, double myDamage, int myEndLag, double damageonshield) {
 		super(boundPlayer, boundPlayer.getX() + localposx, boundPlayer.getVelY() + localposy, width, height,
 				Game.TYPE_ATTACK);
 		localX = localposx;
@@ -26,6 +27,7 @@ public class AttackHitbox extends Hitbox {
 		lifetime = lifeTime;
 		damage = myDamage;
 		endLag = myEndLag;
+		shieldDamage = damageonshield;
 	}
 
 	public double getlocalX() {
@@ -73,6 +75,14 @@ public class AttackHitbox extends Hitbox {
 		else if (lifetime > 0)
 			isActive = true;
 
+	}
+
+	public double getShieldDamage() {
+		return shieldDamage;
+	}
+
+	public void setShieldDamage(double shieldDamage) {
+		this.shieldDamage = shieldDamage;
 	}
 
 }

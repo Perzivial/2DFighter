@@ -79,9 +79,10 @@ public class Character {
 	public static int STATE_FTHROW = 28;
 	public static int STATE_BTHROW = 29;
 	public static int STATE_UPSPECIAL = 30;
-	public static int STATE_DOWNSPECIAL = 30;
-	public static int STATE_FORWARDSPECIAL = 30;
-	public static int STATE_NEUTRALSPECIAL = 30;
+	public static int STATE_DOWNSPECIAL = 31;
+	public static int STATE_FORWARDSPECIAL = 32;
+	public static int STATE_NEUTRALSPECIAL = 33;
+	public static int STATE_HELPLESS = 34;
 	private int direction = 1;
 	private boolean isChargingSmashAttack = false;
 	private double smashAttackChargePercent = 1.0;
@@ -118,6 +119,7 @@ public class Character {
 	BufferedImage hitstunImage = new Image("img/" + name + "/hitstun.png").img;
 	BufferedImage jumpSquatImage = new Image("img/" + name + "/jumpsquat.png").img;
 	BufferedImage jumpImage = new Image("img/" + name + "/jump.png").img;
+	BufferedImage helplessImage = new Image("img/" + name + "/helpless.png").img;
 	// shielding/dodging
 	BufferedImage shieldImage = new Image("img/" + name + "/shield.png").img;
 	BufferedImage dodgeImage = new Image("img/" + name + "/dodge.png").img;
@@ -131,6 +133,18 @@ public class Character {
 	BufferedImage dThrowImage = new Image("img/" + name + "/throw_d.png").img;
 	BufferedImage fThrowImage = new Image("img/" + name + "/throw_f.png").img;
 	BufferedImage bThrowImage = new Image("img/" + name + "/throw_b.png").img;
+
+	// Specials
+	BufferedImage chargeBeam1Image = new Image("img/" + name + "/chargebeam1.png").img;
+	BufferedImage chargeBeam2Image = new Image("img/" + name + "/chargebeam2.png").img;
+	BufferedImage chargeBeam3Image = new Image("img/" + name + "/chargebeam3.png").img;
+	BufferedImage uSpecialImage = new Image("img/" + name + "/upspecial.png").img;
+	BufferedImage dSpecialImage = new Image("img/" + name + "/downspecial.png").img;
+	BufferedImage fSpecialImage = new Image("img/" + name + "/forwardspecial.png").img;
+
+	// extra images
+	BufferedImage chargeBeamBlueImage = new Image("img/" + name + "/chargebeamblue.png").img;
+	BufferedImage kiBlastBlueImage = new Image("img/misc/kiblastblue.png").img;
 
 	private final double startx;
 	private final double starty;
@@ -193,6 +207,8 @@ public class Character {
 	private double neutralSpecialCharge = 0;
 	private double neutralSpecialChargeIncrement = 0.006666666667;
 	private Character grabbedPlayer = null;
+	private int stateOverrideLength = 15;
+	private int stateOverrideCounter = stateOverrideLength;
 
 	public Character(int posx, int posy, int upKey, int downKey, int leftKey, int rightKey, int modifierKey,
 			int jumpKey, int attackKey, int specialKey, int shieldKey, int grabKey, Game gameinstance) {
@@ -276,6 +292,7 @@ public class Character {
 		blastZone();
 		translateHitboxes();
 		drawCorrectSprite(g);
+		drawSpecialSprites(g);
 		recordLastFrameX();
 		recordLastFrameY();
 		recordLastFrameIsGrounded();
@@ -283,148 +300,6 @@ public class Character {
 		attemptToShield();
 		drawShield(g);
 		placeShield();
-	}
-
-	public void placeShield() {
-		shield = new Ellipse2D.Double();
-		if (!isJumpButtonDownController() && state != STATE_JUMPSQUAT && state != STATE_JUMP
-				&& state != STATE_LANDFALLSPECIAL) {
-			if (isShielding && state != STATE_DODGE && state != STATE_LAG && !isJumpButtonDownController()) {
-				shield.setFrame((x - w) + ((1 - shieldWidth) * w * 1.5), (y - 5) + ((1 - shieldWidth) * w),
-						(h + 5) * shieldWidth, (h + 5) * shieldWidth);
-
-				state = STATE_SHIELD;
-				if (isAxisLeft) {
-					velX = -5;
-					dodge();
-				}
-				if (isAxisRight) {
-					velX = 5;
-					dodge();
-				}
-			} else if (state == STATE_SHIELD) {
-				state = STATE_NEUTRAL;
-			} else if (shieldWidth <= 1.0) {
-				shieldWidth += 0.002083333333;
-			}
-			isShielding = false;
-		}
-	}
-
-	public void setShield(Ellipse2D shield) {
-		this.shield = shield;
-	}
-
-	public void breakShield() {
-		if (shieldWidth <= .4) {
-			isShielding = false;
-			putIntoLag(4 * 60);
-		}
-	}
-
-	public void attemptToShield() {
-		if (state != STATE_GRABBED && state != STATE_GRAB) {
-			if (isController) {
-				if (myController != null)
-					for (Component comp : myController.getComponents()) {
-						if (comp.getName().equals(getLeftTrigger()) || comp.getName().equals(getRightTrigger())) {
-							if (comp.getPollData() > getAxisMidpoint()) {
-								if (isGrounded) {
-									if (isGrounded && state != STATE_HITSTUN && state != STATE_DODGE) {
-										isShielding = true;
-										shieldWidth -= 0.002666666667;
-										breakShield();
-									}
-								} else if (state != STATE_HITSTUN && state != STATE_DODGE && canAirDodge) {
-									// velX = 0;
-									// velY = 0;
-									if (state != STATE_JUMPSQUAT) {
-										dodge();
-									}
-								}
-							}
-
-						}
-					}
-			} else {
-				if (isPressing(keyShield) && state != STATE_HITSTUN && state != STATE_DODGE && state != STATE_CROUCH) {
-					if (isGrounded && state != STATE_JUMPSQUAT) {
-						if (isPressing(keyLeft)) {
-							velX = -5;
-							dodge();
-						} else if (isPressing(keyRight)) {
-							velX = 5;
-							dodge();
-						} else {
-							isShielding = true;
-							shieldWidth -= 0.002666666667;
-							breakShield();
-						}
-
-					} else {
-						if (state != STATE_JUMPSQUAT) {
-							/*
-							 * if (isPressing(keyLeft)) velX -= waveDashSpeed;
-							 * if (isPressing(keyRight)) velX += waveDashSpeed;
-							 * if (isPressing(keyUp)) velY -= waveDashSpeed; if
-							 * (isPressing(keyDown)) velY += waveDashSpeed;
-							 */
-							dodge();
-						}
-					}
-				}
-			}
-		}
-	}
-
-	public Ellipse2D getShield() {
-		return shield;
-	}
-
-	public void dodge() {
-
-		if (isGrounded) {
-			if (state == STATE_SHIELD) {
-				rollCounter = rollDistance;
-				state = STATE_DODGE;
-			}
-
-		} else if (canAirDodge) {
-			rollCounter = rollDistance;
-			state = STATE_DODGE;
-			canAirDodge = false;
-		}
-	}
-
-	public void putIntoLag(int lagAmount) {
-		lagCounter = lagAmount;
-		state = STATE_LAG;
-	}
-
-	public void applyDamage(double damageApplied) {
-		percent += damageApplied;
-	}
-
-	public void getController() {
-		for (Controller currentController : myGame.controllers) {
-			if (currentController.getPortNumber() == portNum) {
-				myController = currentController;
-			}
-		}
-	}
-
-	public void removeJumpButtonHistory() {
-		for (boolean mybool : jumpKeyDownHistory) {
-			mybool = false;
-		}
-	}
-
-	public void drawShield(Graphics g) {
-		if (isShielding) {
-			Graphics2D g2 = (Graphics2D) g;
-			g.setColor(Game.transparentblue);
-			g2.fill(getShield());
-		}
 	}
 
 	public void drawCorrectSprite(Graphics g) {
@@ -616,6 +491,287 @@ public class Character {
 				g.drawImage(bThrowImage, (int) x + w, (int) y - (int) (h * 1.1456) + h, (int) (-w * 1.232),
 						(int) (h * 1.1456), null);
 		}
+		// the neutral charging state needs more images to show how far it has
+		// gone along charging
+		if (state == STATE_NEUTRALSPECIAL) {
+			if (hitboxes.size() == 0) {
+				if (neutralSpecialCharge < .5) {
+					if (direction == DIRECTION_RIGHT)
+						g.drawImage(chargeBeam1Image, (int) x, (int) y, w, h, null);
+					if (direction == DIRECTION_LEFT)
+						g.drawImage(chargeBeam1Image, (int) x + w, (int) y, -w, h, null);
+				} else {
+					if (direction == DIRECTION_RIGHT)
+						g.drawImage(chargeBeam2Image, (int) x, (int) y, w, h, null);
+					if (direction == DIRECTION_LEFT)
+						g.drawImage(chargeBeam2Image, (int) x + w, (int) y, -w, h, null);
+				}
+			} else {
+				if (direction == DIRECTION_RIGHT)
+					g.drawImage(chargeBeam3Image, (int) x, (int) y, (int) (w * 1.2), h, null);
+				if (direction == DIRECTION_LEFT)
+					g.drawImage(chargeBeam3Image, (int) x + w, (int) y, (int) (-w * 1.2), h, null);
+			}
+		}
+
+		if (state == STATE_UPSPECIAL) {
+			if (direction == DIRECTION_RIGHT)
+				g.drawImage(uSpecialImage, (int) x, (int) y, (int) (w * 1.308), h, null);
+			if (direction == DIRECTION_LEFT)
+				g.drawImage(uSpecialImage, (int) x + w, (int) y, (int) (-w * 1.308), h, null);
+		}
+
+		if (state == STATE_DOWNSPECIAL) {
+			if (direction == DIRECTION_RIGHT)
+				g.drawImage(dSpecialImage, (int) x, (int) y, (int) (w * 1.524), h, null);
+			if (direction == DIRECTION_LEFT)
+				g.drawImage(dSpecialImage, (int) x + w, (int) y, (int) (-w * 1.524), h, null);
+		}
+
+		if (state == STATE_FORWARDSPECIAL) {
+			if (direction == DIRECTION_RIGHT)
+				g.drawImage(fSpecialImage, (int) x, (int) y, (int) (w * 1.388), h, null);
+			if (direction == DIRECTION_LEFT)
+				g.drawImage(fSpecialImage, (int) x + w, (int) y, (int) (-w * 1.388), h, null);
+		}
+
+		if (state == STATE_HELPLESS) {
+			if (direction == DIRECTION_RIGHT)
+				g.drawImage(helplessImage, (int) x, (int) y, (int) (w * 1.524), h, null);
+			if (direction == DIRECTION_LEFT)
+				g.drawImage(helplessImage, (int) x + w, (int) y, (int) (-w * 1.524), h, null);
+		}
+
+	}
+
+	public void drawSpecialSprites(Graphics g) {
+		if (state == STATE_NEUTRALSPECIAL && hitboxes.size() > 0) {
+			if (hitboxes.get(0).isActive == true) {
+				if (direction == DIRECTION_RIGHT)
+					g.drawImage(chargeBeamBlueImage, (int) x + w, (int) (y + (h / 3)), 1000, 15, null);
+				else
+					g.drawImage(chargeBeamBlueImage, (int) x, (int) (y + (h / 3)), -1000, 15, null);
+			}
+		}
+	}
+
+	public void updateStates() {
+		if (state != STATE_GRABBED) {
+			if (isGrounded && state == STATE_HELPLESS)
+				state = STATE_NEUTRAL;
+			applyJumpWhenRequired();
+			chargeSmashAttack();
+
+			if (state == STATE_FORWARDSPECIAL) {
+				stateOverrideCounter--;
+				if (stateOverrideCounter <= 0) {
+					state = STATE_NEUTRAL;
+					stateOverrideCounter = stateOverrideLength;
+				}
+			}
+
+			if (grabCounter > 0) {
+				if (grabbedPlayer == null)
+					grabCounter--;
+			} else if (state == STATE_GRAB || state == STATE_BTHROW || state == STATE_UTHROW || state == STATE_FTHROW
+					|| state == STATE_DTHROW) {
+				if (grabbedPlayer == null) {
+					state = STATE_NEUTRAL;
+					putIntoLag(10);
+				}
+			}
+
+			if (!canAirDodge && isGrounded) {
+				canAirDodge = true;
+			}
+			if (state == STATE_LAG) {
+				if (lagCounter > 0) {
+					lagCounter--;
+				} else {
+					state = STATE_NEUTRAL;
+				}
+			}
+			if (state == STATE_DODGE) {
+				if (rollCounter > 0) {
+					rollCounter--;
+				} else {
+
+					if (isGrounded) {
+						putIntoLag(rollLag);
+						velX = 0;
+					} else {
+						putIntoLag(rollLag * 3);
+					}
+				}
+			}
+			if (landingLagCounter > 0) {
+				landingLagCounter--;
+			} else if (state == STATE_LANDINGLAG) {
+				state = STATE_NEUTRAL;
+			}
+			if (isGrounded && state != STATE_JUMP) {
+				isJumpButtonDown = false;
+				hasDoubleJump = true;
+			}
+			cycleArray(false, jumpKeyDownHistory);
+			cycleArray(false, attackKeyDownHistory);
+			cycleArray(false, specialKeyDownHistory);
+			if (jumpTimeBuffer > 0)
+				jumpTimeBuffer--;
+			if (state == STATE_JUMP && jumpTimeBuffer == 0) {
+				state = STATE_NEUTRAL;
+			}
+			if (isGrounded && !hasDoubleJump)
+				hasDoubleJump = true;
+			if (hitstunCounter > -1)
+				hitstunCounter--;
+			if (hitstunCounter == 0)
+				state = STATE_NEUTRAL;
+			getKeyboardTiltInfo();
+			checkForCStickSmashAttacks();
+		}
+	}
+
+	public void placeShield() {
+		shield = new Ellipse2D.Double();
+		if (!isJumpButtonDownController() && state != STATE_JUMPSQUAT && state != STATE_JUMP
+				&& state != STATE_LANDFALLSPECIAL) {
+			if (isShielding && state != STATE_DODGE && state != STATE_LAG && !isJumpButtonDownController()) {
+				shield.setFrame((x - w) + ((1 - shieldWidth) * w * 1.5), (y - 5) + ((1 - shieldWidth) * w),
+						(h + 5) * shieldWidth, (h + 5) * shieldWidth);
+
+				state = STATE_SHIELD;
+				if (isAxisLeft) {
+					velX = -5;
+					dodge();
+				}
+				if (isAxisRight) {
+					velX = 5;
+					dodge();
+				}
+			} else if (state == STATE_SHIELD) {
+				state = STATE_NEUTRAL;
+			} else if (shieldWidth <= 1.0) {
+				shieldWidth += 0.002083333333;
+			}
+			isShielding = false;
+		}
+	}
+
+	public void setShield(Ellipse2D shield) {
+		this.shield = shield;
+	}
+
+	public void breakShield() {
+		if (shieldWidth <= .4) {
+			isShielding = false;
+			putIntoLag(4 * 60);
+		}
+	}
+
+	public void attemptToShield() {
+		if (state != STATE_GRABBED && state != STATE_GRAB && state != STATE_HELPLESS) {
+			if (isController) {
+				if (myController != null)
+					for (Component comp : myController.getComponents()) {
+						if (comp.getName().equals(getLeftTrigger()) || comp.getName().equals(getRightTrigger())) {
+							if (comp.getPollData() > getAxisMidpoint()) {
+								if (isGrounded) {
+									if (isGrounded && state != STATE_HITSTUN && state != STATE_DODGE) {
+										isShielding = true;
+										shieldWidth -= 0.002666666667;
+										breakShield();
+									}
+								} else if (state != STATE_HITSTUN && state != STATE_DODGE && canAirDodge) {
+									// velX = 0;
+									// velY = 0;
+									if (state != STATE_JUMPSQUAT) {
+										dodge();
+									}
+								}
+							}
+
+						}
+					}
+			} else {
+				if (isPressing(keyShield) && state != STATE_HITSTUN && state != STATE_DODGE && state != STATE_CROUCH) {
+					if (isGrounded && state != STATE_JUMPSQUAT) {
+						if (isPressing(keyLeft)) {
+							velX = -5;
+							dodge();
+						} else if (isPressing(keyRight)) {
+							velX = 5;
+							dodge();
+						} else {
+							isShielding = true;
+							shieldWidth -= 0.002666666667;
+							breakShield();
+						}
+
+					} else {
+						if (state != STATE_JUMPSQUAT) {
+							/*
+							 * if (isPressing(keyLeft)) velX -= waveDashSpeed;
+							 * if (isPressing(keyRight)) velX += waveDashSpeed;
+							 * if (isPressing(keyUp)) velY -= waveDashSpeed; if
+							 * (isPressing(keyDown)) velY += waveDashSpeed;
+							 */
+							dodge();
+						}
+					}
+				}
+			}
+		}
+	}
+
+	public Ellipse2D getShield() {
+		return shield;
+	}
+
+	public void dodge() {
+
+		if (isGrounded) {
+			if (state == STATE_SHIELD) {
+				rollCounter = rollDistance;
+				state = STATE_DODGE;
+			}
+
+		} else if (canAirDodge) {
+			rollCounter = rollDistance;
+			state = STATE_DODGE;
+			canAirDodge = false;
+		}
+	}
+
+	public void putIntoLag(int lagAmount) {
+		lagCounter = lagAmount;
+		state = STATE_LAG;
+	}
+
+	public void applyDamage(double damageApplied) {
+		percent += damageApplied;
+	}
+
+	public void getController() {
+		for (Controller currentController : myGame.controllers) {
+			if (currentController.getPortNumber() == portNum) {
+				myController = currentController;
+			}
+		}
+	}
+
+	public void removeJumpButtonHistory() {
+		for (boolean mybool : jumpKeyDownHistory) {
+			mybool = false;
+		}
+	}
+
+	public void drawShield(Graphics g) {
+		if (isShielding) {
+			Graphics2D g2 = (Graphics2D) g;
+			g.setColor(Game.transparentblue);
+			g2.fill(getShield());
+		}
 	}
 
 	public void move() {
@@ -654,6 +810,7 @@ public class Character {
 			velX = 0;
 			velY = 0;
 			percent = 0;
+			state = STATE_NEUTRAL;
 		}
 	}
 
@@ -719,33 +876,33 @@ public class Character {
 	}
 
 	public void runLeft() {
-
-		if (isGrounded) {
-			if (state == STATE_NEUTRAL) {
-				if (Math.abs(moveAxisHistoryX[0]) < moveAxisMidpoint || isPressing(keyModifier))
-					velX = -runSpeed / 3;
-				else
-					velX = -runSpeed;
-				direction = DIRECTION_LEFT;
-			}
-		} else if (velX > -maxAirSpeed && state != STATE_AIRDODGE && canAirDodge && state != STATE_GRABBED)
-			velX -= horizontalInAirSpeed;
-
+		if (state != STATE_HELPLESS) {
+			if (isGrounded) {
+				if (state == STATE_NEUTRAL) {
+					if (Math.abs(moveAxisHistoryX[0]) < moveAxisMidpoint || isPressing(keyModifier))
+						velX = -runSpeed / 3;
+					else
+						velX = -runSpeed;
+					direction = DIRECTION_LEFT;
+				}
+			} else if (velX > -maxAirSpeed && state != STATE_AIRDODGE && canAirDodge && state != STATE_GRABBED)
+				velX -= horizontalInAirSpeed;
+		}
 	}
 
 	public void runRight() {
-
-		if (isGrounded) {
-			if (state == STATE_NEUTRAL) {
-				if (Math.abs(moveAxisHistoryX[0]) < moveAxisMidpoint || isPressing(keyModifier))
-					velX = runSpeed / 3;
-				else
-					velX = runSpeed;
-				direction = DIRECTION_RIGHT;
-			}
-		} else if (velX < maxAirSpeed && state != STATE_AIRDODGE && canAirDodge && state != STATE_GRABBED)
-			velX += horizontalInAirSpeed;
-
+		if (state != STATE_HELPLESS) {
+			if (isGrounded) {
+				if (state == STATE_NEUTRAL) {
+					if (Math.abs(moveAxisHistoryX[0]) < moveAxisMidpoint || isPressing(keyModifier))
+						velX = runSpeed / 3;
+					else
+						velX = runSpeed;
+					direction = DIRECTION_RIGHT;
+				}
+			} else if (velX < maxAirSpeed && state != STATE_AIRDODGE && canAirDodge && state != STATE_GRABBED)
+				velX += horizontalInAirSpeed;
+		}
 	}
 
 	public boolean isJumpButtonDownController() {
@@ -931,73 +1088,6 @@ public class Character {
 		setVelY(0);
 		landingLagCounter = length;
 		state = STATE_LANDINGLAG;
-	}
-
-	public void updateStates() {
-		if (state != STATE_GRABBED) {
-			applyJumpWhenRequired();
-			chargeSmashAttack();
-
-			if (grabCounter > 0) {
-				if (grabbedPlayer == null)
-					grabCounter--;
-			} else if (state == STATE_GRAB || state == STATE_BTHROW || state == STATE_UTHROW || state == STATE_FTHROW
-					|| state == STATE_DTHROW) {
-				if (grabbedPlayer == null) {
-					state = STATE_NEUTRAL;
-					putIntoLag(10);
-				}
-			}
-
-			if (!canAirDodge && isGrounded) {
-				canAirDodge = true;
-			}
-			if (state == STATE_LAG) {
-				if (lagCounter > 0) {
-					lagCounter--;
-				} else {
-					state = STATE_NEUTRAL;
-				}
-			}
-			if (state == STATE_DODGE) {
-				if (rollCounter > 0) {
-					rollCounter--;
-				} else {
-
-					if (isGrounded) {
-						putIntoLag(rollLag);
-						velX = 0;
-					} else {
-						putIntoLag(rollLag * 3);
-					}
-				}
-			}
-			if (landingLagCounter > 0) {
-				landingLagCounter--;
-			} else if (state == STATE_LANDINGLAG) {
-				state = STATE_NEUTRAL;
-			}
-			if (isGrounded && state != STATE_JUMP) {
-				isJumpButtonDown = false;
-				hasDoubleJump = true;
-			}
-			cycleArray(false, jumpKeyDownHistory);
-			cycleArray(false, attackKeyDownHistory);
-			cycleArray(false, specialKeyDownHistory);
-			if (jumpTimeBuffer > 0)
-				jumpTimeBuffer--;
-			if (state == STATE_JUMP && jumpTimeBuffer == 0) {
-				state = STATE_NEUTRAL;
-			}
-			if (isGrounded && !hasDoubleJump)
-				hasDoubleJump = true;
-			if (hitstunCounter > -1)
-				hitstunCounter--;
-			if (hitstunCounter == 0)
-				state = STATE_NEUTRAL;
-			getKeyboardTiltInfo();
-			checkForCStickSmashAttacks();
-		}
 	}
 
 	// TODO change
@@ -1595,71 +1685,71 @@ public class Character {
 	// AttackHitbox creation syntax , character, localx,
 	// localy,width,height,xknockback,yknockback,hitstunlen,lifetime, damage
 	public void jab() {
-		hitboxes.add(new AttackHitbox(this, 20, 15, 15, 15, .5, -1, 10, 5, 3, 3));
+		hitboxes.add(new AttackHitbox(this, 20, 15, 15, 15, .5, -1, 10, 5, 3, 3, .1));
 		state = STATE_ATTACK;
 		velX += direction * 2;
 	}
 
 	public void fTilt() {
-		hitboxes.add(new AttackHitbox(this, 20, 20, 20, 15, 2, -1, 10, 5, 6, 5));
-		hitboxes.add(new AttackHitbox(this, 20, 25, 10, 15, 1, -3, 10, 5, 8, 5));
+		hitboxes.add(new AttackHitbox(this, 20, 20, 20, 15, 2, -1, 10, 5, 6, 5, .2));
+		hitboxes.add(new AttackHitbox(this, 20, 25, 10, 15, 1, -3, 10, 5, 8, 5, .2));
 		state = STATE_ATTACKSIDE;
 		velX += direction * 3;
 	}
 
 	public void uTilt() {
-		hitboxes.add(new AttackHitbox(this, 10, -20, 15, 25, 1, -6, 10, 10, 8, 5));
+		hitboxes.add(new AttackHitbox(this, 10, -20, 15, 25, 1, -6, 10, 10, 8, 5, .1));
 		state = STATE_ATTACKUP;
 	}
 
 	public void dTilt() {
-		hitboxes.add(new AttackHitbox(this, 20, 35, 25, 15, 3, -4, 10, 6, 4, 2));
+		hitboxes.add(new AttackHitbox(this, 20, 35, 25, 15, 3, -4, 10, 6, 4, 2, .3));
 		state = STATE_ATTACKDOWN;
 	}
 
 	public void nair() {
-		hitboxes.add(new AttackHitbox(this, 20, 15, 15, 15, .5, -1, 10, 20, 5, 3));
+		hitboxes.add(new AttackHitbox(this, 20, 15, 15, 15, .5, -1, 10, 20, 5, 5, .5));
 		state = STATE_ATTACK_NAIR;
 		velX += direction * 2;
 	}
 
 	public void fair() {
-		hitboxes.add(new AttackHitbox(this, 20 + 2, 0, 15, 15, .5, -1, 10, 10, 5, 1));
-		hitboxes.add(new AttackHitbox(this, 25 + 2, 6, 15, 15, .5, -1, 10, 10, 5, 1));
-		hitboxes.add(new AttackHitbox(this, 30 + 2, 12, 15, 15, .5, -1, 10, 10, 5, 1));
-		hitboxes.add(new AttackHitbox(this, 25 + 2, 18, 15, 15, .5, -1, 10, 10, 5, 1));
-		hitboxes.add(new AttackHitbox(this, 20 + 2, 24, 15, 15, .5, -1, 10, 10, 5, 1));
+		hitboxes.add(new AttackHitbox(this, 20 + 2, 0, 15, 15, .5, -1, 10, 10, 5, 1, 0));
+		hitboxes.add(new AttackHitbox(this, 25 + 2, 6, 15, 15, .5, -1, 10, 10, 5, 1, 0));
+		hitboxes.add(new AttackHitbox(this, 30 + 2, 12, 15, 15, .5, -1, 10, 10, 5, 1, .3));
+		hitboxes.add(new AttackHitbox(this, 25 + 2, 18, 15, 15, .5, -1, 10, 10, 5, 1, 0));
+		hitboxes.add(new AttackHitbox(this, 20 + 2, 24, 15, 15, .5, -1, 10, 10, 5, 1, 0));
 		state = STATE_ATTACK_FAIR;
 	}
 
 	public void bair() {
-		hitboxes.add(new AttackHitbox(this, -20, 15, 30, 15, -10, -1, 10, 20, 5, 3));
+		hitboxes.add(new AttackHitbox(this, -20, 15, 30, 15, -10, -1, 10, 20, 5, 3, .2));
 		state = STATE_ATTACK_BAIR;
 	}
 
 	public void uair() {
-		hitboxes.add(new AttackHitbox(this, -5, -10, w + 10, 15, 0, -5, 5, 20, 20, 10));
+		hitboxes.add(new AttackHitbox(this, -5, -10, w + 10, 15, 0, -5, 5, 20, 20, 10, .1));
 		state = STATE_ATTACK_UAIR;
 	}
 
 	public void dair() {
-		hitboxes.add(new AttackHitbox(this, 0, h, w, 15, .5, 5, 5, 20, 5, 10));
+		hitboxes.add(new AttackHitbox(this, 0, h, w, 15, .5, 5, 5, 20, 5, 10, .4));
 		state = STATE_ATTACK_DAIR;
 	}
 
 	public void upSmash() {
 		hitboxes.add(new AttackHitbox(this, 10, -20, 20, 30, 1 * smashAttackChargePercent,
-				-10 * smashAttackChargePercent, 30, 10, 15 * smashAttackChargePercent, 20));
+				-10 * smashAttackChargePercent, 30, 10, 15 * smashAttackChargePercent, 20, .5));
 		state = STATE_SMASH_ATTACK_UP;
 		smashAttackChargePercent = 1.0;
 	}
 
 	public void downSmash() {
 		hitboxes.add(new AttackHitbox(this, -w, h - 15, w * 1.5, 15, -10 * smashAttackChargePercent,
-				1 * smashAttackChargePercent, 30, 10, 2 * smashAttackChargePercent, 20));
+				1 * smashAttackChargePercent, 10, 10, 2 * smashAttackChargePercent, 20, .6));
 
 		hitboxes.add(new AttackHitbox(this, w / 2, h - 15, w * 1.5, 15, 10 * smashAttackChargePercent,
-				1 * smashAttackChargePercent, 10, 10, 2 * smashAttackChargePercent, 20));
+				1 * smashAttackChargePercent, 10, 10, 2 * smashAttackChargePercent, 20, .6));
 
 		state = STATE_SMASH_ATTACK_DOWN;
 		smashAttackChargePercent = 1.0;
@@ -1668,7 +1758,7 @@ public class Character {
 	public void forwardSmash() {
 		hitboxes.add(
 				new AttackHitbox(this, w, 0, 10, h, 5 * (smashAttackChargePercent * 2), 0 * smashAttackChargePercent,
-						(int) (10 * smashAttackChargePercent), 10, 5 * (smashAttackChargePercent * 2), 20));
+						(int) (10 * smashAttackChargePercent), 10, 5 * (smashAttackChargePercent * 2), 20, .4));
 		state = STATE_SMASH_ATTACK_FORWARD;
 		smashAttackChargePercent = 1.0;
 	}
@@ -1697,19 +1787,27 @@ public class Character {
 	}
 
 	public void upSpecial() {
-		hitboxes.add(new AttackHitbox(this, -5, -10, w + 10, 15, 0, -5, 5, 20, 20, 10));
+		hitboxes.add(new AttackHitbox(this, -5, -10, w + 10, 15, 0, -5, 5, 20, 20, 10, .3));
+		velY = -20;
+		velX = 0;
 	}
 
 	public void downSpecial() {
-		hitboxes.add(new AttackHitbox(this, -5, -10, w + 10, 15, 0, -5, 5, 20, 20, 10));
+		hitboxes.add(new AttackHitbox(this, -10, -10, w + 20, h + 20, 10, 0, 5, 20, 20, 10, .8));
+		hitboxes.add(new AttackHitbox(this, -10, -10, w + 20, 20, 0, 10, 5, 20, 20, 10, .8));
 	}
 
 	public void forwardSpecial() {
-		hitboxes.add(new AttackHitbox(this, -5, -10, w + 10, 15, 0, -5, 5, 20, 20, 10));
+		if (direction == DIRECTION_RIGHT)
+			myGame.projectiles.add(new Projectile((int) x + w + 5, (int) y + h / 3, 15, (int) (15 / 1.5638138138), 15.0,
+					0.0, kiBlastBlueImage, this));
+		else
+			myGame.projectiles.add(new Projectile((int) x - 5 - 15, (int) y + h / 3, 15, (int) (15 / 1.5638138138),
+					-15.0, 0.0, kiBlastBlueImage, this));
 	}
 
 	public void neutralSpecial() {
-		hitboxes.add(new AttackHitbox(this, -2, h / 3, 1000, 15, 10 + percent / 10, -5, 20, 60, 40, 60));
+		hitboxes.add(new AttackHitbox(this, w - 2, h / 3, 1000, 15, 10 + percent / 10, -5, 20, 60, 40, 60, 1));
 	}
 
 	public void chargeNeutralSpecial() {
@@ -1742,7 +1840,7 @@ public class Character {
 	// end of attack codes
 
 	public void doSpecialAttacks() {
-		if (state == STATE_NEUTRAL) {
+		if (state == STATE_NEUTRAL || state == STATE_CROUCH) {
 			if (isController) {
 				if (isSpecialButtonDownController()) {
 					if (isAxisUp) {
@@ -1751,10 +1849,22 @@ public class Character {
 					} else if (isAxisDown) {
 						downSpecial();
 						state = STATE_DOWNSPECIAL;
-					} else if (isAxisLeft || isAxisRight) {
+					} else if (isAxisLeft) {
+						direction = DIRECTION_LEFT;
+						forwardSpecial();
+						state = STATE_FORWARDSPECIAL;
+					} else if (isAxisRight) {
+						direction = DIRECTION_RIGHT;
 						forwardSpecial();
 						state = STATE_FORWARDSPECIAL;
 					} else {
+						for (double myint : moveAxisHistoryX) {
+							if (myint == direction * -1) {
+								direction *= -1;
+								break;
+							}
+						}
+
 						state = STATE_NEUTRALSPECIAL;
 					}
 
@@ -1767,12 +1877,20 @@ public class Character {
 					downSpecial();
 					state = STATE_DOWNSPECIAL;
 				} else if (isPressing(keyLeft)) {
+					direction = DIRECTION_LEFT;
 					forwardSpecial();
 					state = STATE_FORWARDSPECIAL;
 				} else if (isPressing(keyRight)) {
+					direction = DIRECTION_RIGHT;
 					forwardSpecial();
 					state = STATE_FORWARDSPECIAL;
 				} else {
+					for (double myint : moveAxisHistoryX) {
+						if (myint == direction * -1) {
+							direction *= -1;
+							break;
+						}
+					}
 					state = STATE_NEUTRALSPECIAL;
 				}
 			}
@@ -1814,8 +1932,12 @@ public class Character {
 
 			if (!(box.getEndLag() > 0)) {
 				hitboxes.remove(box);
-				if (state != STATE_LANDINGLAG)
-					state = STATE_NEUTRAL;
+				if (state != STATE_LANDINGLAG) {
+					if (state == STATE_UPSPECIAL)
+						state = STATE_HELPLESS;
+					else
+						state = STATE_NEUTRAL;
+				}
 				break;
 			}
 		}
@@ -2181,6 +2303,14 @@ public class Character {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public double getShieldWidth() {
+		return shieldWidth;
+	}
+
+	public void setShieldWidth(double shieldWidth) {
+		this.shieldWidth = shieldWidth;
 	}
 
 }

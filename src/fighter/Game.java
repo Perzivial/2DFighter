@@ -56,13 +56,14 @@ public class Game extends JComponent implements KeyListener {
 	private boolean isEditing = false;
 	Controller[] ca = ControllerEnvironment.getDefaultEnvironment().getControllers();
 	static ArrayList<Controller> controllers = new ArrayList<Controller>();
+	static ArrayList<Projectile> projectiles = new ArrayList<Projectile>();
 
 	public Game() {
 		this.setDoubleBuffered(true);
 		hitboxes.add(GROUND_HITBOX);
 		doControllerThings();
 		characters.add(new Character(300, 450, "Xbox 360 Wired Controller", "x", "y", "rx", "ry", "z", "rz", .5, .2,
-				"1", "2", "3", "5",this));
+				"1", "2", "3", "5", this));
 		characters.add(GOE);
 		for (Controller control : ca) {
 			System.out.println(control.getName());
@@ -90,7 +91,7 @@ public class Game extends JComponent implements KeyListener {
 			drawGround(g);
 			doPlayerPhysics(g);
 			doPlayerDrawing(g);
-
+			doProjectileThings(g);
 			// draws hitboxes, should be after all other drawing code
 			drawHitBoxes(g, hitboxes);
 			drawPlayerHitboxes(g);
@@ -172,6 +173,26 @@ public class Game extends JComponent implements KeyListener {
 			Character person = characters.get(i);
 			g.setColor(Color.red);
 			g.drawString(Double.toString(person.getpercentage()), 20 + (getSpaceBetweenNumbers * i + 1), 600);
+		}
+	}
+
+	public void doProjectileThings(Graphics g) {
+		for (Projectile proj : projectiles) {
+			proj.draw(g);
+			for (Character player : characters) {
+				if (proj.getMyHitbox().getLinkedCharacter() != player)
+					if (proj.getMyHitbox().getRect().intersects(player.getHurtbox().getRect())) {
+						if (!proj.getMyHitbox().playerHitList.contains(player)) {
+							if (!player.getShield().intersects(proj.getMyHitbox().getRect())) {
+								player.applyDamage(proj.getMyHitbox().getDamage());
+								player.applyHitstun(proj.getMyHitbox().getHitstunLength());
+							} else {
+								player.setShieldWidth(player.getShieldWidth() - proj.getMyHitbox().getShieldDamage());
+							}
+							proj.getMyHitbox().playerHitList.add(player);
+						}
+					}
+			}
 		}
 	}
 
@@ -260,6 +281,9 @@ public class Game extends JComponent implements KeyListener {
 
 											if (!person1.getShield().intersects(miniRect)) {
 												shouldapplydamage = true;
+											} else {
+												person1.setShieldWidth(
+														(person1.getShieldWidth() - hitbox.getShieldDamage() / 100));
 											}
 										}
 									}
@@ -498,7 +522,7 @@ public class Game extends JComponent implements KeyListener {
 			}
 			if (e.getKeyCode() == KeyEvent.VK_2) {
 				characters.add(new Character(300, 575, "Xbox 360 Wired Controller", "x", "y", "rx", "ry", "z", "rz", .8,
-						.2, "1", "2", "3", "5" ,this));
+						.2, "1", "2", "3", "5", this));
 				characterSlideNum = 0;
 				characterSlideNum2 = 1;
 			}
