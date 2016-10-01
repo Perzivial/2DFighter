@@ -4,6 +4,8 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
+import java.awt.RenderingHints;
+import java.awt.Transparency;
 import java.awt.event.KeyEvent;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Point2D;
@@ -217,7 +219,7 @@ public class Character {
 	private int runIndex = 0;
 	private int runIndexChangeInterval = 5;
 	private int runIndexChangeCounter = runIndexChangeInterval;
-	
+
 	public Character(int posx, int posy, int upKey, int downKey, int leftKey, int rightKey, int modifierKey,
 			int jumpKey, int attackKey, int specialKey, int shieldKey, int grabKey, Game gameinstance) {
 		myGame = gameinstance;
@@ -315,63 +317,141 @@ public class Character {
 		placeShield();
 	}
 
+	public BufferedImage initializeImage(String url) {
+		try {
+			BufferedImage buff = getScaledInstance(new Image(url).img, w * 2, h * 2,
+					RenderingHints.VALUE_INTERPOLATION_BILINEAR, false);
+			return buff;
+		} catch (NullPointerException e) {
+			System.out.println("error");
+			
+				return null;
+		}
+
+	}
 	public void initializeImages() {
-		neutralImage = new Image("img/" + name + "/neutral.png").img;
-		run1Image = new Image("img/" + name + "/run1.png").img;
-		run2Image = new Image("img/" + name + "/run2.png").img;
-		run3Image = new Image("img/" + name + "/run3.png").img;
-		runImages.add(run1Image);
+		neutralImage = initializeImage("img/" + name + "/neutral.png");
+		run1Image = initializeImage("img/" + name + "/run1.png");
+		run2Image = initializeImage("img/" + name + "/run2.png");
+		run3Image = initializeImage("img/" + name + "/run3.png");
+
 		runImages.add(run2Image);
 		runImages.add(run3Image);
 		runImages.add(run2Image);
+		runImages.add(run1Image);
 		// jab and tilts
-		jabImage = new Image("img/" + name + "/attack1.png").img;
-		fTiltImage = new Image("img/" + name + "/tilt_f.png").img;
-		uTiltImage = new Image("img/" + name + "/tilt_u.png").img;
-		dTiltImage = new Image("img/" + name + "/tilt_d.png").img;
+		jabImage = initializeImage("img/" + name + "/jab.png");
+		fTiltImage = initializeImage("img/" + name + "/tilt_f.png");
+		uTiltImage = initializeImage("img/" + name + "/tilt_u.png");
+		dTiltImage = initializeImage("img/" + name + "/tilt_d.png");
 		// aerials
-		nairImage = new Image("img/" + name + "/air_n.png").img;
-		fairImage = new Image("img/" + name + "/air_f.png").img;
-		bairImage = new Image("img/" + name + "/air_b.png").img;
-		dairImage = new Image("img/" + name + "/air_d.png").img;
-		uairImage = new Image("img/" + name + "/air_u.png").img;
+		nairImage = initializeImage("img/" + name + "/air_n.png");
+		uairImage = initializeImage("img/" + name + "/air_u.png");
+		dairImage = initializeImage("img/" + name + "/air_d.png");
+		fairImage = initializeImage("img/" + name + "/air_f.png");
+		bairImage = initializeImage("img/" + name + "/air_b.png");
+
 		// smashes
-		uSmashChargeImage = new Image("img/" + name + "/smash_charge_u.png").img;
-		uSmashImage = new Image("img/" + name + "/smash_u.png").img;
-		dSmashChargeImage = new Image("img/" + name + "/smash_charge_d.png").img;
-		dSmashImage = new Image("img/" + name + "/smash_d.png").img;
-		fSmashChargeImage = new Image("img/" + name + "/smash_charge_f.png").img;
-		fSmashImage = new Image("img/" + name + "/smash_f.png").img;
+		uSmashChargeImage = initializeImage("img/" + name + "/smash_charge_u.png");
+		uSmashImage = initializeImage("img/" + name + "/smash_u.png");
+		
+		dSmashChargeImage = initializeImage("img/" + name + "/smash_charge_d.png");
+		dSmashImage = initializeImage("img/" + name + "/smash_d.png");
+		
+		fSmashChargeImage = initializeImage("img/" + name + "/smash_charge_f.png");
+		fSmashImage = initializeImage("img/" + name + "/smash_f.png");
+
 		// other
-		hitstunImage = new Image("img/" + name + "/hitstun.png").img;
-		jumpSquatImage = new Image("img/" + name + "/jumpsquat.png").img;
-		jumpImage = new Image("img/" + name + "/jump.png").img;
-		helplessImage = new Image("img/" + name + "/helpless.png").img;
+		hitstunImage = initializeImage("img/" + name + "/hitstun.png");
+		jumpSquatImage = initializeImage("img/" + name + "/jumpsquat.png");
+		jumpImage = initializeImage("img/" + name + "/jump.png");
+		helplessImage = initializeImage("img/" + name + "/helpless.png");
 		// shielding/dodging
-		shieldImage = new Image("img/" + name + "/shield.png").img;
-		dodgeImage = new Image("img/" + name + "/dodge.png").img;
+		shieldImage = initializeImage("img/" + name + "/shield.png");
+		dodgeImage = initializeImage("img/" + name + "/dodge.png");
 		// lag
-		lagImage = new Image("img/" + name + "/endlag.png").img;
+		lagImage = initializeImage("img/" + name + "/endlag.png");
 
 		// grab
-		grabImage = new Image("img/" + name + "/grab.png").img;
-		grabbedImage = new Image("img/" + name + "/grabbed.png").img;
-		uThrowImage = new Image("img/" + name + "/throw_u.png").img;
-		dThrowImage = new Image("img/" + name + "/throw_d.png").img;
-		fThrowImage = new Image("img/" + name + "/throw_f.png").img;
-		bThrowImage = new Image("img/" + name + "/throw_b.png").img;
+		grabImage = initializeImage("img/" + name + "/grab.png");
+		grabbedImage = initializeImage("img/" + name + "/grabbed.png");
+		uThrowImage = initializeImage("img/" + name + "/throw_u.png");
+		dThrowImage = initializeImage("img/" + name + "/throw_d.png");
+		fThrowImage = initializeImage("img/" + name + "/throw_f.png");
+		bThrowImage = initializeImage("img/" + name + "/throw_b.png");
 
 		// Specials
-		chargeBeam1Image = new Image("img/" + name + "/chargebeam1.png").img;
-		chargeBeam2Image = new Image("img/" + name + "/chargebeam2.png").img;
-		chargeBeam3Image = new Image("img/" + name + "/chargebeam3.png").img;
-		uSpecialImage = new Image("img/" + name + "/upspecial.png").img;
-		dSpecialImage = new Image("img/" + name + "/downspecial.png").img;
-		fSpecialImage = new Image("img/" + name + "/forwardspecial.png").img;
+		chargeBeam1Image = initializeImage("img/" + name + "/chargebeam1.png");
+		chargeBeam2Image = initializeImage("img/" + name + "/chargebeam2.png");
+		chargeBeam3Image = initializeImage("img/" + name + "/chargebeam3.png");
+		uSpecialImage = initializeImage("img/" + name + "/upspecial.png");
+		dSpecialImage = initializeImage("img/" + name + "/downspecial.png");
+		fSpecialImage = initializeImage("img/" + name + "/forwardspecial.png");
 
 		// extra images
-		chargeBeamBlueImage = new Image("img/" + name + "/chargebeamblue.png").img;
-		kiBlastBlueImage = new Image("img/misc/kiblastblue.png").img;
+		chargeBeamBlueImage = initializeImage("img/" + name + "/chargebeamblue.png");
+		kiBlastBlueImage = initializeImage("img/" + name + "/kiblastblue.png");
+
+	}
+
+	/**
+	 * * Convenience method that returns a scaled instance of the * provided
+	 * {@code BufferedImage}. * * @param img the original image to be scaled
+	 * * @param targetWidth the desired width of the scaled instance, * in
+	 * pixels * @param targetHeight the desired height of the scaled instance, *
+	 * in pixels * @param hint one of the rendering hints that corresponds to *
+	 * {@code RenderingHints.KEY_INTERPOLATION} (e.g. *
+	 * {@code RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR}, *
+	 * {@code RenderingHints.VALUE_INTERPOLATION_BILINEAR}, *
+	 * {@code RenderingHints.VALUE_INTERPOLATION_BICUBIC}) * @param
+	 * higherQuality if true, this method will use a multi-step * scaling
+	 * technique that provides higher quality than the usual * one-step
+	 * technique (only useful in downscaling cases, where * {@code targetWidth}
+	 * or {@code targetHeight} is * smaller than the original dimensions, and
+	 * generally only when * the {@code BILINEAR} hint is specified) * @return a
+	 * scaled version of the original {@code BufferedImage}
+	 */
+	public BufferedImage getScaledInstance(BufferedImage img, int targetWidth, int targetHeight, Object hint,
+			boolean higherQuality) {
+		int type = (img.getTransparency() == Transparency.OPAQUE) ? BufferedImage.TYPE_INT_RGB
+				: BufferedImage.TYPE_INT_ARGB;
+		BufferedImage ret = (BufferedImage) img;
+		int w, h;
+		if (higherQuality) {
+			// Use multi-step technique: start with original size, then
+			// scale down in multiple passes with drawImage()
+			// until the target size is reached
+			w = img.getWidth();
+			h = img.getHeight();
+			System.out.println("1");
+		} else {
+			// Use one-step technique: scale directly from original
+			// size to target size with a single drawImage() call
+			w = targetWidth;
+			h = targetHeight;
+		}
+		do {
+			if (higherQuality && w > targetWidth) {
+				w /= 2;
+				if (w < targetWidth) {
+					w = targetWidth;
+				}
+			}
+			if (higherQuality && h > targetHeight) {
+				h /= 2;
+				if (h < targetHeight) {
+					h = targetHeight;
+				}
+			}
+			BufferedImage tmp = new BufferedImage(w, h, type);
+			Graphics2D g2 = tmp.createGraphics();
+			g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, hint);
+			g2.drawImage(ret, 0, 0, w, h, null);
+			g2.dispose();
+			ret = tmp;
+			System.out.println("2");
+		} while (w != targetWidth || h != targetHeight);
+		return ret;
 	}
 
 	public void drawCorrectSprite(Graphics g) {
@@ -387,10 +467,12 @@ public class Character {
 				isRunning = true;
 
 			if (!isRunning) {
-				if (direction == DIRECTION_RIGHT)
+				if (direction == DIRECTION_RIGHT) {
 					g.drawImage(neutralImage, (int) x, (int) y, w, h, null);
-				if (direction == DIRECTION_LEFT)
+				}
+				if (direction == DIRECTION_LEFT) {
 					g.drawImage(neutralImage, (int) x + w, (int) y, -w, h, null);
+				}
 			} else {
 				if (direction == DIRECTION_RIGHT)
 					g.drawImage(runImages.get(runIndex), (int) x, (int) y, w, h, null);
@@ -400,9 +482,9 @@ public class Character {
 		}
 		if (state == STATE_ATTACK) {
 			if (direction == DIRECTION_RIGHT)
-				g.drawImage(jabImage, (int) x, (int) y, (int) (w * 1.6), h, null);
+				g.drawImage(jabImage, (int) x, (int) y, (int) ((w) * 1.6), h, null);
 			if (direction == DIRECTION_LEFT)
-				g.drawImage(jabImage, (int) x + w, (int) y, (int) (-w * 1.6), h, null);
+				g.drawImage(jabImage, (int) x + w, (int) y, (int) ((-w) * 1.6), h, null);
 		}
 		if (state == STATE_ATTACKSIDE) {
 			if (direction == DIRECTION_RIGHT)
@@ -720,7 +802,7 @@ public class Character {
 
 	public void rotateRunArray() {
 		if (runIndexChangeCounter <= 0) {
-			if (runIndex + 1 < runImages.size() - 1) {
+			if (runIndex < runImages.size() - 1) {
 				runIndex++;
 			} else {
 				runIndex = 0;
@@ -736,8 +818,10 @@ public class Character {
 		if (!isJumpButtonDownController() && state != STATE_JUMPSQUAT && state != STATE_JUMP
 				&& state != STATE_LANDFALLSPECIAL) {
 			if (isShielding && state != STATE_DODGE && state != STATE_LAG && !isJumpButtonDownController()) {
-				shield.setFrame((x - w) + ((1 - shieldWidth) * w * 1.5), (y - 5) + ((1 - shieldWidth) * w),
-						(h + 5) * shieldWidth, (h + 5) * shieldWidth);
+				/*
+				shield.setFrame((x - w + w/10) + ((1 - (shieldWidth)) * (getW() * (1.5))), (y - 5) + ((1 - shieldWidth) * w),
+						(h + (5 * w/10)) * shieldWidth, (h + (5 * w/10)) * shieldWidth);
+	*/	
 
 				state = STATE_SHIELD;
 				if (isAxisLeft) {
@@ -985,7 +1069,7 @@ public class Character {
 					direction = DIRECTION_LEFT;
 					rotateRunArray();
 				}
-				
+
 			} else if (velX > -maxAirSpeed && state != STATE_AIRDODGE && canAirDodge && state != STATE_GRABBED)
 				velX -= horizontalInAirSpeed;
 		}
@@ -2230,6 +2314,7 @@ public class Character {
 		controllerName = newController.getName();
 		portNum = newController.getPortNumber();
 	}
+
 
 	public boolean getIsAxisUp() {
 		return isAxisUp;

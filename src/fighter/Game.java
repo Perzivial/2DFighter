@@ -13,6 +13,7 @@ import java.awt.event.KeyListener;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.HashSet;
 
@@ -58,9 +59,8 @@ public class Game extends JComponent implements KeyListener {
 	Controller[] ca = ControllerEnvironment.getDefaultEnvironment().getControllers();
 	static ArrayList<Controller> controllers = new ArrayList<Controller>();
 	static ArrayList<Projectile> projectiles = new ArrayList<Projectile>();
-
+	BufferedImage sky = new Image("img/misc/sky.png").img;
 	public Game() {
-		this.setDoubleBuffered(true);
 		hitboxes.add(GROUND_HITBOX);
 		doControllerThings();
 		characters.add(new Character(300, 450, "Xbox 360 Wired Controller", "x", "y", "rx", "ry", "z", "rz", .5, .2,
@@ -85,6 +85,8 @@ public class Game extends JComponent implements KeyListener {
 			g2.scale(screenWidth / DEFAULT_SCREEN_SIZE_X, (screenHeight / DEFAULT_SCREEN_SIZE_X) / 0.625);
 
 		}
+		g2.setColor(Color.white);
+		g2.fillRect(0,0,WIDTH,HEIGHT);
 		switch (screenState) {
 		case (SCREEN_STATE_INGAME):
 			// basic background stuff to build scene
@@ -132,23 +134,28 @@ public class Game extends JComponent implements KeyListener {
 
 			break;
 		case (SCREEN_STATE_CHARACTER_SELECT):
-			
+
 			break;
 		}
+
 		g2.setTransform(oldTransform);
+		
+
 	}
 
 	public void graphicsSettings(Graphics2D g2) {
 
 		g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 		g2.setRenderingHint(RenderingHints.KEY_DITHERING, RenderingHints.VALUE_DITHER_ENABLE);
-		g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+		g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED);
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		g2.setRenderingHint(RenderingHints.KEY_TEXT_LCD_CONTRAST, 100);
 		g2.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
 		g2.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
 		g2.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_QUALITY);
 		g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
+		g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION,RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+
 	}
 
 	public void doPlayerDrawing(Graphics g) {
@@ -162,7 +169,7 @@ public class Game extends JComponent implements KeyListener {
 		for (Character person : characters) {
 			Rectangle groundChecker = new Rectangle((int) person.getX(), (int) person.getY() + 1,
 					(int) person.getWidth(), (int) person.getHeight());
-			if (checkCollision(groundChecker, hitboxes.get(0).getRect()) && person.getY() < hitboxes.get(0).getY())
+			if (checkCollision(groundChecker, hitboxes.get(0).getRect()) && person.getY() + person.getHeight() - 1 < hitboxes.get(0).getY())
 				person.isGrounded = true;
 			else
 				person.isGrounded = false;
@@ -176,7 +183,7 @@ public class Game extends JComponent implements KeyListener {
 		for (int i = 0; i < characters.size(); i++) {
 			Character person = characters.get(i);
 			g.setColor(Color.red);
-			g.drawString(Double.toString(person.getpercentage()), 20 + (getSpaceBetweenNumbers * i + 1), 600);
+			g.drawString(Double.toString(person.getpercentage()), getSpaceBetweenNumbers/ 2 + (getSpaceBetweenNumbers * i + 1), 600);
 		}
 	}
 
@@ -203,6 +210,7 @@ public class Game extends JComponent implements KeyListener {
 	public void drawBackground(Graphics g) {
 		g.setColor(Color.white);
 		g.fillRect(0, 0, 1200, 675);
+		g.drawImage(sky, 0, 0, 1200,675,null);
 	}
 
 	public void drawGround(Graphics g) {

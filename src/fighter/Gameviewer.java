@@ -2,6 +2,7 @@ package fighter;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.DisplayMode;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.Window;
@@ -45,11 +46,12 @@ public class Gameviewer extends JFrame {
 		frame.add(thegame);
 		frame.setSize(1200, 675);
 		frame.setLocationRelativeTo(null);
-		frame.setTitle("NotSmash");
+		frame.setTitle("Smash");
 		frame.setResizable(false);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		thegame.addKeyListener(thegame);
 		thegame.setFocusable(true);
+		thegame.setPreferredSize(new Dimension(1200 * 100, 675 * 100));
 		if (isMacOSX()) {
 			enableFullScreenMode(frame);
 		}
