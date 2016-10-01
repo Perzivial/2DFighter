@@ -117,6 +117,10 @@ public class Game extends JComponent implements KeyListener {
 					g.drawString(String.valueOf(characters.get(characterSlideNum).getRightKey()), 240, 260);
 					g.drawString(String.valueOf(characters.get(characterSlideNum).getJumpKey()), 300, 280);
 					g.drawString(String.valueOf(characters.get(characterSlideNum).getAttackKey()), 360, 300);
+					g.drawString(String.valueOf(characters.get(characterSlideNum).getModifierKey()), 420, 320);
+					g.drawString(String.valueOf(characters.get(characterSlideNum).getShieldKey()), 480, 340);
+					g.drawString(String.valueOf(characters.get(characterSlideNum).getKeyGrab()), 541, 360);
+					g.drawString(String.valueOf(characters.get(characterSlideNum).getKeySpecial()), 600, 380);
 
 					g.drawString("^", 60 * characterSlideNum2, 220 + (20 * characterSlideNum2));
 				} else {
@@ -127,6 +131,13 @@ public class Game extends JComponent implements KeyListener {
 					g.drawString(String.valueOf(characters.get(characterSlideNum).getAxisMidpoint()), 300, 280);
 					g.drawString(String.valueOf(characters.get(characterSlideNum).getJumpButton()), 360, 300);
 					g.drawString(String.valueOf(characters.get(characterSlideNum).getAttackButton()), 420, 320);
+					
+					g.drawString(String.valueOf(characters.get(characterSlideNum).getMoveAxisNameRX()), 480, 340);
+					g.drawString(String.valueOf(characters.get(characterSlideNum).getMoveAxisNameRY()), 540, 360);
+					g.drawString(String.valueOf(characters.get(characterSlideNum).getMoveAxisNameZ()), 600, 380);
+					g.drawString(String.valueOf(characters.get(characterSlideNum).getMoveAxisNameRZ()), 660, 400);
+					g.drawString(String.valueOf(characters.get(characterSlideNum).getButtonGrab()), 720, 420);
+					g.drawString(String.valueOf(characters.get(characterSlideNum).getButtonSpecial()), 780, 440);
 					g.drawString("^", 60 * characterSlideNum2, 220 + (20 * characterSlideNum2));
 					controllerConfigChange(characters.get(characterSlideNum));
 				}
@@ -495,7 +506,32 @@ public class Game extends JComponent implements KeyListener {
 								&& !comp.getName().equals(person.getAxisNameY()))
 							person.setAttackButton(comp.getName());
 						break;
+					case (8):
+						if (comp.getPollData() > 0)
+							person.setMoveAxisNameRX(comp.getName());
+						break;
+					case (9):
+						if (comp.getPollData() > 0)
+							person.setMoveAxisNameRY(comp.getName());
+						break;
+					case (10):
+						if (comp.getPollData() > 0)
+							person.setMoveAxisNameZ(comp.getName());
+						break;
+					case (11):
+						if (comp.getPollData() > 0)
+							person.setMoveAxisNameRZ(comp.getName());
+						break;
+					case (12):
+						if (comp.getPollData() > 0)
+							person.setButtonGrab(comp.getName());
+						break;
+					case (13):
+						if (comp.getPollData() > 0)
+							person.setButtonSpecial(comp.getName());
+						break;
 					}
+					
 				}
 			}
 		}
@@ -562,30 +598,36 @@ public class Game extends JComponent implements KeyListener {
 					}
 					if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
 
-						if (!characters.get(characterSlideNum).getIsUsingController() && characterSlideNum2 < 7)
+						if (!characters.get(characterSlideNum).getIsUsingController() && characterSlideNum2 < 10)
 							characterSlideNum2++;
-						if (characters.get(characterSlideNum).getIsUsingController() && characterSlideNum2 < 7)
+						if (characters.get(characterSlideNum).getIsUsingController() && characterSlideNum2 < 13)
 							characterSlideNum2++;
 					}
 
 					if (e.getKeyCode() == KeyEvent.VK_ENTER)
 						isEditing = true;
 				} else {
-					if (characters.get(characterSlideNum).getIsUsingController()) {
+					if (!characters.get(characterSlideNum).getIsUsingController()) {
 						if (characterSlideNum2 == 1)
-							characters.get(characterSlideNum).changecontrols(e.getKeyCode(), -1, -1, -1, -1, -1, -1);
+							characters.get(characterSlideNum).changecontrols(e.getKeyCode(), -1, -1, -1, -1, -1, -1,-1,-1,-1);
 						if (characterSlideNum2 == 2)
-							characters.get(characterSlideNum).changecontrols(-1, -e.getKeyCode(), -1, -1, -1, -1, -1);
+							characters.get(characterSlideNum).changecontrols(-1, -e.getKeyCode(), -1, -1, -1, -1, -1,-1,-1,-1);
 						if (characterSlideNum2 == 3)
-							characters.get(characterSlideNum).changecontrols(-1, -1, e.getKeyCode(), -1, -1, -1, -1);
+							characters.get(characterSlideNum).changecontrols(-1, -1, e.getKeyCode(), -1, -1, -1, -1,-1,-1,-1);
 						if (characterSlideNum2 == 4)
-							characters.get(characterSlideNum).changecontrols(-1, -1, -1, e.getKeyCode(), -1, -1, -1);
+							characters.get(characterSlideNum).changecontrols(-1, -1, -1, e.getKeyCode(), -1, -1, -1,-1,-1,-1);
 						if (characterSlideNum2 == 5)
-							characters.get(characterSlideNum).changecontrols(-1, -1, -1, -1, e.getKeyCode(), -1, -1);
+							characters.get(characterSlideNum).changecontrols(-1, -1, -1, -1, e.getKeyCode(), -1, -1,-1,-1,-1);
 						if (characterSlideNum2 == 6)
-							characters.get(characterSlideNum).changecontrols(-1, -1, -1, -1, -1, e.getKeyCode(), -1);
+							characters.get(characterSlideNum).changecontrols(-1, -1, -1, -1, -1, e.getKeyCode(), -1 ,-1,-1,-1);
 						if (characterSlideNum2 == 7)
-							characters.get(characterSlideNum).changecontrols(-1, -1, -1, -1, -1, -1, e.getKeyCode());
+							characters.get(characterSlideNum).changecontrols(-1, -1, -1, -1, -1, -1, e.getKeyCode(),-1,-1,-1);
+						if (characterSlideNum2 == 8)
+							characters.get(characterSlideNum).changecontrols(-1, -1, -1, -1, -1, -1, -1, e.getKeyCode(),-1,-1);
+						if (characterSlideNum2 == 9)
+							characters.get(characterSlideNum).changecontrols(-1, -1, -1, -1, -1, -1, -1,-1, e.getKeyCode(),-1);
+						if (characterSlideNum2 == 10)
+							characters.get(characterSlideNum).changecontrols(-1, -1, -1, -1, -1, -1,-1,-1,-1 , e.getKeyCode());
 						isEditing = false;
 					}
 				}

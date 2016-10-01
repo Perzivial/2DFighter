@@ -827,7 +827,8 @@ public class Character {
 				// (h + (5 * w / 10)) * shieldWidth);
 				//hopefuly this new method works
 
-				shield.setFrameFromCenter(x + w/2, y + h/2, (x+w*1.5) - 1/shieldWidth * (w/3), (y+h*1.3) - 1/shieldWidth * (w/2.5));
+				shield.setFrameFromCenter(x + w/2, y + h/2, (x+w*1.7) - 1/shieldWidth * (w/3), (y+h*1.5) - 1/shieldWidth * (w/2.5));
+				
 				state = STATE_SHIELD;
 				if (isAxisLeft) {
 					velX = -5;
@@ -2285,7 +2286,7 @@ public class Character {
 
 	// changes the controls at runtime
 	public void changecontrols(int newKeyUp, int newKeyDown, int newKeyLeft, int newKeyRight, int newKeyJump,
-			int newKeyAttack, int newKeyModifier) {
+			int newKeyAttack, int newKeyModifier, int newKeyShield, int newKeyGrab, int newKeySpecial) {
 		if (newKeyUp != -1)
 			keyUp = newKeyUp;
 		if (newKeyDown != -1)
@@ -2300,6 +2301,12 @@ public class Character {
 			keyAttack = newKeyAttack;
 		if (newKeyModifier != -1)
 			keyModifier = newKeyModifier;
+		if (newKeyShield != -1)
+			keyShield = newKeyShield;
+		if (newKeyGrab != -1)
+			keyGrab = newKeyGrab;
+		if (newKeySpecial != -1)
+			keySpecial = newKeySpecial;
 	}
 
 	public boolean getIsUsingController() {
@@ -2518,6 +2525,54 @@ public class Character {
 
 	public void setH(int h) {
 		this.h = h;
+	}
+
+	public String getAxisShield1() {
+		return axisShield1;
+	}
+
+	public void setAxisShield1(String axisShield1) {
+		this.axisShield1 = axisShield1;
+	}
+
+	public String getAxisShield2() {
+		return axisShield2;
+	}
+
+	public void setAxisShield2(String axisShield2) {
+		this.axisShield2 = axisShield2;
+	}
+
+	public String getMoveAxisNameRX() {
+		return moveAxisNameRX;
+	}
+
+	public void setMoveAxisNameRX(String moveAxisNameRX) {
+		this.moveAxisNameRX = moveAxisNameRX;
+	}
+
+	public String getMoveAxisNameRY() {
+		return moveAxisNameRY;
+	}
+
+	public void setMoveAxisNameRY(String moveAxisNameRY) {
+		this.moveAxisNameRY = moveAxisNameRY;
+	}
+
+	public String getMoveAxisNameZ() {
+		return moveAxisNameZ;
+	}
+
+	public void setMoveAxisNameZ(String moveAxisNameZ) {
+		this.moveAxisNameZ = moveAxisNameZ;
+	}
+
+	public String getMoveAxisNameRZ() {
+		return moveAxisNameRZ;
+	}
+
+	public void setMoveAxisNameRZ(String moveAxisNameRZ) {
+		this.moveAxisNameRZ = moveAxisNameRZ;
 	}
 
 }
