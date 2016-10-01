@@ -45,12 +45,13 @@ public class Game extends JComponent implements KeyListener {
 	public static final Hitbox GROUND_HITBOX = new Hitbox(200, 500, 720, 175, TYPE_GROUND);
 
 	ArrayList<Character> characters = new ArrayList<Character>();
-	Character GOE = new Character(500, 400, KeyEvent.VK_UP, KeyEvent.VK_DOWN, KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT,
+	Character GOE = new KidGoku(500, 400, KeyEvent.VK_UP, KeyEvent.VK_DOWN, KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT,
 			KeyEvent.VK_RIGHT, KeyEvent.VK_SPACE, KeyEvent.VK_Q, KeyEvent.VK_W, KeyEvent.VK_E, KeyEvent.VK_R, this);
 	private int screenState = 0;
 	private final static int SCREEN_STATE_INGAME = 0;
 	private final static int SCREEN_STATE_ADDCHARACTER = 1;
-	private final static int SCREEN_STATE_CONTROLLERCALIBRATION = 2;
+	private final static int SCREEN_STATE_CHARACTER_SELECT = 2;
+
 	private int characterSlideNum = 0;
 	private int characterSlideNum2 = 1;
 	private boolean isEditing = false;
@@ -129,6 +130,9 @@ public class Game extends JComponent implements KeyListener {
 				}
 			}
 
+			break;
+		case (SCREEN_STATE_CHARACTER_SELECT):
+			
 			break;
 		}
 		g2.setTransform(oldTransform);

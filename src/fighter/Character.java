@@ -24,7 +24,7 @@ public class Character {
 	private double velY;
 	private double x;
 	private double y;
-	private int w = 20;
+	protected int w = 20;
 	private int h = 50;
 	private Hitbox hurtbox;
 	public ArrayList<AttackHitbox> hitboxes = new ArrayList<AttackHitbox>();
@@ -96,55 +96,55 @@ public class Character {
 	private int hitstunCounter = 0;
 
 	HashSet<Integer> keysPressed = new HashSet<Integer>();
-	BufferedImage neutralImage = new Image("img/" + name + "/neutral.png").img;
+	BufferedImage neutralImage;
 	// jab and tilts
-	BufferedImage jabImage = new Image("img/" + name + "/attack1.png").img;
-	BufferedImage fTiltImage = new Image("img/" + name + "/tilt_f.png").img;
-	BufferedImage uTiltImage = new Image("img/" + name + "/tilt_u.png").img;
-	BufferedImage dTiltImage = new Image("img/" + name + "/tilt_d.png").img;
+	BufferedImage jabImage;
+	BufferedImage fTiltImage;
+	BufferedImage uTiltImage;
+	BufferedImage dTiltImage;
 	// aerials
-	BufferedImage nairImage = new Image("img/" + name + "/air_n.png").img;
-	BufferedImage fairImage = new Image("img/" + name + "/air_f.png").img;
-	BufferedImage bairImage = new Image("img/" + name + "/air_b.png").img;
-	BufferedImage dairImage = new Image("img/" + name + "/air_d.png").img;
-	BufferedImage uairImage = new Image("img/" + name + "/air_u.png").img;
+	BufferedImage nairImage;
+	BufferedImage fairImage;
+	BufferedImage bairImage;
+	BufferedImage dairImage;
+	BufferedImage uairImage;
 	// smashes
-	BufferedImage uSmashChargeImage = new Image("img/" + name + "/smash_charge_u.png").img;
-	BufferedImage uSmashImage = new Image("img/" + name + "/smash_u.png").img;
-	BufferedImage dSmashChargeImage = new Image("img/" + name + "/smash_charge_d.png").img;
-	BufferedImage dSmashImage = new Image("img/" + name + "/smash_d.png").img;
-	BufferedImage fSmashChargeImage = new Image("img/" + name + "/smash_charge_f.png").img;
-	BufferedImage fSmashImage = new Image("img/" + name + "/smash_f.png").img;
+	BufferedImage uSmashChargeImage;
+	BufferedImage uSmashImage;
+	BufferedImage dSmashChargeImage;
+	BufferedImage dSmashImage;
+	BufferedImage fSmashChargeImage;
+	BufferedImage fSmashImage;
 	// other
-	BufferedImage hitstunImage = new Image("img/" + name + "/hitstun.png").img;
-	BufferedImage jumpSquatImage = new Image("img/" + name + "/jumpsquat.png").img;
-	BufferedImage jumpImage = new Image("img/" + name + "/jump.png").img;
-	BufferedImage helplessImage = new Image("img/" + name + "/helpless.png").img;
+	BufferedImage hitstunImage;
+	BufferedImage jumpSquatImage;
+	BufferedImage jumpImage;
+	BufferedImage helplessImage;
 	// shielding/dodging
-	BufferedImage shieldImage = new Image("img/" + name + "/shield.png").img;
-	BufferedImage dodgeImage = new Image("img/" + name + "/dodge.png").img;
+	BufferedImage shieldImage;
+	BufferedImage dodgeImage;
 	// lag
-	BufferedImage lagImage = new Image("img/" + name + "/endlag.png").img;
+	BufferedImage lagImage;
 
 	// grab
-	BufferedImage grabImage = new Image("img/" + name + "/grab.png").img;
-	BufferedImage grabbedImage = new Image("img/" + name + "/grabbed.png").img;
-	BufferedImage uThrowImage = new Image("img/" + name + "/throw_u.png").img;
-	BufferedImage dThrowImage = new Image("img/" + name + "/throw_d.png").img;
-	BufferedImage fThrowImage = new Image("img/" + name + "/throw_f.png").img;
-	BufferedImage bThrowImage = new Image("img/" + name + "/throw_b.png").img;
+	BufferedImage grabImage;
+	BufferedImage grabbedImage;
+	BufferedImage uThrowImage;
+	BufferedImage dThrowImage;
+	BufferedImage fThrowImage;
+	BufferedImage bThrowImage;
 
 	// Specials
-	BufferedImage chargeBeam1Image = new Image("img/" + name + "/chargebeam1.png").img;
-	BufferedImage chargeBeam2Image = new Image("img/" + name + "/chargebeam2.png").img;
-	BufferedImage chargeBeam3Image = new Image("img/" + name + "/chargebeam3.png").img;
-	BufferedImage uSpecialImage = new Image("img/" + name + "/upspecial.png").img;
-	BufferedImage dSpecialImage = new Image("img/" + name + "/downspecial.png").img;
-	BufferedImage fSpecialImage = new Image("img/" + name + "/forwardspecial.png").img;
+	BufferedImage chargeBeam1Image;
+	BufferedImage chargeBeam2Image;
+	BufferedImage chargeBeam3Image;
+	BufferedImage uSpecialImage;
+	BufferedImage dSpecialImage;
+	BufferedImage fSpecialImage;
 
 	// extra images
-	BufferedImage chargeBeamBlueImage = new Image("img/" + name + "/chargebeamblue.png").img;
-	BufferedImage kiBlastBlueImage = new Image("img/misc/kiblastblue.png").img;
+	BufferedImage chargeBeamBlueImage;
+	BufferedImage kiBlastBlueImage;
 
 	private final double startx;
 	private final double starty;
@@ -209,6 +209,7 @@ public class Character {
 	private Character grabbedPlayer = null;
 	private int stateOverrideLength = 15;
 	private int stateOverrideCounter = stateOverrideLength;
+	private boolean hasInitializedImages = false;
 
 	public Character(int posx, int posy, int upKey, int downKey, int leftKey, int rightKey, int modifierKey,
 			int jumpKey, int attackKey, int specialKey, int shieldKey, int grabKey, Game gameinstance) {
@@ -276,7 +277,12 @@ public class Character {
 	}
 
 	public void draw(Graphics g) {
-
+		//initalizes the images
+		if (!hasInitializedImages) {
+			initializeImages();
+			hasInitializedImages = true;
+		}
+		
 		getController();
 		updateStates();
 		chargeNeutralSpecial();
@@ -300,6 +306,58 @@ public class Character {
 		attemptToShield();
 		drawShield(g);
 		placeShield();
+	}
+
+	public void initializeImages() {
+		neutralImage = new Image("img/" + name + "/neutral.png").img;
+		// jab and tilts
+		jabImage = new Image("img/" + name + "/attack1.png").img;
+		fTiltImage = new Image("img/" + name + "/tilt_f.png").img;
+		uTiltImage = new Image("img/" + name + "/tilt_u.png").img;
+		dTiltImage = new Image("img/" + name + "/tilt_d.png").img;
+		// aerials
+		nairImage = new Image("img/" + name + "/air_n.png").img;
+		fairImage = new Image("img/" + name + "/air_f.png").img;
+		bairImage = new Image("img/" + name + "/air_b.png").img;
+		dairImage = new Image("img/" + name + "/air_d.png").img;
+		uairImage = new Image("img/" + name + "/air_u.png").img;
+		// smashes
+		uSmashChargeImage = new Image("img/" + name + "/smash_charge_u.png").img;
+		uSmashImage = new Image("img/" + name + "/smash_u.png").img;
+		dSmashChargeImage = new Image("img/" + name + "/smash_charge_d.png").img;
+		dSmashImage = new Image("img/" + name + "/smash_d.png").img;
+		fSmashChargeImage = new Image("img/" + name + "/smash_charge_f.png").img;
+		fSmashImage = new Image("img/" + name + "/smash_f.png").img;
+		// other
+		hitstunImage = new Image("img/" + name + "/hitstun.png").img;
+		jumpSquatImage = new Image("img/" + name + "/jumpsquat.png").img;
+		jumpImage = new Image("img/" + name + "/jump.png").img;
+		helplessImage = new Image("img/" + name + "/helpless.png").img;
+		// shielding/dodging
+		shieldImage = new Image("img/" + name + "/shield.png").img;
+		dodgeImage = new Image("img/" + name + "/dodge.png").img;
+		// lag
+		lagImage = new Image("img/" + name + "/endlag.png").img;
+
+		// grab
+		grabImage = new Image("img/" + name + "/grab.png").img;
+		grabbedImage = new Image("img/" + name + "/grabbed.png").img;
+		uThrowImage = new Image("img/" + name + "/throw_u.png").img;
+		dThrowImage = new Image("img/" + name + "/throw_d.png").img;
+		fThrowImage = new Image("img/" + name + "/throw_f.png").img;
+		bThrowImage = new Image("img/" + name + "/throw_b.png").img;
+
+		// Specials
+		chargeBeam1Image = new Image("img/" + name + "/chargebeam1.png").img;
+		chargeBeam2Image = new Image("img/" + name + "/chargebeam2.png").img;
+		chargeBeam3Image = new Image("img/" + name + "/chargebeam3.png").img;
+		uSpecialImage = new Image("img/" + name + "/upspecial.png").img;
+		dSpecialImage = new Image("img/" + name + "/downspecial.png").img;
+		fSpecialImage = new Image("img/" + name + "/forwardspecial.png").img;
+
+		// extra images
+		chargeBeamBlueImage = new Image("img/" + name + "/chargebeamblue.png").img;
+		kiBlastBlueImage = new Image("img/misc/kiblastblue.png").img;
 	}
 
 	public void drawCorrectSprite(Graphics g) {
@@ -2311,6 +2369,22 @@ public class Character {
 
 	public void setShieldWidth(double shieldWidth) {
 		this.shieldWidth = shieldWidth;
+	}
+
+	public int getW() {
+		return w;
+	}
+
+	public void setW(int w) {
+		this.w = w;
+	}
+
+	public int getH() {
+		return h;
+	}
+
+	public void setH(int h) {
+		this.h = h;
 	}
 
 }
