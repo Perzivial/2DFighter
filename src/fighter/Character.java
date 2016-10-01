@@ -97,6 +97,9 @@ public class Character {
 
 	HashSet<Integer> keysPressed = new HashSet<Integer>();
 	BufferedImage neutralImage;
+	BufferedImage run1Image;
+	BufferedImage run2Image;
+	BufferedImage run3Image;
 	// jab and tilts
 	BufferedImage jabImage;
 	BufferedImage fTiltImage;
@@ -210,7 +213,11 @@ public class Character {
 	private int stateOverrideLength = 15;
 	private int stateOverrideCounter = stateOverrideLength;
 	private boolean hasInitializedImages = false;
-
+	protected ArrayList<BufferedImage> runImages = new ArrayList<BufferedImage>();
+	private int runIndex = 0;
+	private int runIndexChangeInterval = 5;
+	private int runIndexChangeCounter = runIndexChangeInterval;
+	
 	public Character(int posx, int posy, int upKey, int downKey, int leftKey, int rightKey, int modifierKey,
 			int jumpKey, int attackKey, int specialKey, int shieldKey, int grabKey, Game gameinstance) {
 		myGame = gameinstance;
@@ -277,12 +284,12 @@ public class Character {
 	}
 
 	public void draw(Graphics g) {
-		//initalizes the images
+		// initalizes the images
 		if (!hasInitializedImages) {
 			initializeImages();
 			hasInitializedImages = true;
 		}
-		
+
 		getController();
 		updateStates();
 		chargeNeutralSpecial();
@@ -310,6 +317,13 @@ public class Character {
 
 	public void initializeImages() {
 		neutralImage = new Image("img/" + name + "/neutral.png").img;
+		run1Image = new Image("img/" + name + "/run1.png").img;
+		run2Image = new Image("img/" + name + "/run2.png").img;
+		run3Image = new Image("img/" + name + "/run3.png").img;
+		runImages.add(run1Image);
+		runImages.add(run2Image);
+		runImages.add(run3Image);
+		runImages.add(run2Image);
 		// jab and tilts
 		jabImage = new Image("img/" + name + "/attack1.png").img;
 		fTiltImage = new Image("img/" + name + "/tilt_f.png").img;
@@ -365,10 +379,24 @@ public class Character {
 		// other
 		// factors
 		if (state == STATE_NEUTRAL) {
-			if (direction == DIRECTION_RIGHT)
-				g.drawImage(neutralImage, (int) x, (int) y, w, h, null);
-			if (direction == DIRECTION_LEFT)
-				g.drawImage(neutralImage, (int) x + w, (int) y, -w, h, null);
+			boolean isRunning = false;
+			if (isController) {
+				if (isAxisLeft || isAxisRight)
+					isRunning = true;
+			} else if (isPressing(keyLeft) || isPressing(keyRight))
+				isRunning = true;
+
+			if (!isRunning) {
+				if (direction == DIRECTION_RIGHT)
+					g.drawImage(neutralImage, (int) x, (int) y, w, h, null);
+				if (direction == DIRECTION_LEFT)
+					g.drawImage(neutralImage, (int) x + w, (int) y, -w, h, null);
+			} else {
+				if (direction == DIRECTION_RIGHT)
+					g.drawImage(runImages.get(runIndex), (int) x, (int) y, w, h, null);
+				if (direction == DIRECTION_LEFT)
+					g.drawImage(runImages.get(runIndex), (int) x + w, (int) y, -w, h, null);
+			}
 		}
 		if (state == STATE_ATTACK) {
 			if (direction == DIRECTION_RIGHT)
@@ -690,6 +718,19 @@ public class Character {
 		}
 	}
 
+	public void rotateRunArray() {
+		if (runIndexChangeCounter <= 0) {
+			if (runIndex + 1 < runImages.size() - 1) {
+				runIndex++;
+			} else {
+				runIndex = 0;
+			}
+			runIndexChangeCounter = runIndexChangeInterval;
+		} else {
+			runIndexChangeCounter--;
+		}
+	}
+
 	public void placeShield() {
 		shield = new Ellipse2D.Double();
 		if (!isJumpButtonDownController() && state != STATE_JUMPSQUAT && state != STATE_JUMP
@@ -942,7 +983,9 @@ public class Character {
 					else
 						velX = -runSpeed;
 					direction = DIRECTION_LEFT;
+					rotateRunArray();
 				}
+				
 			} else if (velX > -maxAirSpeed && state != STATE_AIRDODGE && canAirDodge && state != STATE_GRABBED)
 				velX -= horizontalInAirSpeed;
 		}
@@ -957,6 +1000,7 @@ public class Character {
 					else
 						velX = runSpeed;
 					direction = DIRECTION_RIGHT;
+					rotateRunArray();
 				}
 			} else if (velX < maxAirSpeed && state != STATE_AIRDODGE && canAirDodge && state != STATE_GRABBED)
 				velX += horizontalInAirSpeed;

@@ -54,10 +54,11 @@ public class Gameviewer extends JFrame {
 			enableFullScreenMode(frame);
 		}
 		frame.getContentPane().setBackground(Color.black);
+		thegame.setDoubleBuffered(true);
 		thegame.setVisible(true);
 		frame.setVisible(true);
 		frame.addComponentListener(new ComponentListener() {
-
+		
 			public void componentResized(ComponentEvent e) {
 				// do stuff
 				if (screensizeChangeBuffer >= 5) {
