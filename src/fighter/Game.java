@@ -59,7 +59,9 @@ public class Game extends JComponent implements KeyListener {
 	Controller[] ca = ControllerEnvironment.getDefaultEnvironment().getControllers();
 	static ArrayList<Controller> controllers = new ArrayList<Controller>();
 	static ArrayList<Projectile> projectiles = new ArrayList<Projectile>();
+	//images
 	BufferedImage sky = new Image("img/misc/sky.png").img;
+	BufferedImage ground = new Image("img/misc/ground.png").img;
 	public Game() {
 		hitboxes.add(GROUND_HITBOX);
 		doControllerThings();
@@ -225,9 +227,10 @@ public class Game extends JComponent implements KeyListener {
 	}
 
 	public void drawGround(Graphics g) {
-		g.setColor(Color.black);
-		Graphics2D g2 = (Graphics2D) g;
-		g2.fill(GROUND_HITBOX.getRect());
+		//g.setColor(Color.black);
+		//Graphics2D g2 = (Graphics2D) g;
+		//g2.fill(GROUND_HITBOX.getRect());
+		g.drawImage(ground,(int)GROUND_HITBOX.getX(),(int) GROUND_HITBOX.getY() - 32, (int)GROUND_HITBOX.getWidth(), (int)GROUND_HITBOX.getHeight() + 32, null);
 	}
 
 	public void drawPlayerHitboxes(Graphics g) {

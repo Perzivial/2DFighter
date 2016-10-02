@@ -22,7 +22,7 @@ public class Character {
 	private double shieldWidth = 1.0;
 	boolean isShielding = false;
 	private double fallSpeed = .8;
-	private double velX;
+	protected double velX;
 	private double velY;
 	private double x;
 	private double y;
@@ -85,7 +85,7 @@ public class Character {
 	public static int STATE_FORWARDSPECIAL = 32;
 	public static int STATE_NEUTRALSPECIAL = 33;
 	public static int STATE_HELPLESS = 34;
-	private int direction = 1;
+	protected int direction = 1;
 	private boolean isChargingSmashAttack = false;
 	private double smashAttackChargePercent = 1.0;
 	private int smashAttackDirection = 1;
@@ -94,7 +94,7 @@ public class Character {
 	public final static int DIRECTION_RIGHT = 1;
 	public final static int DIRECTION_DOWN = -2;
 	public final static int DIRECTION_UP = 2;
-	private int state = 0;
+	protected int state = 0;
 	private int hitstunCounter = 0;
 
 	HashSet<Integer> keysPressed = new HashSet<Integer>();
@@ -219,6 +219,8 @@ public class Character {
 	private int runIndex = 0;
 	private int runIndexChangeInterval = 5;
 	private int runIndexChangeCounter = runIndexChangeInterval;
+	protected double imageXTransform = 1;
+	protected double imageYTransform = 1;
 
 	public Character(int posx, int posy, int upKey, int downKey, int leftKey, int rightKey, int modifierKey,
 			int jumpKey, int attackKey, int specialKey, int shieldKey, int grabKey, Game gameinstance) {
@@ -391,7 +393,7 @@ public class Character {
 
 		// extra images
 		chargeBeamBlueImage = initializeImage("img/" + name + "/chargebeamblue.png");
-		kiBlastBlueImage = initializeImage("img/" + name + "/kiblastblue.png");
+		kiBlastBlueImage = initializeImage("img/misc/kiblastblue.png");
 
 	}
 
@@ -483,15 +485,17 @@ public class Character {
 		}
 		if (state == STATE_ATTACK) {
 			if (direction == DIRECTION_RIGHT)
-				g.drawImage(jabImage, (int) x, (int) y, (int) ((w) * 1.6), h, null);
+				g.drawImage(jabImage, (int) x, (int) y, (int) ((w) * imageXTransform), (int) (h * imageYTransform),
+						null);
 			if (direction == DIRECTION_LEFT)
-				g.drawImage(jabImage, (int) x + w, (int) y, (int) ((-w) * 1.6), h, null);
+				g.drawImage(jabImage, (int) x + w, (int) y, (int) ((-w) * imageXTransform), (int) (h * imageYTransform),
+						null);
 		}
 		if (state == STATE_ATTACKSIDE) {
 			if (direction == DIRECTION_RIGHT)
-				g.drawImage(fTiltImage, (int) x, (int) y, (int) (w * 1.6), h, null);
+				g.drawImage(fTiltImage, (int) x, (int) y, (int) (w * imageXTransform), h, null);
 			if (direction == DIRECTION_LEFT)
-				g.drawImage(fTiltImage, (int) x + w, (int) y, (int) (-w * 1.6), h, null);
+				g.drawImage(fTiltImage, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
 		}
 		if (state == STATE_ATTACKUP) {
 			if (direction == DIRECTION_RIGHT)
@@ -501,39 +505,39 @@ public class Character {
 		}
 		if (state == STATE_ATTACKDOWN) {
 			if (direction == DIRECTION_RIGHT)
-				g.drawImage(dTiltImage, (int) x, (int) y, (int) (w * 1.876), h, null);
+				g.drawImage(dTiltImage, (int) x, (int) y, (int) (w * imageXTransform), h, null);
 			if (direction == DIRECTION_LEFT)
-				g.drawImage(dTiltImage, (int) x + w, (int) y, (int) (-w * 1.876), h, null);
+				g.drawImage(dTiltImage, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
 		}
 		if (state == STATE_ATTACK_NAIR) {
 			if (direction == DIRECTION_RIGHT)
-				g.drawImage(nairImage, (int) x, (int) y, (int) (w / 0.704735376), h, null);
+				g.drawImage(nairImage, (int) x, (int) y, (int) (w * imageXTransform), h, null);
 			if (direction == DIRECTION_LEFT)
-				g.drawImage(nairImage, (int) x + w, (int) y, (int) (-w / 0.704735376), h, null);
+				g.drawImage(nairImage, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
 		}
 		if (state == STATE_ATTACK_FAIR) {
 			if (direction == DIRECTION_RIGHT)
-				g.drawImage(fairImage, (int) x, (int) y, (int) (w / 0.6203473945), h, null);
+				g.drawImage(fairImage, (int) x, (int) y, (int) (w * imageXTransform), h, null);
 			if (direction == DIRECTION_LEFT)
-				g.drawImage(fairImage, (int) x + w, (int) y, (int) (-w / 0.6203473945), h, null);
+				g.drawImage(fairImage, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
 		}
 		if (state == STATE_ATTACK_BAIR) {
 			if (direction == DIRECTION_RIGHT)
-				g.drawImage(bairImage, (int) x, (int) y, (int) (w / 0.6203473945), h, null);
+				g.drawImage(bairImage, (int) x, (int) y, (int) (w * imageXTransform), h, null);
 			if (direction == DIRECTION_LEFT)
-				g.drawImage(bairImage, (int) x + w, (int) y, (int) (-w / 0.6203473945), h, null);
+				g.drawImage(bairImage, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
 		}
 		if (state == STATE_ATTACK_DAIR) {
 			if (direction == DIRECTION_RIGHT)
-				g.drawImage(dairImage, (int) x, (int) y, (int) (w / 0.8445945946), h, null);
+				g.drawImage(dairImage, (int) x, (int) y, (int) (w * imageXTransform), h, null);
 			if (direction == DIRECTION_LEFT)
-				g.drawImage(dairImage, (int) x + w, (int) y, (int) (-w / 0.8445945946), h, null);
+				g.drawImage(dairImage, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
 		}
 		if (state == STATE_ATTACK_UAIR) {
 			if (direction == DIRECTION_RIGHT)
-				g.drawImage(uairImage, (int) x, (int) y, (int) (w / 0.8445945946), h, null);
+				g.drawImage(uairImage, (int) x, (int) y, (int) (w * imageXTransform), h, null);
 			if (direction == DIRECTION_LEFT)
-				g.drawImage(uairImage, (int) x + w, (int) y, (int) (-w / 0.8445945946), h, null);
+				g.drawImage(uairImage, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
 		}
 		// smash chargin has a bit of nuances in it so it needs it's own area
 		if (state == STATE_SMASH_ATTACK_CHARGE && isGrounded) {
@@ -624,9 +628,9 @@ public class Character {
 		}
 		if (state == STATE_GRAB) {
 			if (direction == DIRECTION_RIGHT)
-				g.drawImage(grabImage, (int) x, (int) y, (int) (w * 1.66), h, null);
+				g.drawImage(grabImage, (int) x, (int) y, (int) (w * imageXTransform), h, null);
 			if (direction == DIRECTION_LEFT)
-				g.drawImage(grabImage, (int) x + w, (int) y, (int) (-w * 1.66), h, null);
+				g.drawImage(grabImage, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
 		}
 		if (state == STATE_GRABBED) {
 			if (direction == DIRECTION_RIGHT)
@@ -636,9 +640,9 @@ public class Character {
 		}
 		if (state == STATE_UTHROW) {
 			if (direction == DIRECTION_RIGHT)
-				g.drawImage(uThrowImage, (int) x, (int) y, (int) (w * 1.068), h, null);
+				g.drawImage(uThrowImage, (int) x, (int) y, (int) (w * imageXTransform), h, null);
 			if (direction == DIRECTION_LEFT)
-				g.drawImage(uThrowImage, (int) x + w, (int) y, (int) (-w * 1.068), h, null);
+				g.drawImage(uThrowImage, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
 		}
 		if (state == STATE_DTHROW) {
 			if (direction == DIRECTION_RIGHT)
@@ -648,17 +652,17 @@ public class Character {
 		}
 		if (state == STATE_FTHROW) {
 			if (direction == DIRECTION_RIGHT)
-				g.drawImage(fThrowImage, (int) x, (int) y, (int) (w * 1.376), h, null);
+				g.drawImage(fThrowImage, (int) x, (int) y, (int) (w * imageXTransform), h, null);
 			if (direction == DIRECTION_LEFT)
-				g.drawImage(fThrowImage, (int) x + w, (int) y, (int) (-w * 1.376), h, null);
+				g.drawImage(fThrowImage, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
 		}
 		if (state == STATE_BTHROW) {
 			if (direction == DIRECTION_RIGHT)
-				g.drawImage(bThrowImage, (int) x, (int) y - (int) (h * 1.1456) + h, (int) (w * 1.232),
-						(int) (h * 1.1456), null);
+				g.drawImage(bThrowImage, (int) x, (int) y - (int) (h * imageYTransform) + h,
+						(int) (w * imageXTransform), (int) (h * imageYTransform), null);
 			if (direction == DIRECTION_LEFT)
-				g.drawImage(bThrowImage, (int) x + w, (int) y - (int) (h * 1.1456) + h, (int) (-w * 1.232),
-						(int) (h * 1.1456), null);
+				g.drawImage(bThrowImage, (int) x + w, (int) y - (int) (h * imageYTransform) + h,
+						(int) (-w * imageXTransform), (int) (h * imageYTransform), null);
 		}
 		// the neutral charging state needs more images to show how far it has
 		// gone along charging
@@ -677,38 +681,38 @@ public class Character {
 				}
 			} else {
 				if (direction == DIRECTION_RIGHT)
-					g.drawImage(chargeBeam3Image, (int) x, (int) y, (int) (w * 1.2), h, null);
+					g.drawImage(chargeBeam3Image, (int) x, (int) y, (int) (w * imageXTransform), h, null);
 				if (direction == DIRECTION_LEFT)
-					g.drawImage(chargeBeam3Image, (int) x + w, (int) y, (int) (-w * 1.2), h, null);
+					g.drawImage(chargeBeam3Image, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
 			}
 		}
 
 		if (state == STATE_UPSPECIAL) {
 			if (direction == DIRECTION_RIGHT)
-				g.drawImage(uSpecialImage, (int) x, (int) y, (int) (w * 1.308), h, null);
+				g.drawImage(uSpecialImage, (int) x, (int) y, (int) (w * imageXTransform), h, null);
 			if (direction == DIRECTION_LEFT)
-				g.drawImage(uSpecialImage, (int) x + w, (int) y, (int) (-w * 1.308), h, null);
+				g.drawImage(uSpecialImage, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
 		}
 
 		if (state == STATE_DOWNSPECIAL) {
 			if (direction == DIRECTION_RIGHT)
-				g.drawImage(dSpecialImage, (int) x, (int) y, (int) (w * 1.524), h, null);
+				g.drawImage(dSpecialImage, (int) x, (int) y, (int) (w * imageXTransform), h, null);
 			if (direction == DIRECTION_LEFT)
-				g.drawImage(dSpecialImage, (int) x + w, (int) y, (int) (-w * 1.524), h, null);
+				g.drawImage(dSpecialImage, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
 		}
 
 		if (state == STATE_FORWARDSPECIAL) {
 			if (direction == DIRECTION_RIGHT)
-				g.drawImage(fSpecialImage, (int) x, (int) y, (int) (w * 1.388), h, null);
+				g.drawImage(fSpecialImage, (int) x, (int) y, (int) (w * imageXTransform), h, null);
 			if (direction == DIRECTION_LEFT)
-				g.drawImage(fSpecialImage, (int) x + w, (int) y, (int) (-w * 1.388), h, null);
+				g.drawImage(fSpecialImage, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
 		}
 
 		if (state == STATE_HELPLESS) {
 			if (direction == DIRECTION_RIGHT)
-				g.drawImage(helplessImage, (int) x, (int) y, (int) (w * 1.524), h, null);
+				g.drawImage(helplessImage, (int) x, (int) y, (int) (w * imageXTransform), h, null);
 			if (direction == DIRECTION_LEFT)
-				g.drawImage(helplessImage, (int) x + w, (int) y, (int) (-w * 1.524), h, null);
+				g.drawImage(helplessImage, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
 		}
 
 	}
@@ -725,6 +729,10 @@ public class Character {
 	}
 
 	public void updateStates() {
+		if (state == STATE_NEUTRAL) {
+			imageXTransform = 1;
+			imageYTransform = 1;
+		}
 		if (state != STATE_GRABBED) {
 			if (isGrounded && state == STATE_HELPLESS)
 				state = STATE_NEUTRAL;
@@ -825,10 +833,11 @@ public class Character {
 				// (y - 5) + ((1 - shieldWidth) * w), (h + (5 * w / 10)) *
 				// shieldWidth,
 				// (h + (5 * w / 10)) * shieldWidth);
-				//hopefuly this new method works
+				// hopefuly this new method works
 
-				shield.setFrameFromCenter(x + w/2, y + h/2, (x+w*1.7) - 1/shieldWidth * (w/3), (y+h*1.5) - 1/shieldWidth * (w/2.5));
-				
+				shield.setFrameFromCenter(x + w / 2, y + h / 2, (x + w * 1.7) - 1 / shieldWidth * (w / 3),
+						(y + h * 1.5) - 1 / shieldWidth * (w / 2.5));
+
 				state = STATE_SHIELD;
 				if (isAxisLeft) {
 					velX = -5;
@@ -1743,6 +1752,7 @@ public class Character {
 				grabBox = new Rectangle((int) x + w, (int) y + 5, 20, 30);
 			else
 				grabBox = new Rectangle((int) (x + w) - (w) - w, (int) y + 5, 20, 30);
+			imageXTransform = 1.66;
 		} else {
 			grabBox = null;
 		}
@@ -1877,12 +1887,14 @@ public class Character {
 	// AttackHitbox creation syntax , character, localx,
 	// localy,width,height,xknockback,yknockback,hitstunlen,lifetime, damage
 	public void jab() {
+		imageXTransform = 1.6;
 		hitboxes.add(new AttackHitbox(this, 20, 15, 15, 15, .5, -1, 10, 5, 3, 3, .1));
 		state = STATE_ATTACK;
 		velX += direction * 2;
 	}
 
 	public void fTilt() {
+		imageXTransform = 1.6;
 		hitboxes.add(new AttackHitbox(this, 20, 20, 20, 15, 2, -1, 10, 5, 6, 5, .2));
 		hitboxes.add(new AttackHitbox(this, 20, 25, 10, 15, 1, -3, 10, 5, 8, 5, .2));
 		state = STATE_ATTACKSIDE;
@@ -1895,17 +1907,20 @@ public class Character {
 	}
 
 	public void dTilt() {
+		imageXTransform = 1.876;
 		hitboxes.add(new AttackHitbox(this, 20, 35, 25, 15, 3, -4, 10, 6, 4, 2, .3));
 		state = STATE_ATTACKDOWN;
 	}
 
 	public void nair() {
+		imageXTransform = 1.436;
 		hitboxes.add(new AttackHitbox(this, 20, 15, 15, 15, .5, -1, 10, 20, 5, 5, .5));
 		state = STATE_ATTACK_NAIR;
 		velX += direction * 2;
 	}
 
 	public void fair() {
+		imageXTransform = 1.612;
 		hitboxes.add(new AttackHitbox(this, 20 + 2, 0, 15, 15, .5, -1, 10, 10, 5, 1, 0));
 		hitboxes.add(new AttackHitbox(this, 25 + 2, 6, 15, 15, .5, -1, 10, 10, 5, 1, 0));
 		hitboxes.add(new AttackHitbox(this, 30 + 2, 12, 15, 15, .5, -1, 10, 10, 5, 1, .3));
@@ -1915,16 +1930,19 @@ public class Character {
 	}
 
 	public void bair() {
+		imageXTransform = 1.612;
 		hitboxes.add(new AttackHitbox(this, -20, 15, 30, 15, -10, -1, 10, 20, 5, 3, .2));
 		state = STATE_ATTACK_BAIR;
 	}
 
 	public void uair() {
+		imageXTransform = 1.184;
 		hitboxes.add(new AttackHitbox(this, -5, -10, w + 10, 15, 0, -5, 5, 20, 20, 10, .1));
 		state = STATE_ATTACK_UAIR;
 	}
 
 	public void dair() {
+		imageXTransform = 1.184;
 		hitboxes.add(new AttackHitbox(this, 0, h, w, 15, .5, 5, 5, 20, 5, 10, .4));
 		state = STATE_ATTACK_DAIR;
 	}
@@ -1956,18 +1974,22 @@ public class Character {
 	}
 
 	public void fThrow() {
+		imageXTransform = 1.376;
 		grabbedPlayer.velX = (5 + grabbedPlayer.percent / 8) * direction;
 		grabbedPlayer.velY = -8 + percent / 10;
 		grabbedPlayer.applyDamage(7);
 	}
 
 	public void bThrow() {
+		imageXTransform = 1.068;
 		grabbedPlayer.velX = (5 + grabbedPlayer.percent / 10) * -direction;
 		grabbedPlayer.velY = -10 + percent / 10;
 		grabbedPlayer.applyDamage(3);
 	}
 
 	public void uThrow() {
+		imageXTransform = 1.1456;
+		imageYTransform = 1.232;
 		grabbedPlayer.velY = (-5 + (grabbedPlayer.percent / 20)) + 10;
 		grabbedPlayer.applyDamage(5);
 	}
@@ -1979,17 +2001,20 @@ public class Character {
 	}
 
 	public void upSpecial() {
+		imageXTransform = 1.388;
 		hitboxes.add(new AttackHitbox(this, -5, -10, w + 10, 15, 0, -5, 5, 20, 20, 10, .3));
 		velY = -20;
 		velX = 0;
 	}
 
 	public void downSpecial() {
+		imageXTransform = 1.524;
 		hitboxes.add(new AttackHitbox(this, -10, -10, w + 20, h + 20, 10, 0, 5, 20, 20, 10, .8));
 		hitboxes.add(new AttackHitbox(this, -10, -10, w + 20, 20, 0, 10, 5, 20, 20, 10, .8));
 	}
 
 	public void forwardSpecial() {
+		imageXTransform = 1.388;
 		if (direction == DIRECTION_RIGHT)
 			myGame.projectiles.add(new Projectile((int) x + w + 5, (int) y + h / 3, 15, (int) (15 / 1.5638138138), 15.0,
 					0.0, kiBlastBlueImage, this));
@@ -1999,6 +2024,7 @@ public class Character {
 	}
 
 	public void neutralSpecial() {
+		imageXTransform = 1.2;
 		hitboxes.add(new AttackHitbox(this, w - 2, h / 3, 1000, 15, 10 + percent / 10, -5, 20, 60, 40, 60, 1));
 	}
 
@@ -2089,6 +2115,11 @@ public class Character {
 		}
 	}
 
+	public void enterHelpless() {
+		imageXTransform= 1.524;
+		state = STATE_HELPLESS;
+	}
+
 	public boolean checkIfInSpecificHitBox(Hitbox box) {
 		if (hurtbox.getRect().intersects(box.getRect()))
 			return true;
@@ -2126,7 +2157,7 @@ public class Character {
 				hitboxes.remove(box);
 				if (state != STATE_LANDINGLAG) {
 					if (state == STATE_UPSPECIAL)
-						state = STATE_HELPLESS;
+						enterHelpless();
 					else
 						state = STATE_NEUTRAL;
 				}

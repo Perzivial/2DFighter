@@ -26,7 +26,10 @@ public class KidGoku extends Character {
 	}
 
 	@Override
-	public void nair() {
-		hitboxes.add(new AttackHitbox(this, -5, -10, w + 10, 15, 0, -5, 5, 20, 20, 10, .3));
+	public void jab() {
+		imageXTransform = 1.32;
+		hitboxes.add(new AttackHitbox(this, 20, 15, 15, 15, .5, -1, 10, 5, 3, 3, .1));
+		state = STATE_ATTACK;
+		velX += direction * 2;
 	}
 }
