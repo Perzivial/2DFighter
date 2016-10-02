@@ -230,7 +230,7 @@ public class Game extends JComponent implements KeyListener {
 		//g.setColor(Color.black);
 		//Graphics2D g2 = (Graphics2D) g;
 		//g2.fill(GROUND_HITBOX.getRect());
-		g.drawImage(ground,(int)GROUND_HITBOX.getX(),(int) GROUND_HITBOX.getY() - 32, (int)GROUND_HITBOX.getWidth(), (int)GROUND_HITBOX.getHeight() + 32, null);
+		g.drawImage(ground,(int)GROUND_HITBOX.getX(),(int) GROUND_HITBOX.getY() - 43, (int)GROUND_HITBOX.getWidth(), (int)GROUND_HITBOX.getHeight() + 43, null);
 	}
 
 	public void drawPlayerHitboxes(Graphics g) {
