@@ -468,7 +468,7 @@ public class Character {
 					isRunning = true;
 			} else if (isPressing(keyLeft) || isPressing(keyRight))
 				isRunning = true;
-
+			if(isGrounded){
 			if (!isRunning) {
 				if (direction == DIRECTION_RIGHT) {
 					g.drawImage(neutralImage, (int) x, (int) y, w, h, null);
@@ -482,6 +482,12 @@ public class Character {
 				if (direction == DIRECTION_LEFT)
 					g.drawImage(runImages.get(runIndex), (int) x + w, (int) y, -w, h, null);
 			}
+			}else{
+				if (direction == DIRECTION_RIGHT)
+					g.drawImage(runImages.get(2), (int) x, (int) y, w, h, null);
+				if (direction == DIRECTION_LEFT)
+					g.drawImage(runImages.get(2), (int) x + w, (int) y, -w, h, null);
+			}
 		}
 		if (state == STATE_ATTACK) {
 			if (direction == DIRECTION_RIGHT)
@@ -493,9 +499,9 @@ public class Character {
 		}
 		if (state == STATE_ATTACKSIDE) {
 			if (direction == DIRECTION_RIGHT)
-				g.drawImage(fTiltImage, (int) x, (int) y, (int) (w * imageXTransform), h, null);
+				g.drawImage(fTiltImage, (int) x, (int) y - (int) (h * imageYTransform) + h, (int) (w * imageXTransform), (int) (h * imageYTransform), null);
 			if (direction == DIRECTION_LEFT)
-				g.drawImage(fTiltImage, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
+				g.drawImage(fTiltImage, (int) x + w, (int) y - (int) (h * imageYTransform) + h, (int) (-w * imageXTransform), (int) (h * imageYTransform), null);
 		}
 		if (state == STATE_ATTACKUP) {
 			if (direction == DIRECTION_RIGHT)
@@ -1134,7 +1140,7 @@ public class Character {
 	}
 
 	public void jump() {
-
+		
 		boolean canJump = true;
 		for (boolean bool : jumpKeyDownHistory) {
 			if (bool == true) {

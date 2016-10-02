@@ -28,8 +28,16 @@ public class KidGoku extends Character {
 	@Override
 	public void jab() {
 		imageXTransform = 1.32;
-		hitboxes.add(new AttackHitbox(this, 20, 15, 15, 15, .5, -1, 10, 5, 3, 3, .1));
+		hitboxes.add(new AttackHitbox(this, w -5, 25, 25, 25, .5, -1, 10, 5, 3, 3, .1));
 		state = STATE_ATTACK;
+		velX += direction * 2;
+	}
+	@Override
+	public void fTilt(){
+		imageXTransform = 1.348;
+		imageYTransform = 1.0263157895;
+		hitboxes.add(new AttackHitbox(this, w -5, 25, 25, 25, .5, -1, 10, 5, 3, 3, .1));
+		state = STATE_ATTACKSIDE;
 		velX += direction * 2;
 	}
 }
