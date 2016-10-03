@@ -206,12 +206,12 @@ public class Character {
 	private int grabLength = 20;
 	private int grabbedTime = 0;
 	private final int grabbedTimeDefault = 60;
-	private Rectangle grabBox;
+	protected Rectangle grabBox;
 	protected Game myGame;
 	private Controller myController;
 	private double neutralSpecialCharge = 0;
 	private double neutralSpecialChargeIncrement = 0.006666666667;
-	private Character grabbedPlayer = null;
+	protected Character grabbedPlayer = null;
 	private int stateOverrideLength = 15;
 	private int stateOverrideCounter = stateOverrideLength;
 	private boolean hasInitializedImages = false;
@@ -1793,7 +1793,17 @@ public class Character {
 			grabBox = null;
 		}
 	}
-
+	public void forceGrabPlayerLocation(){
+		if (direction == DIRECTION_RIGHT) {
+			grabbedPlayer.x = x + w + 5;
+			grabbedPlayer.y = y - 5;
+			grabbedPlayer.direction = DIRECTION_LEFT;
+		} else {
+			grabbedPlayer.x = x - 5 - grabbedPlayer.getW();
+			grabbedPlayer.y = y - 5;
+			grabbedPlayer.direction = DIRECTION_RIGHT;
+		}
+	}
 	// self explanatory naming FTW
 	public void testForGrabAndDoGrabbedPlayerThings() {
 
@@ -1809,15 +1819,7 @@ public class Character {
 					grabbedPlayer.velX = 0;
 					grabbedPlayer.velY = 0;
 					grabbedTime = (int) (grabbedTimeDefault + (grabbedPlayer.percent));
-					if (direction == DIRECTION_RIGHT) {
-						grabbedPlayer.x = x + w + 5;
-						grabbedPlayer.y = y - 5;
-						grabbedPlayer.direction = DIRECTION_LEFT;
-					} else {
-						grabbedPlayer.x = x - w - 5;
-						grabbedPlayer.y = y - 5;
-						grabbedPlayer.direction = DIRECTION_RIGHT;
-					}
+					forceGrabPlayerLocation();
 					break;
 				}
 		}

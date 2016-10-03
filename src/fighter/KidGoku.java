@@ -1,6 +1,7 @@
 package fighter;
 
 import java.awt.Graphics;
+import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 
 public class KidGoku extends Character {
@@ -131,11 +132,40 @@ public class KidGoku extends Character {
 		state = STATE_SMASH_ATTACK_DOWN;
 		smashAttackChargePercent = 1.0;
 	}
+
 	@Override
 	public void upSmash() {
-		hitboxes.add(new AttackHitbox(this, 0, 0, w, 30, 1 * smashAttackChargePercent,
-				-10 * smashAttackChargePercent, 30, 10, 15 * smashAttackChargePercent, 20, .5));
+		hitboxes.add(new AttackHitbox(this, 0, 0, w, 30, 1 * smashAttackChargePercent, -10 * smashAttackChargePercent,
+				30, 10, 15 * smashAttackChargePercent, 20, .5));
 		state = STATE_SMASH_ATTACK_UP;
 		smashAttackChargePercent = 1.0;
 	}
+
+	@Override
+	public void placeGrabBox() {
+
+		if (state == STATE_GRAB && grabbedPlayer == null) {
+			if (direction == DIRECTION_RIGHT)
+				grabBox = new Rectangle((int) x + w + 10, (int) y + 10, 20, 30);
+			else
+				grabBox = new Rectangle((int) x - 10, (int) y + 10, 20, 30);
+			imageXTransform = 1.172;
+		} else {
+			grabBox = null;
+		}
+	}
+
+	@Override
+	public void forceGrabPlayerLocation() {
+		if (direction == DIRECTION_RIGHT) {
+			grabbedPlayer.x = x + w - 5;
+			grabbedPlayer.y = y - 5;
+			grabbedPlayer.direction = DIRECTION_LEFT;
+		} else {
+			grabbedPlayer.x = x - grabbedPlayer.getW() + 5;
+			grabbedPlayer.y = y - 5;
+			grabbedPlayer.direction = DIRECTION_RIGHT;
+		}
+	}
+
 }
