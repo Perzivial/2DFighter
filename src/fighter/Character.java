@@ -17,17 +17,17 @@ import net.java.games.input.Controller;
 import net.java.games.input.ControllerEnvironment;
 
 public class Character {
-	private String name = "stickman";
+	protected String name = "stickman";
 	private Ellipse2D shield;
 	private double shieldWidth = 1.0;
 	boolean isShielding = false;
 	private double fallSpeed = .8;
 	protected double velX;
 	private double velY;
-	private double x;
-	private double y;
+	protected double x;
+	protected double y;
 	protected int w = 20;
-	private int h = 50;
+	protected int h = 50;
 	private Hitbox hurtbox;
 	public ArrayList<AttackHitbox> hitboxes = new ArrayList<AttackHitbox>();
 	public boolean isGrounded = true;
@@ -87,7 +87,7 @@ public class Character {
 	public static int STATE_HELPLESS = 34;
 	protected int direction = 1;
 	private boolean isChargingSmashAttack = false;
-	private double smashAttackChargePercent = 1.0;
+	protected double smashAttackChargePercent = 1.0;
 	private int smashAttackDirection = 1;
 
 	public final static int DIRECTION_LEFT = -1;
@@ -207,7 +207,7 @@ public class Character {
 	private int grabbedTime = 0;
 	private final int grabbedTimeDefault = 60;
 	private Rectangle grabBox;
-	private Game myGame;
+	protected Game myGame;
 	private Controller myController;
 	private double neutralSpecialCharge = 0;
 	private double neutralSpecialChargeIncrement = 0.006666666667;
@@ -221,7 +221,7 @@ public class Character {
 	private int runIndexChangeCounter = runIndexChangeInterval;
 	protected double imageXTransform = 1;
 	protected double imageYTransform = 1;
-
+	private int canAttackResetCounter = 5;
 	public Character(int posx, int posy, int upKey, int downKey, int leftKey, int rightKey, int modifierKey,
 			int jumpKey, int attackKey, int specialKey, int shieldKey, int grabKey, Game gameinstance) {
 		myGame = gameinstance;
@@ -331,7 +331,20 @@ public class Character {
 		}
 
 	}
+	
+	public BufferedImage initializeImage(String url,int scaleX,int scaleY) {
+		try {
+			BufferedImage buff = getScaledInstance(new Image(url).img, w * scaleX, h * scaleY,
+					RenderingHints.VALUE_INTERPOLATION_BILINEAR, false);
+			return buff;
+		} catch (NullPointerException e) {
+			System.out.println("error");
 
+			return null;
+		}
+
+	}
+	
 	public void initializeImages() {
 		neutralImage = initializeImage("img/" + name + "/neutral.png");
 		run1Image = initializeImage("img/" + name + "/run1.png");
@@ -505,9 +518,9 @@ public class Character {
 		}
 		if (state == STATE_ATTACKUP) {
 			if (direction == DIRECTION_RIGHT)
-				g.drawImage(uTiltImage, (int) x, (int) y, w, h, null);
+				g.drawImage(uTiltImage, (int) x, (int) y - (int) (h * imageYTransform) + h, (int) (w * imageXTransform), (int) (h * imageYTransform), null);
 			if (direction == DIRECTION_LEFT)
-				g.drawImage(uTiltImage, (int) x + w, (int) y, -w, h, null);
+				g.drawImage(uTiltImage, (int) x + w, (int) y - (int) (h * imageYTransform) + h, (int) (-w * imageXTransform), (int) (h * imageYTransform), null);
 		}
 		if (state == STATE_ATTACKDOWN) {
 			if (direction == DIRECTION_RIGHT)
@@ -580,9 +593,9 @@ public class Character {
 		}
 		if (state == STATE_SMASH_ATTACK_FORWARD) {
 			if (direction == DIRECTION_RIGHT)
-				g.drawImage(fSmashImage, (int) x, (int) y, w, h, null);
+				g.drawImage(fSmashImage, (int) x, (int) y,(int)(w * imageXTransform), h, null);
 			if (direction == DIRECTION_LEFT)
-				g.drawImage(fSmashImage, (int) x + w, (int) y, -w, h, null);
+				g.drawImage(fSmashImage, (int) x + w, (int) y, (int)(-w * imageXTransform), h, null);
 		}
 		if (state == STATE_HITSTUN) {
 			if (direction == DIRECTION_RIGHT)
@@ -592,9 +605,9 @@ public class Character {
 		}
 		if (state == STATE_JUMPSQUAT) {
 			if (direction == DIRECTION_RIGHT)
-				g.drawImage(jumpSquatImage, (int) x, (int) y + h / 2, w, h / 2, null);
+				g.drawImage(jumpSquatImage, (int) x, (int) y, w, h, null);
 			if (direction == DIRECTION_LEFT)
-				g.drawImage(jumpSquatImage, (int) x + w, (int) y + h / 2, -w, h / 2, null);
+				g.drawImage(jumpSquatImage, (int) x + w, (int) y, -w, h, null);
 		}
 		if (state == STATE_JUMP) {
 			if (direction == DIRECTION_RIGHT)
@@ -738,6 +751,16 @@ public class Character {
 		if (state == STATE_NEUTRAL) {
 			imageXTransform = 1;
 			imageYTransform = 1;
+			if(!canAttack()){
+				if(canAttackResetCounter > 0)
+				canAttackResetCounter --;
+				else{
+					attackKeyDownHistory = new boolean[] {false,false,false};
+					attackKeyDownHistory = new boolean[] {false,false,false};
+					keysPressed.remove(keyAttack);
+					canAttackResetCounter = 5;
+				}
+			}
 		}
 		if (state != STATE_GRABBED) {
 			if (isGrounded && state == STATE_HELPLESS)
@@ -1021,7 +1044,7 @@ public class Character {
 	public void handleInput() {
 		if (!isController) {
 			if (state != STATE_HITSTUN) {
-				if (state == STATE_NEUTRAL || !isGrounded) {
+				if (state == STATE_NEUTRAL || !isGrounded || state == STATE_CROUCH) {
 					// Jumping code
 					if (isPressing(keyJump)) {
 						jump();
@@ -1308,6 +1331,7 @@ public class Character {
 					} else {
 						upSmash();
 						keysPressed.remove(keyAttack);
+						smashAttackChargePercent = 1;
 					}
 				} else if (smashAttackDirection == DIRECTION_DOWN) {
 
@@ -1316,6 +1340,7 @@ public class Character {
 					} else {
 						downSmash();
 						keysPressed.remove(keyAttack);
+						smashAttackChargePercent = 1;
 					}
 				} else if (smashAttackDirection == DIRECTION_LEFT || smashAttackDirection == DIRECTION_RIGHT) {
 
@@ -1324,6 +1349,7 @@ public class Character {
 					} else {
 						forwardSmash();
 						keysPressed.remove(keyAttack);
+						smashAttackChargePercent = 1;
 					}
 				}
 
@@ -1334,18 +1360,22 @@ public class Character {
 						smashAttackChargePercent += 0.006666666667;
 					} else {
 						upSmash();
+						smashAttackChargePercent = 1;
 					}
 				} else if (smashAttackDirection == DIRECTION_DOWN) {
 					if (isAttackButtonDownController() && smashAttackChargePercent < 1.4) {
 						smashAttackChargePercent += 0.006666666667;
 					} else {
 						downSmash();
+						smashAttackChargePercent = 1;
 					}
 				} else if (smashAttackDirection == DIRECTION_LEFT || smashAttackDirection == DIRECTION_RIGHT) {
 					if (isAttackButtonDownController() && smashAttackChargePercent < 1.4) {
 						smashAttackChargePercent += 0.006666666667;
+						System.out.println(smashAttackChargePercent);
 					} else {
 						forwardSmash();
+						smashAttackChargePercent = 1;
 					}
 				}
 			}
@@ -1976,7 +2006,6 @@ public class Character {
 				new AttackHitbox(this, w, 0, 10, h, 5 * (smashAttackChargePercent * 2), 0 * smashAttackChargePercent,
 						(int) (10 * smashAttackChargePercent), 10, 5 * (smashAttackChargePercent * 2), 20, .4));
 		state = STATE_SMASH_ATTACK_FORWARD;
-		smashAttackChargePercent = 1.0;
 	}
 
 	public void fThrow() {
@@ -2119,6 +2148,7 @@ public class Character {
 				}
 			}
 		}
+		//smashAttackChargePercent = 1.0;
 	}
 
 	public void enterHelpless() {
@@ -2145,9 +2175,9 @@ public class Character {
 			hurtbox.updateLocation(x, y + h * .2, w, h * .8);
 		else if (state == STATE_ATTACK_BAIR) {
 			if (direction == DIRECTION_RIGHT)
-				hurtbox.updateLocation(x + w - 5, y, w, h);
+				hurtbox.updateLocation(x, y, w, h);
 			if (direction == DIRECTION_LEFT)
-				hurtbox.updateLocation(x - w + 5, y, w, h);
+				hurtbox.updateLocation(x , y, w, h);
 		} else
 			hurtbox.updateLocation(x, y, w, h);
 		for (AttackHitbox box : hitboxes) {
