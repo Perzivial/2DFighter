@@ -6,6 +6,7 @@ import java.awt.image.BufferedImage;
 
 public class KidGoku extends Character {
 	BufferedImage fsmashblast = new Image("img/misc/fsmashkidgoku.png").img;
+	BufferedImage downspecialki = new Image("img/misc/downspecialki.png").img;
 
 	public KidGoku(int posx, int posy, int upKey, int downKey, int leftKey, int rightKey, int modifierKey, int jumpKey,
 			int attackKey, int specialKey, int shieldKey, int grabKey, Game gameinstance) {
@@ -50,6 +51,17 @@ public class KidGoku extends Character {
 				else
 					g.drawImage(chargeBeamBlueImage, (int) x - 1000 - 8, (int) y, 1000, h, null);
 			}
+		
+		if (state == STATE_DOWNSPECIAL && hitboxes.get(0).isActive) {
+			if (direction == DIRECTION_RIGHT)
+				g.drawImage(downspecialki, (int) x - 15, (int) y - 10, 30 + w, h + 10, null);
+			else
+				g.drawImage(downspecialki, (int) x - 15, (int) y- 10, 30 + w, h + 10, null);
+		}
+		if(state == STATE_HELPLESS){
+			imageYTransform = 1;
+			imageXTransform = 1;
+		}
 	}
 
 	@Override
@@ -121,6 +133,12 @@ public class KidGoku extends Character {
 		imageXTransform = 1;
 		hitboxes.add(new AttackHitbox(this, -5, 0, w + 10, 15, 0, -5, 5, 20, 20, 10, .1));
 		state = STATE_ATTACK_UAIR;
+	}
+
+	@Override
+	public void dair() {
+		super.dair();
+		imageXTransform = 1;
 	}
 
 	@Override
@@ -204,5 +222,28 @@ public class KidGoku extends Character {
 		grabbedPlayer.velY = 2 + percent / 20;
 		grabbedPlayer.applyHitstun((int) (10 + grabbedPlayer.percent / 5));
 		grabbedPlayer.applyDamage(2);
+	}
+
+	@Override
+	public void forwardSpecial() {
+		imageXTransform = 1.104;
+		if (direction == DIRECTION_RIGHT)
+			myGame.projectiles.add(new Projectile((int) x + w + 5, (int) (y + h / 3) + 7, 15, (int) (15 / 1.5638138138),
+					15.0, 0.0, kiBlastBlueImage, this));
+		else
+			myGame.projectiles.add(new Projectile((int) x - 5 - 15, (int) (y + h / 3) + 7, 15,
+					(int) (15 / 1.5638138138), -15.0, 0.0, kiBlastBlueImage, this));
+	}
+
+	@Override
+	public void downSpecial() {
+		imageXTransform = 1;
+		hitboxes.add(new AttackHitbox(this, -10, -10, w + 20, 40, 0, 10, 5, 20, 20, 10, .8));
+	}
+	@Override
+	public void upSpecial(){
+		super.upSpecial();
+		imageXTransform = 1;
+		imageYTransform = 1;
 	}
 }

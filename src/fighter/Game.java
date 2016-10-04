@@ -48,7 +48,8 @@ public class Game extends JComponent implements KeyListener {
 	ArrayList<Character> characters = new ArrayList<Character>();
 	Character GOE = new KidGoku(500, 400, KeyEvent.VK_UP, KeyEvent.VK_DOWN, KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT,
 			KeyEvent.VK_RIGHT, KeyEvent.VK_SPACE, KeyEvent.VK_Q, KeyEvent.VK_W, KeyEvent.VK_E, KeyEvent.VK_R, this);
-	private int screenState = 0;
+	
+	private int screenState = 2;
 	private final static int SCREEN_STATE_INGAME = 0;
 	private final static int SCREEN_STATE_ADDCHARACTER = 1;
 	private final static int SCREEN_STATE_CHARACTER_SELECT = 2;
@@ -146,7 +147,8 @@ public class Game extends JComponent implements KeyListener {
 
 			break;
 		case (SCREEN_STATE_CHARACTER_SELECT):
-
+			g.setColor(Color.cyan);
+			g.fillRect(0, 0, 1200, 675);
 			break;
 		}
 
@@ -566,7 +568,7 @@ public class Game extends JComponent implements KeyListener {
 			if (e.getKeyCode() == KeyEvent.VK_1) {
 				characters.add(new Character(500, 400, KeyEvent.VK_UP, KeyEvent.VK_DOWN, KeyEvent.VK_LEFT,
 						KeyEvent.VK_RIGHT, KeyEvent.VK_SHIFT, KeyEvent.VK_SPACE, KeyEvent.VK_Q, KeyEvent.VK_W,
-						KeyEvent.VK_R, KeyEvent.VK_E, this));
+						KeyEvent.VK_E, KeyEvent.VK_R, this));
 
 				characterSlideNum = 0;
 				characterSlideNum2 = 1;
