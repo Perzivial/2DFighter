@@ -23,9 +23,9 @@ public class Character {
 	boolean isShielding = false;
 	private double fallSpeed = .8;
 	protected double velX;
-	private double velY;
-	protected double x;
-	protected double y;
+	protected double velY;
+	protected double x = 200;
+	protected double y = 200;
 	protected int w = 20;
 	protected int h = 50;
 	private Hitbox hurtbox;
@@ -143,6 +143,7 @@ public class Character {
 	BufferedImage chargeBeam1Image;
 	BufferedImage chargeBeam2Image;
 	BufferedImage chargeBeam3Image;
+	BufferedImage chargeBeam4Image;
 	BufferedImage uSpecialImage;
 	BufferedImage dSpecialImage;
 	BufferedImage fSpecialImage;
@@ -198,7 +199,7 @@ public class Character {
 	private int rollLag = 10;
 
 	private double moveAxisDeadZone;
-	private double percent = 0;
+	protected double percent = 0;
 	private int jumpSquatFrames = 8;
 	private int jumpSquatBuffer = 0;
 	private boolean canAirDodge = true;
@@ -222,6 +223,8 @@ public class Character {
 	protected double imageXTransform = 1;
 	protected double imageYTransform = 1;
 	private int canAttackResetCounter = 5;
+	public String playerName = "Player ";
+	
 	public Character(int posx, int posy, int upKey, int downKey, int leftKey, int rightKey, int modifierKey,
 			int jumpKey, int attackKey, int specialKey, int shieldKey, int grabKey, Game gameinstance) {
 		myGame = gameinstance;
@@ -251,19 +254,39 @@ public class Character {
 		startx = x;
 		starty = y;
 		hurtbox = new Hitbox(this, x, y, w, h, Game.TYPE_HURTBOX);
-
+		controllerName = "NULL";
 		ArrayList<Character> characters = gameinstance.characters;
 
-		Controller[] ca = ControllerEnvironment.getDefaultEnvironment().getControllers();
-		for (Controller currentController : ca) {
+		boolean shouldSkipPortCheck = true;
+
+		for (Controller currentController : gameinstance.controllers) {
+			for (Character person : characters) {
+				if (person.getControllerName() == nameOfController) {
+					shouldSkipPortCheck = false;
+				}
+			}
+		}
+
+		if (shouldSkipPortCheck) {
+			for (Controller currentController : gameinstance.controllers) {
+				if (currentController.getName() == nameOfController) {
+					this.portNum = currentController.getPortNumber();
+					break;
+
+				}
+			}
+			controllerName = nameOfController;
+		}
+
+		for (Controller currentController : gameinstance.controllers) {
 			boolean isvalid = true;
 			if (currentController.getName().equals(nameOfController)) {
 				for (Character person : characters) {
-					if (person.getIsUsingController())
-						if (person.portNum == currentController.getPortNumber())
-							isvalid = false;
+					if (person.portNum == currentController.getPortNumber())
+						isvalid = false;
 					if (isvalid) {
 						this.portNum = currentController.getPortNumber();
+						controllerName = nameOfController;
 						break;
 					}
 				}
@@ -283,7 +306,9 @@ public class Character {
 		buttonGrab = grabButton;
 		buttonSpecial = specialButton;
 		isController = true;
-		controllerName = nameOfController;
+		if(controllerName == "NULL"){
+			portNum = -1;
+		}
 		placeShield();
 	}
 
@@ -331,8 +356,8 @@ public class Character {
 		}
 
 	}
-	
-	public BufferedImage initializeImage(String url,int scaleX,int scaleY) {
+
+	public BufferedImage initializeImage(String url, int scaleX, int scaleY) {
 		try {
 			BufferedImage buff = getScaledInstance(new Image(url).img, w * scaleX, h * scaleY,
 					RenderingHints.VALUE_INTERPOLATION_BILINEAR, false);
@@ -344,7 +369,7 @@ public class Character {
 		}
 
 	}
-	
+
 	public void initializeImages() {
 		neutralImage = initializeImage("img/" + name + "/neutral.png");
 		run1Image = initializeImage("img/" + name + "/run1.png");
@@ -400,6 +425,7 @@ public class Character {
 		chargeBeam1Image = initializeImage("img/" + name + "/chargebeam1.png");
 		chargeBeam2Image = initializeImage("img/" + name + "/chargebeam2.png");
 		chargeBeam3Image = initializeImage("img/" + name + "/chargebeam3.png");
+		chargeBeam4Image = initializeImage("img/" + name + "/chargebeam4.png");
 		uSpecialImage = initializeImage("img/" + name + "/upspecial.png");
 		dSpecialImage = initializeImage("img/" + name + "/downspecial.png");
 		fSpecialImage = initializeImage("img/" + name + "/forwardspecial.png");
@@ -481,21 +507,21 @@ public class Character {
 					isRunning = true;
 			} else if (isPressing(keyLeft) || isPressing(keyRight))
 				isRunning = true;
-			if(isGrounded){
-			if (!isRunning) {
-				if (direction == DIRECTION_RIGHT) {
-					g.drawImage(neutralImage, (int) x, (int) y, w, h, null);
-				}
-				if (direction == DIRECTION_LEFT) {
-					g.drawImage(neutralImage, (int) x + w, (int) y, -w, h, null);
+			if (isGrounded) {
+				if (!isRunning) {
+					if (direction == DIRECTION_RIGHT) {
+						g.drawImage(neutralImage, (int) x, (int) y, w, h, null);
+					}
+					if (direction == DIRECTION_LEFT) {
+						g.drawImage(neutralImage, (int) x + w, (int) y, -w, h, null);
+					}
+				} else {
+					if (direction == DIRECTION_RIGHT)
+						g.drawImage(runImages.get(runIndex), (int) x, (int) y, w, h, null);
+					if (direction == DIRECTION_LEFT)
+						g.drawImage(runImages.get(runIndex), (int) x + w, (int) y, -w, h, null);
 				}
 			} else {
-				if (direction == DIRECTION_RIGHT)
-					g.drawImage(runImages.get(runIndex), (int) x, (int) y, w, h, null);
-				if (direction == DIRECTION_LEFT)
-					g.drawImage(runImages.get(runIndex), (int) x + w, (int) y, -w, h, null);
-			}
-			}else{
 				if (direction == DIRECTION_RIGHT)
 					g.drawImage(runImages.get(2), (int) x, (int) y, w, h, null);
 				if (direction == DIRECTION_LEFT)
@@ -512,15 +538,19 @@ public class Character {
 		}
 		if (state == STATE_ATTACKSIDE) {
 			if (direction == DIRECTION_RIGHT)
-				g.drawImage(fTiltImage, (int) x, (int) y - (int) (h * imageYTransform) + h, (int) (w * imageXTransform), (int) (h * imageYTransform), null);
+				g.drawImage(fTiltImage, (int) x, (int) y - (int) (h * imageYTransform) + h, (int) (w * imageXTransform),
+						(int) (h * imageYTransform), null);
 			if (direction == DIRECTION_LEFT)
-				g.drawImage(fTiltImage, (int) x + w, (int) y - (int) (h * imageYTransform) + h, (int) (-w * imageXTransform), (int) (h * imageYTransform), null);
+				g.drawImage(fTiltImage, (int) x + w, (int) y - (int) (h * imageYTransform) + h,
+						(int) (-w * imageXTransform), (int) (h * imageYTransform), null);
 		}
 		if (state == STATE_ATTACKUP) {
 			if (direction == DIRECTION_RIGHT)
-				g.drawImage(uTiltImage, (int) x, (int) y - (int) (h * imageYTransform) + h, (int) (w * imageXTransform), (int) (h * imageYTransform), null);
+				g.drawImage(uTiltImage, (int) x, (int) y - (int) (h * imageYTransform) + h, (int) (w * imageXTransform),
+						(int) (h * imageYTransform), null);
 			if (direction == DIRECTION_LEFT)
-				g.drawImage(uTiltImage, (int) x + w, (int) y - (int) (h * imageYTransform) + h, (int) (-w * imageXTransform), (int) (h * imageYTransform), null);
+				g.drawImage(uTiltImage, (int) x + w, (int) y - (int) (h * imageYTransform) + h,
+						(int) (-w * imageXTransform), (int) (h * imageYTransform), null);
 		}
 		if (state == STATE_ATTACKDOWN) {
 			if (direction == DIRECTION_RIGHT)
@@ -593,9 +623,9 @@ public class Character {
 		}
 		if (state == STATE_SMASH_ATTACK_FORWARD) {
 			if (direction == DIRECTION_RIGHT)
-				g.drawImage(fSmashImage, (int) x, (int) y,(int)(w * imageXTransform), h, null);
+				g.drawImage(fSmashImage, (int) x, (int) y, (int) (w * imageXTransform), h, null);
 			if (direction == DIRECTION_LEFT)
-				g.drawImage(fSmashImage, (int) x + w, (int) y, (int)(-w * imageXTransform), h, null);
+				g.drawImage(fSmashImage, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
 		}
 		if (state == STATE_HITSTUN) {
 			if (direction == DIRECTION_RIGHT)
@@ -699,10 +729,17 @@ public class Character {
 						g.drawImage(chargeBeam2Image, (int) x + w, (int) y, -w, h, null);
 				}
 			} else {
+				if(hitboxes.get(0).isActive){
 				if (direction == DIRECTION_RIGHT)
 					g.drawImage(chargeBeam3Image, (int) x, (int) y, (int) (w * imageXTransform), h, null);
 				if (direction == DIRECTION_LEFT)
 					g.drawImage(chargeBeam3Image, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
+				}else{
+					if (direction == DIRECTION_RIGHT)
+						g.drawImage(chargeBeam4Image, (int) x, (int) y, (int) (w * imageXTransform), h, null);
+					if (direction == DIRECTION_LEFT)
+						g.drawImage(chargeBeam4Image, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
+				}
 			}
 		}
 
@@ -751,12 +788,12 @@ public class Character {
 		if (state == STATE_NEUTRAL) {
 			imageXTransform = 1;
 			imageYTransform = 1;
-			if(!canAttack()){
-				if(canAttackResetCounter > 0)
-				canAttackResetCounter --;
-				else{
-					attackKeyDownHistory = new boolean[] {false,false,false};
-					attackKeyDownHistory = new boolean[] {false,false,false};
+			if (!canAttack()) {
+				if (canAttackResetCounter > 0)
+					canAttackResetCounter--;
+				else {
+					attackKeyDownHistory = new boolean[] { false, false, false };
+					attackKeyDownHistory = new boolean[] { false, false, false };
 					keysPressed.remove(keyAttack);
 					canAttackResetCounter = 5;
 				}
@@ -899,7 +936,7 @@ public class Character {
 	public void attemptToShield() {
 		if (state != STATE_GRABBED && state != STATE_GRAB && state != STATE_HELPLESS) {
 			if (isController) {
-				if (myController != null)
+				if (myController != null  && getPortNum() == myController.getPortNumber())
 					for (Component comp : myController.getComponents()) {
 						if (comp.getName().equals(getLeftTrigger()) || comp.getName().equals(getRightTrigger())) {
 							if (comp.getPollData() > getAxisMidpoint()) {
@@ -1163,7 +1200,7 @@ public class Character {
 	}
 
 	public void jump() {
-		
+
 		boolean canJump = true;
 		for (boolean bool : jumpKeyDownHistory) {
 			if (bool == true) {
@@ -1793,7 +1830,8 @@ public class Character {
 			grabBox = null;
 		}
 	}
-	public void forceGrabPlayerLocation(){
+
+	public void forceGrabPlayerLocation() {
 		if (direction == DIRECTION_RIGHT) {
 			grabbedPlayer.x = x + w + 5;
 			grabbedPlayer.y = y - 5;
@@ -1804,6 +1842,7 @@ public class Character {
 			grabbedPlayer.direction = DIRECTION_RIGHT;
 		}
 	}
+
 	// self explanatory naming FTW
 	public void testForGrabAndDoGrabbedPlayerThings() {
 
@@ -2150,11 +2189,11 @@ public class Character {
 				}
 			}
 		}
-		//smashAttackChargePercent = 1.0;
+		// smashAttackChargePercent = 1.0;
 	}
 
 	public void enterHelpless() {
-		imageXTransform= 1.524;
+		imageXTransform = 1.524;
 		state = STATE_HELPLESS;
 	}
 
@@ -2179,7 +2218,7 @@ public class Character {
 			if (direction == DIRECTION_RIGHT)
 				hurtbox.updateLocation(x, y, w, h);
 			if (direction == DIRECTION_LEFT)
-				hurtbox.updateLocation(x , y, w, h);
+				hurtbox.updateLocation(x, y, w, h);
 		} else
 			hurtbox.updateLocation(x, y, w, h);
 		for (AttackHitbox box : hitboxes) {
@@ -2642,6 +2681,14 @@ public class Character {
 
 	public void setMoveAxisNameRZ(String moveAxisNameRZ) {
 		this.moveAxisNameRZ = moveAxisNameRZ;
+	}
+
+	public Controller getMyController() {
+		return myController;
+	}
+
+	public void setMyController(Controller myController) {
+		this.myController = myController;
 	}
 
 }

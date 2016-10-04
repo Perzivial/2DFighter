@@ -31,11 +31,11 @@ public class KidGoku extends Character {
 		setH((int) (getW() * 1.5263157895));
 		setW(getW() * 2);
 		setH(getH() * 2);
+
 	}
 
 	@Override
 	public void drawSpecialSprites(Graphics g) {
-		super.drawSpecialSprites(g);
 		if (state == STATE_SMASH_ATTACK_FORWARD && hitboxes.get(0).isActive) {
 			if (direction == DIRECTION_RIGHT)
 				g.drawImage(fsmashblast, (int) x + w - 10, (int) y, 50, h, null);
@@ -43,6 +43,13 @@ public class KidGoku extends Character {
 				g.drawImage(fsmashblast, (int) x + 10, (int) y, -50, h, null);
 
 		}
+		if (hitboxes.size() > 0)
+			if (state == STATE_NEUTRALSPECIAL && hitboxes.get(0).isActive) {
+				if (direction == DIRECTION_RIGHT)
+					g.drawImage(chargeBeamBlueImage, (int) x + w + 8, (int) y, 1000, h, null);
+				else
+					g.drawImage(chargeBeamBlueImage, (int) x - 1000 - 8, (int) y, 1000, h, null);
+			}
 	}
 
 	@Override
@@ -146,7 +153,7 @@ public class KidGoku extends Character {
 
 		if (state == STATE_GRAB && grabbedPlayer == null) {
 			if (direction == DIRECTION_RIGHT)
-				grabBox = new Rectangle((int) x + w + 10, (int) y + 10, 20, 30);
+				grabBox = new Rectangle((int) x + w - 10, (int) y + 10, 20, 30);
 			else
 				grabBox = new Rectangle((int) x - 10, (int) y + 10, 20, 30);
 			imageXTransform = 1.172;
@@ -168,4 +175,34 @@ public class KidGoku extends Character {
 		}
 	}
 
+	@Override
+	public void fThrow() {
+		imageXTransform = 1.088;
+		grabbedPlayer.velX = (2 + grabbedPlayer.percent / 8) * direction;
+		grabbedPlayer.velY = -8 + percent / 10;
+		grabbedPlayer.applyHitstun(5);
+		grabbedPlayer.applyDamage(7);
+	}
+
+	@Override
+	public void bThrow() {
+		imageXTransform = 1.088;
+		grabbedPlayer.velX = (5 + grabbedPlayer.percent / 10) * -direction;
+		grabbedPlayer.velY = -5 + percent / 10;
+		grabbedPlayer.applyDamage(3);
+	}
+
+	@Override
+	public void uThrow() {
+		imageXTransform = 1.088;
+		grabbedPlayer.velY = (-8 - (grabbedPlayer.percent / 20)) - 5;
+		grabbedPlayer.applyDamage(5);
+	}
+
+	@Override
+	public void dThrow() {
+		grabbedPlayer.velY = 2 + percent / 20;
+		grabbedPlayer.applyHitstun((int) (10 + grabbedPlayer.percent / 5));
+		grabbedPlayer.applyDamage(2);
+	}
 }

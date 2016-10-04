@@ -56,7 +56,7 @@ public class Game extends JComponent implements KeyListener {
 	private int characterSlideNum = 0;
 	private int characterSlideNum2 = 1;
 	private boolean isEditing = false;
-	Controller[] ca = ControllerEnvironment.getDefaultEnvironment().getControllers();
+	Controller[] ca;
 	static ArrayList<Controller> controllers = new ArrayList<Controller>();
 	static ArrayList<Projectile> projectiles = new ArrayList<Projectile>();
 	//images
@@ -76,7 +76,6 @@ public class Game extends JComponent implements KeyListener {
 
 	@Override
 	public void paintComponent(Graphics g) {
-
 		// TODO the paint method
 		getControllerInput();
 		Graphics2D g2 = (Graphics2D) g;
@@ -339,6 +338,7 @@ public class Game extends JComponent implements KeyListener {
 
 	// below here is all the controlling code keep it that way
 	public void doControllerThings() {
+		ca = ControllerEnvironment.getDefaultEnvironment().getControllers();
 		for (int i = 0; i < ca.length; i++) {
 			if (ca[i].getType() == Type.GAMEPAD || ca[i].getType() == Type.STICK) {
 				controllers.add(ca[i]);
@@ -387,7 +387,7 @@ public class Game extends JComponent implements KeyListener {
 				// how far a button or axis has been pushed
 				for (Character person : characters) {
 					if (person.getIsUsingController()) {
-						if (person.getControllerName().equals(currentController.getName())) {
+						if (person.getControllerName().equals(currentController.getName()) && person.getPortNum() == currentController.getPortNumber()) {
 							if (person.getAxisNameX().equals(comp.getName())) {
 								// code for the horizontal movement stick
 								axisXinput = comp.getPollData();
@@ -572,7 +572,7 @@ public class Game extends JComponent implements KeyListener {
 				characterSlideNum2 = 1;
 			}
 			if (e.getKeyCode() == KeyEvent.VK_2) {
-				characters.add(new Character(300, 575, "Xbox 360 Wired Controller", "x", "y", "rx", "ry", "z", "rz", .8,
+				characters.add(new Character(300, 275, "Xbox 360 Wired Controller", "x", "y", "rx", "ry", "z", "rz", .8,
 						.2, "1", "2", "3", "5", this));
 				characterSlideNum = 0;
 				characterSlideNum2 = 1;
