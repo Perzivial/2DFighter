@@ -151,7 +151,10 @@ public class Character {
 	// extra images
 	BufferedImage chargeBeamBlueImage;
 	BufferedImage kiBlastBlueImage;
-
+	
+	//sounds
+	
+	
 	private final double startx;
 	private final double starty;
 	private boolean isController = false;
@@ -210,8 +213,8 @@ public class Character {
 	protected Rectangle grabBox;
 	protected Game myGame;
 	private Controller myController;
-	private double neutralSpecialCharge = 0;
-	private double neutralSpecialChargeIncrement = 0.006666666667;
+	protected double neutralSpecialCharge = 0;
+	protected double neutralSpecialChargeIncrement = 0.006666666667;
 	protected Character grabbedPlayer = null;
 	private int stateOverrideLength = 15;
 	private int stateOverrideCounter = stateOverrideLength;

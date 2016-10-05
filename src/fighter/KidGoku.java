@@ -7,7 +7,7 @@ import java.awt.image.BufferedImage;
 public class KidGoku extends Character {
 	BufferedImage fsmashblast = new Image("img/misc/fsmashkidgoku.png").img;
 	BufferedImage downspecialki = new Image("img/misc/downspecialki.png").img;
-
+	Sound kamehameha = new Sound("sound/kidgoku/kamehameha.wav");
 	public KidGoku(int posx, int posy, int upKey, int downKey, int leftKey, int rightKey, int modifierKey, int jumpKey,
 			int attackKey, int specialKey, int shieldKey, int grabKey, Game gameinstance) {
 		super(posx, posy, upKey, downKey, leftKey, rightKey, modifierKey, jumpKey, attackKey, specialKey, shieldKey,
@@ -18,7 +18,7 @@ public class KidGoku extends Character {
 		setH((int) (getW() * 1.5263157895));
 		setW(getW() * 2);
 		setH(getH() * 2);
-
+		neutralSpecialChargeIncrement = 0.009523809524;
 	}
 
 	public KidGoku(int posx, int posy, String nameOfController, String axisName, String axisName2, String axisName3,
@@ -32,7 +32,7 @@ public class KidGoku extends Character {
 		setH((int) (getW() * 1.5263157895));
 		setW(getW() * 2);
 		setH(getH() * 2);
-
+		neutralSpecialChargeIncrement = 0.009523809524;
 	}
 
 	@Override
@@ -61,6 +61,14 @@ public class KidGoku extends Character {
 		if(state == STATE_HELPLESS){
 			imageYTransform = 1;
 			imageXTransform = 1;
+		}
+		
+		if(state == STATE_NEUTRALSPECIAL){
+			if(!kamehameha.isrunning() && neutralSpecialCharge < .1)
+				kamehameha.play();
+		}else{
+			if(kamehameha.isrunning())
+				kamehameha.stop();
 		}
 	}
 
@@ -124,7 +132,7 @@ public class KidGoku extends Character {
 	public void bair() {
 		imageXTransform = 1.196;
 
-		hitboxes.add(new AttackHitbox(this, -20, 35, 25, 15, .5, -1, 10, 60, 3, 6, .1));
+		hitboxes.add(new AttackHitbox(this, -15, 20, 25, 15, -.5, -1, 10, 60, 3, 6, .1));
 		state = STATE_ATTACK_BAIR;
 	}
 
