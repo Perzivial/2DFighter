@@ -318,7 +318,11 @@ public class Character {
 			initializeImages();
 			hasInitializedImages = true;
 		}
-
+		if(isPressing(KeyEvent.VK_ENTER)){
+			System.out.println(state);
+			System.out.println(Arrays.toString(attackKeyDownHistory));
+			System.out.println(canAttack());
+		}
 		getController();
 		updateStates();
 		chargeNeutralSpecial();
@@ -2081,7 +2085,7 @@ public class Character {
 			myGame.projectiles.add(new Projectile((int) x - 5 - 15, (int) y + h / 3, 15, (int) (15 / 1.5638138138),
 					-15.0, 0.0, kiBlastBlueImage, this));
 	}
-
+	
 	public void neutralSpecial() {
 		imageXTransform = 1.2;
 		hitboxes.add(new AttackHitbox(this, w - 2, h / 3, 1000, 15, 10 + percent / 10, -5, 20, 60, 40, 60, 1));
@@ -2672,6 +2676,14 @@ public class Character {
 
 	public void setMyController(Controller myController) {
 		this.myController = myController;
+	}
+
+	public Game getMyGame() {
+		return myGame;
+	}
+
+	public void setMyGame(Game myGame) {
+		this.myGame = myGame;
 	}
 
 }

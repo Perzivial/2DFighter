@@ -3,6 +3,7 @@ package fighter;
 import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 
 public class CharacterIcon {
 	Character keyBoard;
@@ -11,16 +12,21 @@ public class CharacterIcon {
 	int x;
 	int y;
 	BufferedImage img;
-
-	public CharacterIcon(String url, int posx, int posy, Character keyBoardCharacter, Character ControllerCharacter) {
-		keyBoard = keyBoardCharacter;
-		controller = ControllerCharacter;
+	boolean isChoosingKeyBoard = true;
+	ArrayList<Character> characters;
+	Game mygame;
+	public CharacterIcon(int posx, int posy, ArrayList<Character> chars, Game gameinstance) {
 		x = posx;
 		y = posy;
-		img = new Image(url).img;
+		interactRect = new Rectangle(x,y,100,100);
+		characters = chars;
+		mygame = gameinstance;
 	}
 
 	public void draw(Graphics g) {
 		g.drawImage(img, x, y, 100, 100, null);
+	}
+	public void addCharacter(){
+		
 	}
 }

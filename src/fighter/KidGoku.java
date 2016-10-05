@@ -246,4 +246,9 @@ public class KidGoku extends Character {
 		imageXTransform = 1;
 		imageYTransform = 1;
 	}
+	@Override
+	public void neutralSpecial() {
+		imageXTransform = 1.2;
+		hitboxes.add(new AttackHitbox(this, w - 2, (h / 3 ) + 10, 1000, 15, 10 + percent / 10, -5, 20, 60, 40, 60, 1));
+	}
 }
