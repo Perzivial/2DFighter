@@ -393,11 +393,13 @@ public class Game extends JComponent implements KeyListener {
 	}
 
 	public void drawPlayerPercentage(Graphics g) {
+
 		int getSpaceBetweenNumbers = (int) (screenHeight / characters.size());
 		for (int i = 0; i < characters.size(); i++) {
 			Character person = characters.get(i);
 			g.setColor(Color.red);
-			g.drawString(Double.toString(person.getpercentage()),
+
+			g.drawString(String.valueOf((int)person.getpercentage()),
 					getSpaceBetweenNumbers / 2 + (getSpaceBetweenNumbers * i + 1), 600);
 		}
 	}

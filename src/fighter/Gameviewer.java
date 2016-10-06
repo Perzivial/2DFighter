@@ -3,6 +3,7 @@ package fighter;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.DisplayMode;
+import java.awt.Font;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.Window;
@@ -59,8 +60,10 @@ public class Gameviewer extends JFrame {
 		thegame.setDoubleBuffered(true);
 		thegame.setVisible(true);
 		frame.setVisible(true);
+		Font myFont = new Font("Futura", Font.BOLD, 25);
+		thegame.setFont(myFont);
 		frame.addComponentListener(new ComponentListener() {
-		
+
 			public void componentResized(ComponentEvent e) {
 				// do stuff
 				if (screensizeChangeBuffer >= 5) {
