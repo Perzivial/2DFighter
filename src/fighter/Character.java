@@ -153,8 +153,7 @@ public class Character {
 	BufferedImage kiBlastBlueImage;
 
 	// sounds
-	SoundArray hurtsounds = new SoundArray(new Sound("sound/" + name + "/hurtsound.wav"),
-			new Sound("sound/" + name + "/hurtsound2.wav"), new Sound("sound/" + name + "/hurtsound3.wav"));
+	SoundArray hurtsounds;
 
 	private final double startx;
 	private final double starty;
@@ -317,9 +316,10 @@ public class Character {
 	}
 
 	public void draw(Graphics g) {
-		// initalizes the images
+		// initalizes the images and sounds
 		if (!hasInitializedImages) {
 			initializeImages();
+			initializeSounds();
 			hasInitializedImages = true;
 		}
 		if (isPressing(KeyEvent.VK_ENTER)) {
@@ -377,7 +377,11 @@ public class Character {
 		}
 
 	}
-
+	public void initializeSounds(){
+		hurtsounds = new SoundArray(new Sound("sound/" + name + "/hurtsound.wav"),
+				new Sound("sound/" + name + "/hurtsound2.wav"), new Sound("sound/" + name + "/hurtsound3.wav"));
+		hurtsounds.lowerSounds();
+	}
 	public void initializeImages() {
 		neutralImage = initializeImage("img/" + name + "/neutral.png");
 		run1Image = initializeImage("img/" + name + "/run1.png");

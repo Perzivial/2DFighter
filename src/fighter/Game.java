@@ -15,8 +15,15 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 
 import javax.swing.JComponent;
 import net.java.games.input.*;
@@ -81,15 +88,17 @@ public class Game extends JComponent implements KeyListener {
 	BufferedImage sky = new Image("img/misc/sky.png").img;
 	BufferedImage ground = new Image("img/misc/ground.png").img;
 	ArrayList<CharacterIcon> charIcons = new ArrayList<CharacterIcon>();
-	
-	
-	//music
+
+	// music
 	Sound headchalapiano = new Sound("sound/music/headchalapiano.wav");
 	Sound headchalaremix = new Sound("sound/music/headchalaremix.wav");
-	SoundArray music = new SoundArray(headchalapiano,headchalaremix);
+	SoundArray music = new SoundArray(headchalapiano, headchalaremix);
+	boolean canPlayMusic = false;
+	boolean musicEnabled = true;
+
 	// characters are all kept in an arraylist, some of them will in fact be an
 	// extension of the character class
-	public Game() {
+	public Game() throws IOException {
 		hitboxes.add(GROUND_HITBOX);
 		doControllerThings();
 		// characters.add(GOE);
@@ -97,6 +106,26 @@ public class Game extends JComponent implements KeyListener {
 			System.out.println(control.getName());
 		}
 		addCharIcons();
+		initializeConfig();
+	}
+
+	public void initializeConfig() throws IOException {
+		List<String> lines = null;
+		try {
+			lines = Files.readAllLines(Paths.get("config/game.txt"));
+		} catch (IOException e) {
+			System.out.println("Did not find any game.txt file in /config, creating one");
+			File dir = new File("config");
+			@SuppressWarnings("unused")
+			boolean successful = dir.mkdir();
+			PrintWriter writer;
+			writer = new PrintWriter("config/game.txt");
+			lines = Files.readAllLines(Paths.get("config/game.txt"));
+		}
+		if (lines.size() > 0)
+			if (lines.get(0).equals("false")) {
+				musicEnabled = false;
+			}
 	}
 
 	public void addCharIcons() {
@@ -108,11 +137,14 @@ public class Game extends JComponent implements KeyListener {
 	@Override
 	public void paintComponent(Graphics g) {
 		// TODO the paint method
-		if(screenState == SCREEN_STATE_INGAME){
-		if(!music.isAnySoundPlaying()){
-			music.getRandomSound().play();
-		}
-		}else{
+		if (screenState == SCREEN_STATE_INGAME) {
+			if (!music.isAnySoundPlaying()) {
+				if (canPlayMusic && musicEnabled)
+					music.getRandomSound().play();
+				else
+					canPlayMusic = true;
+			}
+		} else {
 			music.stopAllSounds();
 		}
 		getControllerInput();
@@ -138,7 +170,7 @@ public class Game extends JComponent implements KeyListener {
 			drawHitBoxes(g, hitboxes);
 			drawPlayerHitboxes(g);
 			drawPlayerPercentage(g);
-			
+
 			break;
 		case (SCREEN_STATE_ADDCHARACTER):
 			g.setColor(Color.WHITE);
@@ -186,7 +218,7 @@ public class Game extends JComponent implements KeyListener {
 			break;
 		// TODO the character select screen
 		case (SCREEN_STATE_CHARACTER_SELECT):
-			g.setColor(Color.cyan);
+			g.setColor(new Color(149, 214, 223));
 			g.fillRect(0, 0, 1200, 675);
 			if (keysPressed.contains(KeyEvent.VK_UP))
 				charSelectY -= 10;
@@ -210,7 +242,7 @@ public class Game extends JComponent implements KeyListener {
 				selectionRect = new Rectangle(charSelectX - 10, charSelectY - 10, 35, 35);
 			}
 
-			if (characters.size() > 1) {
+			if (characters.size() > 0) {
 				g.drawImage(pressenterImage, 0, 0, DEFAULT_SCREEN_SIZE_X, DEFAULT_SCREEN_SIZE_Y, null);
 			}
 
@@ -227,9 +259,17 @@ public class Game extends JComponent implements KeyListener {
 			}
 			break;
 		}
-
+		drawBlackBars(g);
 		g2.setTransform(oldTransform);
 
+	}
+
+	public void drawBlackBars(Graphics g) {
+		g.setColor(Color.BLACK);
+		g.fillRect(-100, -100, DEFAULT_SCREEN_SIZE_X + 100, 100);
+		g.fillRect(-100, DEFAULT_SCREEN_SIZE_Y, DEFAULT_SCREEN_SIZE_X + 100, 100);
+		g.fillRect(-100, -100, 100, 100);
+		g.fillRect(DEFAULT_SCREEN_SIZE_X, -100, 100, 100);
 	}
 
 	public void drawIcons(Graphics g) {
@@ -245,6 +285,7 @@ public class Game extends JComponent implements KeyListener {
 					if (icon.interactRect.intersects(selectionRect)) {
 						selectedIcon = icon;
 						screenState = SCREEN_STATE_CHOOSE_CONTROL_SCHEME;
+						keysPressed.clear();
 						break;
 					}
 				}
@@ -485,6 +526,7 @@ public class Game extends JComponent implements KeyListener {
 									person1.applyDamage(hitbox.getDamage());
 									hitbox.playerHitList.add(person1);
 									person1.hurtsounds.getRandomSound().play();
+
 								}
 							}
 						}
@@ -813,8 +855,10 @@ public class Game extends JComponent implements KeyListener {
 			break;
 		case SCREEN_STATE_CHARACTER_SELECT:
 			keysPressed.add(e.getKeyCode());
-			if (e.getKeyCode() == KeyEvent.VK_ENTER && characters.size() > 1)
+			if (e.getKeyCode() == KeyEvent.VK_ENTER && characters.size() > 0) {
 				screenState = SCREEN_STATE_INGAME;
+				keysPressed.clear();
+			}
 			break;
 		case (SCREEN_STATE_CHOOSE_CONTROL_SCHEME):
 			if (e.getKeyCode() == KeyEvent.VK_LEFT || e.getKeyCode() == KeyEvent.VK_RIGHT)
@@ -822,7 +866,7 @@ public class Game extends JComponent implements KeyListener {
 			if (e.getKeyCode() == KeyEvent.VK_ENTER) {
 				selectedIcon.addCharacter();
 				screenState = SCREEN_STATE_CHARACTER_SELECT;
-				keysPressed.remove(KeyEvent.VK_SPACE);
+				keysPressed.clear();
 				selectedIcon = null;
 			}
 			break;

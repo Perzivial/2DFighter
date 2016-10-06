@@ -8,6 +8,9 @@ public class KidGoku extends Character {
 	BufferedImage fsmashblast = new Image("img/misc/fsmashkidgoku.png").img;
 	BufferedImage downspecialki = new Image("img/misc/downspecialki.png").img;
 	Sound kamehameha = new Sound("sound/kidgoku/kamehameha.wav");
+	Sound downB = new Sound("sound/kidgoku/downb.wav");
+	Sound sideB = new Sound("sound/kidgoku/sideb.wav");
+	Sound nimbus = new Sound("sound/kidgoku/flyingnimbus.wav");
 	public KidGoku(int posx, int posy, int upKey, int downKey, int leftKey, int rightKey, int modifierKey, int jumpKey,
 			int attackKey, int specialKey, int shieldKey, int grabKey, Game gameinstance) {
 		super(posx, posy, upKey, downKey, leftKey, rightKey, modifierKey, jumpKey, attackKey, specialKey, shieldKey,
@@ -19,6 +22,7 @@ public class KidGoku extends Character {
 		setW(getW() * 2);
 		setH(getH() * 2);
 		neutralSpecialChargeIncrement = 0.009523809524;
+		downB.reducesound();
 	}
 
 	public KidGoku(int posx, int posy, String nameOfController, String axisName, String axisName2, String axisName3,
@@ -33,6 +37,7 @@ public class KidGoku extends Character {
 		setW(getW() * 2);
 		setH(getH() * 2);
 		neutralSpecialChargeIncrement = 0.009523809524;
+		downB.reducesound();
 	}
 
 	@Override
@@ -234,6 +239,8 @@ public class KidGoku extends Character {
 
 	@Override
 	public void forwardSpecial() {
+		sideB.stop();
+		sideB.play();
 		imageXTransform = 1.104;
 		if (direction == DIRECTION_RIGHT)
 			myGame.projectiles.add(new Projectile((int) x + w + 5, (int) (y + h / 3) + 7, 15, (int) (15 / 1.5638138138),
@@ -245,12 +252,16 @@ public class KidGoku extends Character {
 
 	@Override
 	public void downSpecial() {
+		downB.stop();
+		downB.play();
 		imageXTransform = 1;
 		hitboxes.add(new AttackHitbox(this, -10, -10, w + 20, 40, 0, 10, 5, 20, 20, 10, .8));
 	}
 	@Override
 	public void upSpecial(){
 		super.upSpecial();
+		nimbus.stop();
+		nimbus.play();
 		imageXTransform = 1;
 		imageYTransform = 1;
 	}

@@ -32,5 +32,11 @@ public class SoundArray {
 			current.stop();
 		}
 	}
+	public void lowerSounds(){
+		for (Sound current : sounds) {
+		current.reducesound();
+		}
+		}
+	}
 
-}
+
