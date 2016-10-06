@@ -151,10 +151,11 @@ public class Character {
 	// extra images
 	BufferedImage chargeBeamBlueImage;
 	BufferedImage kiBlastBlueImage;
-	
-	//sounds
-	
-	
+
+	// sounds
+	SoundArray hurtsounds = new SoundArray(new Sound("sound/" + name + "/hurtsound.wav"),
+			new Sound("sound/" + name + "/hurtsound2.wav"), new Sound("sound/" + name + "/hurtsound3.wav"));
+
 	private final double startx;
 	private final double starty;
 	private boolean isController = false;
@@ -227,7 +228,7 @@ public class Character {
 	protected double imageYTransform = 1;
 	private int canAttackResetCounter = 5;
 	public String playerName = "Player ";
-	
+
 	public Character(int posx, int posy, int upKey, int downKey, int leftKey, int rightKey, int modifierKey,
 			int jumpKey, int attackKey, int specialKey, int shieldKey, int grabKey, Game gameinstance) {
 		myGame = gameinstance;
@@ -309,7 +310,7 @@ public class Character {
 		buttonGrab = grabButton;
 		buttonSpecial = specialButton;
 		isController = true;
-		if(controllerName == "NULL"){
+		if (controllerName == "NULL") {
 			portNum = -1;
 		}
 		placeShield();
@@ -321,7 +322,7 @@ public class Character {
 			initializeImages();
 			hasInitializedImages = true;
 		}
-		if(isPressing(KeyEvent.VK_ENTER)){
+		if (isPressing(KeyEvent.VK_ENTER)) {
 			System.out.println(state);
 			System.out.println(Arrays.toString(attackKeyDownHistory));
 			System.out.println(canAttack());
@@ -442,7 +443,8 @@ public class Character {
 		kiBlastBlueImage = initializeImage("img/misc/kiblastblue.png");
 
 	}
-	//not my code. only have some idea of how this works
+
+	// not my code. only have some idea of how this works
 	public BufferedImage getScaledInstance(BufferedImage img, int targetWidth, int targetHeight, Object hint,
 			boolean higherQuality) {
 		int type = (img.getTransparency() == Transparency.OPAQUE) ? BufferedImage.TYPE_INT_RGB
@@ -719,12 +721,12 @@ public class Character {
 						g.drawImage(chargeBeam2Image, (int) x + w, (int) y, -w, h, null);
 				}
 			} else {
-				if(hitboxes.get(0).isActive){
-				if (direction == DIRECTION_RIGHT)
-					g.drawImage(chargeBeam3Image, (int) x, (int) y, (int) (w * imageXTransform), h, null);
-				if (direction == DIRECTION_LEFT)
-					g.drawImage(chargeBeam3Image, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
-				}else{
+				if (hitboxes.get(0).isActive) {
+					if (direction == DIRECTION_RIGHT)
+						g.drawImage(chargeBeam3Image, (int) x, (int) y, (int) (w * imageXTransform), h, null);
+					if (direction == DIRECTION_LEFT)
+						g.drawImage(chargeBeam3Image, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
+				} else {
 					if (direction == DIRECTION_RIGHT)
 						g.drawImage(chargeBeam4Image, (int) x, (int) y, (int) (w * imageXTransform), h, null);
 					if (direction == DIRECTION_LEFT)
@@ -775,6 +777,15 @@ public class Character {
 	}
 
 	public void updateStates() {
+		if(state == STATE_NEUTRALSPECIAL){
+			if(neutralSpecialCharge >= 1 && hitboxes.size() > 0){
+				if(hitboxes.get(0).getEndLag() < 2){
+					state = STATE_NEUTRAL;
+					hitboxes.clear();
+					neutralSpecialCharge = 0;
+				}
+			}
+		}
 		if (state == STATE_NEUTRAL) {
 			imageXTransform = 1;
 			imageYTransform = 1;
@@ -926,7 +937,7 @@ public class Character {
 	public void attemptToShield() {
 		if (state != STATE_GRABBED && state != STATE_GRAB && state != STATE_HELPLESS) {
 			if (isController) {
-				if (myController != null  && getPortNum() == myController.getPortNumber())
+				if (myController != null && getPortNum() == myController.getPortNumber())
 					for (Component comp : myController.getComponents()) {
 						if (comp.getName().equals(getLeftTrigger()) || comp.getName().equals(getRightTrigger())) {
 							if (comp.getPollData() > getAxisMidpoint()) {
@@ -2088,14 +2099,14 @@ public class Character {
 			myGame.projectiles.add(new Projectile((int) x - 5 - 15, (int) y + h / 3, 15, (int) (15 / 1.5638138138),
 					-15.0, 0.0, kiBlastBlueImage, this));
 	}
-	
+
 	public void neutralSpecial() {
 		imageXTransform = 1.2;
 		hitboxes.add(new AttackHitbox(this, w - 2, h / 3, 1000, 15, 10 + percent / 10, -5, 20, 60, 40, 60, 1));
 	}
 
 	public void chargeNeutralSpecial() {
-		if (state == STATE_NEUTRALSPECIAL) {
+		if (state == STATE_NEUTRALSPECIAL && hitboxes.size() == 0) {
 			if (isController) {
 				if (isSpecialButtonDownController() && neutralSpecialCharge < 1) {
 					neutralSpecialCharge += neutralSpecialChargeIncrement;
@@ -2183,7 +2194,7 @@ public class Character {
 	}
 
 	public void enterHelpless() {
-	//	imageXTransform = 1.524;
+		// imageXTransform = 1.524;
 		state = STATE_HELPLESS;
 	}
 
@@ -2225,8 +2236,9 @@ public class Character {
 				if (state != STATE_LANDINGLAG) {
 					if (state == STATE_UPSPECIAL)
 						enterHelpless();
-					else
-						state = STATE_NEUTRAL;
+					else {
+							state = STATE_NEUTRAL;
+					}
 				}
 				break;
 			}

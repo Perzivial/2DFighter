@@ -81,7 +81,12 @@ public class Game extends JComponent implements KeyListener {
 	BufferedImage sky = new Image("img/misc/sky.png").img;
 	BufferedImage ground = new Image("img/misc/ground.png").img;
 	ArrayList<CharacterIcon> charIcons = new ArrayList<CharacterIcon>();
-
+	
+	
+	//music
+	Sound headchalapiano = new Sound("sound/music/headchalapiano.wav");
+	Sound headchalaremix = new Sound("sound/music/headchalaremix.wav");
+	SoundArray music = new SoundArray(headchalapiano,headchalaremix);
 	// characters are all kept in an arraylist, some of them will in fact be an
 	// extension of the character class
 	public Game() {
@@ -103,6 +108,13 @@ public class Game extends JComponent implements KeyListener {
 	@Override
 	public void paintComponent(Graphics g) {
 		// TODO the paint method
+		if(screenState == SCREEN_STATE_INGAME){
+		if(!music.isAnySoundPlaying()){
+			music.getRandomSound().play();
+		}
+		}else{
+			music.stopAllSounds();
+		}
 		getControllerInput();
 		Graphics2D g2 = (Graphics2D) g;
 		AffineTransform oldTransform = g2.getTransform();
@@ -126,6 +138,7 @@ public class Game extends JComponent implements KeyListener {
 			drawHitBoxes(g, hitboxes);
 			drawPlayerHitboxes(g);
 			drawPlayerPercentage(g);
+			
 			break;
 		case (SCREEN_STATE_ADDCHARACTER):
 			g.setColor(Color.WHITE);
@@ -471,6 +484,7 @@ public class Game extends JComponent implements KeyListener {
 									person1.applyHitstun(hitbox.getHitstunLength());
 									person1.applyDamage(hitbox.getDamage());
 									hitbox.playerHitList.add(person1);
+									person1.hurtsounds.getRandomSound().play();
 								}
 							}
 						}

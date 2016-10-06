@@ -64,7 +64,7 @@ public class KidGoku extends Character {
 		}
 		
 		if(state == STATE_NEUTRALSPECIAL){
-			if(!kamehameha.isrunning() && neutralSpecialCharge < .1)
+			if(!kamehameha.isrunning() && neutralSpecialCharge < .1 && hitboxes.size() == 0)
 				kamehameha.play();
 		}else{
 			if(kamehameha.isrunning())
@@ -258,5 +258,6 @@ public class KidGoku extends Character {
 	public void neutralSpecial() {
 		imageXTransform = 1.2;
 		hitboxes.add(new AttackHitbox(this, w - 2, (h / 3 ) + 10, 1000, 15, 10 + percent / 10, -5, 20, 60, 40, 60, 1));
+
 	}
 }
