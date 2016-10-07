@@ -94,6 +94,7 @@ public class Game extends JComponent implements KeyListener {
 	ArrayList<CharacterIcon> charIcons = new ArrayList<CharacterIcon>();
 
 	// music
+	Sound menuMusic = new Sound("sound/music/menutheme.wav");
 	Sound headchalapiano = new Sound("sound/music/headchalapiano.wav");
 	Sound headchalaremix = new Sound("sound/music/headchalaremix.wav");
 	SoundArray music = new SoundArray(headchalapiano, headchalaremix);
@@ -101,6 +102,7 @@ public class Game extends JComponent implements KeyListener {
 	boolean musicEnabled = true;
 	Character winningPlayer;
 	int winScreenCounter = 120;
+	int dayTime = 0;
 	// characters are all kept in an arraylist, some of them will in fact be an
 	// extension of the character class
 	public Game() throws IOException {
@@ -156,6 +158,13 @@ public class Game extends JComponent implements KeyListener {
 			}
 		} else {
 			music.stopAllSounds();
+		}
+		if(screenState == SCREEN_STATE_CHARACTER_SELECT || screenState == SCREEN_STATE_CHOOSE_CONTROL_SCHEME){
+			if(!menuMusic.isrunning() && musicEnabled){
+				menuMusic.play();
+			}
+		}else{
+			menuMusic.stop();
 		}
 		getControllerInput();
 		Graphics2D g2 = (Graphics2D) g;
@@ -284,7 +293,11 @@ public class Game extends JComponent implements KeyListener {
 		g2.setTransform(oldTransform);
 
 	}
-
+	
+	public void doDayCycle(){
+		
+	}
+	
 	public void drawBlackBars(Graphics g) {
 		g.setColor(Color.BLACK);
 		g.fillRect(-100, -100, DEFAULT_SCREEN_SIZE_X + 100, 100);
@@ -505,6 +518,13 @@ public class Game extends JComponent implements KeyListener {
 						}
 					}
 			}
+			
+		}
+		for (Projectile proj : projectiles) {
+			if(proj.x < -50)
+				projectiles.remove(proj);
+			if(proj.x > DEFAULT_SCREEN_SIZE_X +50)
+				projectiles.remove(proj);
 		}
 	}
 
@@ -773,7 +793,12 @@ public class Game extends JComponent implements KeyListener {
 				for (Component comp : currentController.getComponents()) {
 					switch (characterSlideNum2) {
 					case (1):
-						if (comp.getPollData() > comp.getDeadZone()) {
+						if (comp.getPollData() > .5) {
+							boolean canChange = true;
+							for(Character person2: characters){
+								if(person.getMyController() == currentController)
+									canChange = false;
+							}
 							person.changeController(currentController);
 							isEditing = false;
 						}

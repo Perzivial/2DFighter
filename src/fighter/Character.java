@@ -230,6 +230,7 @@ public class Character {
 	private int canAttackResetCounter = 5;
 	public String playerName = "Player ";
 	private int lives = 3;
+	ArrayList<Particle> particles = new ArrayList<Particle>();
 
 	public Character(int posx, int posy, int upKey, int downKey, int leftKey, int rightKey, int modifierKey,
 			int jumpKey, int attackKey, int specialKey, int shieldKey, int grabKey, Game gameinstance) {
@@ -355,39 +356,42 @@ public class Character {
 		recordLastFrameIsGrounded();
 		getControllerAxisInformation();
 		attemptToShield();
+		drawParticles(g);
+
 		drawShield(g);
 		placeShield();
 		drawName(g);
 	}
 
-	public void movePlayerBasedOnName(){
-		switch(playerName){
-		case("Player 1"):
-			placePlayer(320,310); 
-		direction = DIRECTION_RIGHT;
+	public void movePlayerBasedOnName() {
+		switch (playerName) {
+		case ("Player 1"):
+			placePlayer(320, 310);
+			direction = DIRECTION_RIGHT;
 			break;
-		case("Player 2"):
-			placePlayer(800 - w - 20,310); 
-		direction = DIRECTION_LEFT;
+		case ("Player 2"):
+			placePlayer(800 - w - 20, 310);
+			direction = DIRECTION_LEFT;
 			break;
-		case("Player 3"):
-			placePlayer(400,210); 
-		direction = DIRECTION_RIGHT;
+		case ("Player 3"):
+			placePlayer(400, 210);
+			direction = DIRECTION_RIGHT;
 			break;
-		case("Player 4"):
-			placePlayer(720 - w - 20,210); 
-		direction = DIRECTION_LEFT;
+		case ("Player 4"):
+			placePlayer(720 - w - 20, 210);
+			direction = DIRECTION_LEFT;
 			break;
 		}
 
-		
 	}
-	public void placePlayer(int posx,int posy){
+
+	public void placePlayer(int posx, int posy) {
 		startx = posx;
 		starty = posy;
 		x = startx;
 		y = starty;
 	}
+
 	public BufferedImage initializeImage(String url) {
 		try {
 			BufferedImage buff = getScaledInstance(new Image(url).img, w * 2, h * 2,
@@ -918,6 +922,18 @@ public class Character {
 		}
 	}
 
+	public void drawParticles(Graphics g) {
+		for (Particle current : particles) {
+			current.draw(g);
+
+		}
+		for (Particle current : particles) {
+			if (current.getLifetime() <= 0)
+				particles.remove(current);
+			break;
+		}
+	}
+
 	public void rotateRunArray() {
 		if (runIndexChangeCounter <= 0) {
 			if (runIndex < runImages.size() - 1) {
@@ -1204,8 +1220,9 @@ public class Character {
 					rotateRunArray();
 				}
 
-			} else if (velX > -maxAirSpeed && state != STATE_AIRDODGE && canAirDodge && state != STATE_GRABBED)
+			} else if (velX > -maxAirSpeed && state != STATE_AIRDODGE && canAirDodge && state != STATE_GRABBED) {
 				velX -= horizontalInAirSpeed;
+			}
 		}
 	}
 
@@ -1220,8 +1237,9 @@ public class Character {
 					direction = DIRECTION_RIGHT;
 					rotateRunArray();
 				}
-			} else if (velX < maxAirSpeed && state != STATE_AIRDODGE && canAirDodge && state != STATE_GRABBED)
+			} else if (velX < maxAirSpeed && state != STATE_AIRDODGE && canAirDodge && state != STATE_GRABBED) {
 				velX += horizontalInAirSpeed;
+			}
 		}
 	}
 

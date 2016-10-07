@@ -1,8 +1,10 @@
 package fighter;
 
+import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
+import java.util.Random;
 
 public class KidGoku extends Character {
 	BufferedImage fsmashblast = new Image("img/misc/fsmashkidgoku.png").img;
@@ -269,8 +271,8 @@ public class KidGoku extends Character {
 	}
 	@Override
 	public void neutralSpecial() {
-		imageXTransform = 1.2;
+		imageXTransform = 1.3;
 		hitboxes.add(new AttackHitbox(this, w - 2, (h / 3 ) + 10, 1000, 15, 10 + percent / 10, -5, 20, 60, 40, 60, 1));
-
+		Random rand = new Random();
 	}
 }
