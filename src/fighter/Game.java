@@ -14,6 +14,7 @@ import java.awt.event.KeyListener;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.awt.geom.RoundRectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -52,16 +53,18 @@ public class Game extends JComponent implements KeyListener {
 	boolean shouldShowHitboxes = true;
 	ArrayList<Hitbox> hitboxes = new ArrayList<Hitbox>();
 	public static final Hitbox GROUND_HITBOX = new Hitbox(200, 500, 720, 175, TYPE_GROUND);
+	public static ArrayList<Hitbox> PLATFORMS = new ArrayList<Hitbox>();
 
 	ArrayList<Character> characters = new ArrayList<Character>();
 	Character GOE = new KidGoku(500, 400, KeyEvent.VK_UP, KeyEvent.VK_DOWN, KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT,
 			KeyEvent.VK_RIGHT, KeyEvent.VK_SPACE, KeyEvent.VK_Q, KeyEvent.VK_W, KeyEvent.VK_E, KeyEvent.VK_R, this);
-
+	// this controls the screen state
 	private int screenState = 2;
 	private final static int SCREEN_STATE_INGAME = 0;
 	private final static int SCREEN_STATE_ADDCHARACTER = 1;
 	private final static int SCREEN_STATE_CHARACTER_SELECT = 2;
 	private final static int SCREEN_STATE_CHOOSE_CONTROL_SCHEME = 3;
+	private final static int SCREEN_STATE_WIN_SCREEN = 4;
 	// character select screen specific variables
 	private int charSelectX = WIDTH / 2;
 	private int charSelectY = HEIGHT / 2;
@@ -87,6 +90,7 @@ public class Game extends JComponent implements KeyListener {
 	// images
 	BufferedImage sky = new Image("img/misc/sky.png").img;
 	BufferedImage ground = new Image("img/misc/ground.png").img;
+	BufferedImage platform = new Image("img/misc/platform.png").img;
 	ArrayList<CharacterIcon> charIcons = new ArrayList<CharacterIcon>();
 
 	// music
@@ -95,18 +99,24 @@ public class Game extends JComponent implements KeyListener {
 	SoundArray music = new SoundArray(headchalapiano, headchalaremix);
 	boolean canPlayMusic = false;
 	boolean musicEnabled = true;
-
+	Character winningPlayer;
+	int winScreenCounter = 120;
 	// characters are all kept in an arraylist, some of them will in fact be an
 	// extension of the character class
 	public Game() throws IOException {
 		hitboxes.add(GROUND_HITBOX);
 		doControllerThings();
-		// characters.add(GOE);
+
+		//characters.add(GOE);
 		for (Controller control : ca) {
 			System.out.println(control.getName());
 		}
 		addCharIcons();
 		initializeConfig();
+
+		PLATFORMS.add(new Hitbox(300, 430, 100, 20, TYPE_GROUND));
+		PLATFORMS.add(new Hitbox(720, 430, 100, 20, TYPE_GROUND));
+		PLATFORMS.add(new Hitbox(380, 350, 360, 20, TYPE_GROUND));
 	}
 
 	public void initializeConfig() throws IOException {
@@ -161,6 +171,7 @@ public class Game extends JComponent implements KeyListener {
 		switch (screenState) {
 		case (SCREEN_STATE_INGAME):
 			// basic background stuff to build scene
+			shouldPlayerWin();
 			drawBackground(g);
 			drawGround(g);
 			doPlayerPhysics(g);
@@ -258,6 +269,16 @@ public class Game extends JComponent implements KeyListener {
 				g.fillOval(100 + DEFAULT_SCREEN_SIZE_X / 2, (DEFAULT_SCREEN_SIZE_Y / 2) - 50, 50, 50);
 			}
 			break;
+		case (SCREEN_STATE_WIN_SCREEN):
+			g.setColor(Color.white);
+			g.drawString("The winner is: " + winningPlayer.playerName, 20, 40);
+			winScreenCounter --;
+			if(winScreenCounter <= 0){
+				screenState = SCREEN_STATE_CHARACTER_SELECT;
+				characters.clear();
+				winScreenCounter = 120;
+			}				
+			break;
 		}
 		drawBlackBars(g);
 		g2.setTransform(oldTransform);
@@ -296,19 +317,16 @@ public class Game extends JComponent implements KeyListener {
 	public void graphicsSettings(Graphics2D g2) {
 
 		g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-		// g2.setRenderingHint(RenderingHints.KEY_DITHERING,
-		// RenderingHints.VALUE_DITHER_ENABLE);
-		// g2.setRenderingHint(RenderingHints.KEY_RENDERING,
-		// RenderingHints.VALUE_RENDER_SPEED);
+		g2.setRenderingHint(RenderingHints.KEY_DITHERING, RenderingHints.VALUE_DITHER_ENABLE);
+		g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED);
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-		// g2.setRenderingHint(RenderingHints.KEY_TEXT_LCD_CONTRAST, 100);
+		g2.setRenderingHint(RenderingHints.KEY_TEXT_LCD_CONTRAST, 100);
 		g2.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
 		g2.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
-		// g2.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING,
-		// RenderingHints.VALUE_COLOR_RENDER_QUALITY);
-		// g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL,
-		// RenderingHints.VALUE_STROKE_PURE);
+		g2.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_QUALITY);
+		g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
 		g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+		g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_GASP);
 
 	}
 
@@ -323,13 +341,33 @@ public class Game extends JComponent implements KeyListener {
 
 	public void doPlayerPhysics(Graphics g) {
 		for (Character person : characters) {
+
 			Rectangle groundChecker = new Rectangle((int) person.getX(), (int) person.getY() + 1,
 					(int) person.getWidth(), (int) person.getHeight());
+
+			boolean isOnGround = false;
+			boolean isOnPlatform = false;
 			if (checkCollision(groundChecker, hitboxes.get(0).getRect())
-					&& person.getY() + person.getHeight() - 1 < hitboxes.get(0).getY())
-				person.isGrounded = true;
-			else
+					&& person.getY() + person.getHeight() - 1 < hitboxes.get(0).getY()) {
+				isOnGround = true;
+			}
+
+			for (Hitbox platform : PLATFORMS) {
+				if (groundChecker.intersects(platform.getRect())) {
+					if (person.getY() + person.getH() - 10 < platform.getY()) {
+						if (person.getVelY() >= 0 && person.getState() != Character.STATE_CROUCH)
+							isOnPlatform = true;
+						person.setY(platform.getY() - person.getH());
+					}
+				}
+
+			}
+
+			if (!isOnGround && !isOnPlatform)
 				person.isGrounded = false;
+			else {
+				person.isGrounded = true;
+			}
 
 		}
 		checkForAndExecutePlayerHitDectection((Graphics2D) g);
@@ -393,15 +431,61 @@ public class Game extends JComponent implements KeyListener {
 	}
 
 	public void drawPlayerPercentage(Graphics g) {
+		// this is not just for percentage.it is the player ui
+		Graphics2D g2 = (Graphics2D) g;
 
 		int getSpaceBetweenNumbers = (int) (screenHeight / characters.size());
 		for (int i = 0; i < characters.size(); i++) {
-			Character person = characters.get(i);
-			g.setColor(Color.red);
+			int placementX = getSpaceBetweenNumbers / 2 + (getSpaceBetweenNumbers * i + 1);
 
-			g.drawString(String.valueOf((int)person.getpercentage()),
-					getSpaceBetweenNumbers / 2 + (getSpaceBetweenNumbers * i + 1), 600);
+			RoundRectangle2D rounded = new RoundRectangle2D.Double(placementX - 50, 550, 120, 60, 30, 30);
+			RoundRectangle2D rounded2 = new RoundRectangle2D.Double(placementX - 60, 540, 140, 80, 30, 30);
+			g.setColor(Color.white);
+			g2.fill(rounded2);
+			g.setColor(new Color(149, 214, 223));
+			g2.fill(rounded);
+
+			Character person = characters.get(i);
+			g.setColor(Color.black);
+			g.setFont(new Font("Futura", Font.PLAIN, 15));
+			g.drawString(String.valueOf((int) person.getpercentage()) + " %", placementX + 25, 575);
+
+			g.drawString(person.name, placementX - 40, 600);
+
+			for (int o = 0; o < person.getLives(); o++) {
+				g.drawImage(person.livesIconImage, placementX + (o * 22) - 45, 560, 20, 20, null);
+			}
 		}
+	}
+
+	public void shouldPlayerWin() {
+		int howManyAtZero = 0;
+		for (Character person : characters) {
+			if (person.getLives() <= 0)
+				howManyAtZero++;
+		}
+		if (characters.size() > 1)
+			if (howManyAtZero == characters.size() - 1) {
+				screenState = SCREEN_STATE_WIN_SCREEN;
+				getWinningPlayer();
+			}
+		if (characters.size() == 1) {
+			if (howManyAtZero == 1) {
+				screenState = SCREEN_STATE_WIN_SCREEN;
+				getWinningPlayer();
+			}
+		}
+	}
+
+	public void getWinningPlayer() {
+		if (characters.size() > 0)
+			for (Character person : characters) {
+				if (person.getLives() > 0) {
+					winningPlayer = person;
+				}
+			}
+		if (characters.size() == 1)
+			winningPlayer = characters.get(0);
 	}
 
 	public void doProjectileThings(Graphics g) {
@@ -436,6 +520,10 @@ public class Game extends JComponent implements KeyListener {
 		// g2.fill(GROUND_HITBOX.getRect());
 		g.drawImage(ground, (int) GROUND_HITBOX.getX(), (int) GROUND_HITBOX.getY() - 43, (int) GROUND_HITBOX.getWidth(),
 				(int) GROUND_HITBOX.getHeight() + 43, null);
+		for (Hitbox platform : PLATFORMS) {
+			g.drawImage(this.platform, (int) platform.getX(), (int) platform.getY() - 3, (int) platform.getWidth(),
+					(int) platform.getHeight(), null);
+		}
 	}
 
 	public void drawPlayerHitboxes(Graphics g) {
@@ -460,7 +548,7 @@ public class Game extends JComponent implements KeyListener {
 	}
 
 	public void drawHitBoxes(Graphics g, ArrayList<Hitbox> hitboxList) {
-		if (shouldShowHitboxes)
+		if (shouldShowHitboxes) {
 			for (Hitbox myhitbox : hitboxList) {
 				switch ((int) myhitbox.getType()) {
 				case TYPE_GROUND:
@@ -479,6 +567,11 @@ public class Game extends JComponent implements KeyListener {
 				g.fillRect((int) myhitbox.getX(), (int) myhitbox.getY(), (int) myhitbox.getWidth(),
 						(int) myhitbox.getHeight());
 			}
+			for (Hitbox box : PLATFORMS) {
+				Graphics2D g2 = (Graphics2D) g;
+				g2.fill(box.getRect());
+			}
+		}
 	}
 
 	// self explanatory naming FTW
@@ -680,67 +773,85 @@ public class Game extends JComponent implements KeyListener {
 				for (Component comp : currentController.getComponents()) {
 					switch (characterSlideNum2) {
 					case (1):
-						if (comp.getPollData() > .5) {
+						if (comp.getPollData() > comp.getDeadZone()) {
 							person.changeController(currentController);
 							isEditing = false;
 						}
 						break;
 					case (2):
-						if (comp.getPollData() > .5) {
+						if (comp.getPollData() > comp.getDeadZone()) {
 							person.setAxisNameX(comp.getName());
 							isEditing = false;
 						}
 						break;
 					case (3):
-						if (comp.getPollData() > .5) {
+						if (comp.getPollData() > comp.getDeadZone()) {
 							person.setAxisNameY(comp.getName());
 							isEditing = false;
 						}
 						break;
 					case (4):
-						if (comp.getPollData() > 0) {
+						if (comp.getPollData() > comp.getDeadZone()) {
 							person.setNewDeadZone(comp.getDeadZone());
 							isEditing = false;
 						}
 						break;
 					case (5):
-						if (comp.getPollData() > 0) {
+						if (comp.getPollData() > comp.getDeadZone()) {
 							person.setAxisMidpoint(comp.getPollData());
+							isEditing = false;
 						}
 						break;
 					case (6):
-						if (comp.getPollData() > 0 && !comp.getName().equals(person.getAxisNameX())
-								&& !comp.getName().equals(person.getAxisNameY()))
+						if (comp.getPollData() > comp.getDeadZone() && !comp.getName().equals(person.getAxisNameX())
+								&& !comp.getName().equals(person.getAxisNameY())) {
 							person.setJumpButton(comp.getName());
+							isEditing = false;
+						}
 						break;
 					case (7):
-						if (comp.getPollData() > 0 && !comp.getName().equals(person.getAxisNameX())
-								&& !comp.getName().equals(person.getAxisNameY()))
+						if (comp.getPollData() > comp.getDeadZone() && !comp.getName().equals(person.getAxisNameX())
+								&& !comp.getName().equals(person.getAxisNameY())) {
 							person.setAttackButton(comp.getName());
+							isEditing = false;
+						}
 						break;
 					case (8):
-						if (comp.getPollData() > 0)
+						if (comp.getPollData() > comp.getDeadZone()) {
 							person.setMoveAxisNameRX(comp.getName());
+							isEditing = false;
+						}
 						break;
 					case (9):
-						if (comp.getPollData() > 0)
+						if (comp.getPollData() > comp.getDeadZone()) {
 							person.setMoveAxisNameRY(comp.getName());
+							isEditing = false;
+						}
 						break;
 					case (10):
-						if (comp.getPollData() > 0)
+						if (comp.getPollData() > comp.getDeadZone()) {
 							person.setMoveAxisNameZ(comp.getName());
+							isEditing = false;
+						}
 						break;
 					case (11):
-						if (comp.getPollData() > 0)
+						if (comp.getPollData() > comp.getDeadZone()) {
 							person.setMoveAxisNameRZ(comp.getName());
+							isEditing = false;
+						}
 						break;
 					case (12):
-						if (comp.getPollData() > 0)
+						if (comp.getPollData() > comp.getDeadZone()) {
 							person.setButtonGrab(comp.getName());
+							isEditing = false;
+						}
 						break;
 					case (13):
-						if (comp.getPollData() > 0)
+						if (comp.getPollData() > comp.getDeadZone()) {
 							person.setButtonSpecial(comp.getName());
+
+							isEditing = false;
+						}
 						break;
 					}
 
@@ -851,6 +962,8 @@ public class Game extends JComponent implements KeyListener {
 							characters.get(characterSlideNum).changecontrols(-1, -1, -1, -1, -1, -1, -1, -1, -1,
 									e.getKeyCode());
 						isEditing = false;
+					} else {
+
 					}
 				}
 			}
@@ -866,11 +979,14 @@ public class Game extends JComponent implements KeyListener {
 			if (e.getKeyCode() == KeyEvent.VK_LEFT || e.getKeyCode() == KeyEvent.VK_RIGHT)
 				selectedIcon.isChoosingKeyBoard = !selectedIcon.isChoosingKeyBoard;
 			if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+				if(characters.size() < 4)
 				selectedIcon.addCharacter();
 				screenState = SCREEN_STATE_CHARACTER_SELECT;
 				keysPressed.clear();
 				selectedIcon = null;
 			}
+			if (e.getKeyCode() == KeyEvent.VK_ESCAPE)
+				screenState = SCREEN_STATE_CHARACTER_SELECT;
 			break;
 		}
 	}

@@ -156,6 +156,8 @@ public class KidGoku extends Character {
 
 	@Override
 	public void forwardSmash() {
+		downB.stop();
+		downB.play();
 		imageXTransform = 1.2;
 		hitboxes.add(new AttackHitbox(this, w, 0, 30, h, 10 * smashAttackChargePercent, -5, 10, 50, 50, 20, .1));
 		state = STATE_SMASH_ATTACK_FORWARD;

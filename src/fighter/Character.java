@@ -1,6 +1,7 @@
 package fighter;
 
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
@@ -151,12 +152,13 @@ public class Character {
 	// extra images
 	BufferedImage chargeBeamBlueImage;
 	BufferedImage kiBlastBlueImage;
+	BufferedImage livesIconImage;
 
 	// sounds
 	SoundArray hurtsounds;
 
-	private final double startx;
-	private final double starty;
+	private double startx;
+	private double starty;
 	private boolean isController = false;
 
 	private String controllerName;
@@ -227,6 +229,7 @@ public class Character {
 	protected double imageYTransform = 1;
 	private int canAttackResetCounter = 5;
 	public String playerName = "Player ";
+	private int lives = 3;
 
 	public Character(int posx, int posy, int upKey, int downKey, int leftKey, int rightKey, int modifierKey,
 			int jumpKey, int attackKey, int specialKey, int shieldKey, int grabKey, Game gameinstance) {
@@ -246,6 +249,8 @@ public class Character {
 		keySpecial = specialKey;
 		hurtbox = new Hitbox(this, x, y, w, h, Game.TYPE_HURTBOX);
 		placeShield();
+		playerName += myGame.characters.size() + 1;
+		movePlayerBasedOnName();
 	}
 
 	public Character(int posx, int posy, String nameOfController, String axisName, String axisName2, String axisName3,
@@ -313,6 +318,8 @@ public class Character {
 			portNum = -1;
 		}
 		placeShield();
+		playerName += myGame.characters.size() + 1;
+		movePlayerBasedOnName();
 	}
 
 	public void draw(Graphics g) {
@@ -350,8 +357,37 @@ public class Character {
 		attemptToShield();
 		drawShield(g);
 		placeShield();
+		drawName(g);
 	}
 
+	public void movePlayerBasedOnName(){
+		switch(playerName){
+		case("Player 1"):
+			placePlayer(320,310); 
+		direction = DIRECTION_RIGHT;
+			break;
+		case("Player 2"):
+			placePlayer(800 - w - 20,310); 
+		direction = DIRECTION_LEFT;
+			break;
+		case("Player 3"):
+			placePlayer(400,210); 
+		direction = DIRECTION_RIGHT;
+			break;
+		case("Player 4"):
+			placePlayer(720 - w - 20,210); 
+		direction = DIRECTION_LEFT;
+			break;
+		}
+
+		
+	}
+	public void placePlayer(int posx,int posy){
+		startx = posx;
+		starty = posy;
+		x = startx;
+		y = starty;
+	}
 	public BufferedImage initializeImage(String url) {
 		try {
 			BufferedImage buff = getScaledInstance(new Image(url).img, w * 2, h * 2,
@@ -377,11 +413,13 @@ public class Character {
 		}
 
 	}
-	public void initializeSounds(){
+
+	public void initializeSounds() {
 		hurtsounds = new SoundArray(new Sound("sound/" + name + "/hurtsound.wav"),
 				new Sound("sound/" + name + "/hurtsound2.wav"), new Sound("sound/" + name + "/hurtsound3.wav"));
 		hurtsounds.lowerSounds();
 	}
+
 	public void initializeImages() {
 		neutralImage = initializeImage("img/" + name + "/neutral.png");
 		run1Image = initializeImage("img/" + name + "/run1.png");
@@ -445,7 +483,7 @@ public class Character {
 		// extra images
 		chargeBeamBlueImage = initializeImage("img/" + name + "/chargebeamblue.png");
 		kiBlastBlueImage = initializeImage("img/misc/kiblastblue.png");
-
+		livesIconImage = initializeImage("img/" + name + "/livesicon.png", 20, 20);
 	}
 
 	// not my code. only have some idea of how this works
@@ -781,9 +819,9 @@ public class Character {
 	}
 
 	public void updateStates() {
-		if(state == STATE_NEUTRALSPECIAL){
-			if(neutralSpecialCharge >= 1 && hitboxes.size() > 0){
-				if(hitboxes.get(0).getEndLag() < 2){
+		if (state == STATE_NEUTRALSPECIAL) {
+			if (neutralSpecialCharge >= 1 && hitboxes.size() > 0) {
+				if (hitboxes.get(0).getEndLag() < 2) {
 					state = STATE_NEUTRAL;
 					hitboxes.clear();
 					neutralSpecialCharge = 0;
@@ -895,10 +933,9 @@ public class Character {
 
 	public void placeShield() {
 		shield = new Ellipse2D.Double();
-		if (!isJumpButtonDownController() && state != STATE_JUMPSQUAT && state != STATE_JUMP
-				&& state != STATE_LANDFALLSPECIAL) {
+		if (!isJumpButtonDownController() && state != STATE_JUMPSQUAT && state != STATE_JUMP) {
 			if (isShielding && state != STATE_DODGE && state != STATE_LAG && !isJumpButtonDownController()) {
-
+				System.out.println("derp2");
 				// shield.setFrame((x - w + w / 10) + ((1 - (shieldWidth)) *
 				// (getW() * (1.5))),
 				// (y - 5) + ((1 - shieldWidth) * w), (h + (5 * w / 10)) *
@@ -1012,6 +1049,14 @@ public class Character {
 		}
 	}
 
+	public void drawName(Graphics g) {
+		g.setColor(Color.white);
+		Font oldFont = myGame.getFont();
+		g.setFont(new Font("Futura", Font.PLAIN, 15));
+		g.drawString(playerName, (int) x - 10, (int) y - 5);
+		g.setFont(oldFont);
+	}
+
 	public void putIntoLag(int lagAmount) {
 		lagCounter = lagAmount;
 		state = STATE_LAG;
@@ -1073,13 +1118,16 @@ public class Character {
 	}
 
 	private void blastZone() {
-		if (x < (0 - 50) || x + w > (1200 + 50) || y < (0 - 50) || y + h > (675 + 50)) {
-			x = startx;
-			y = starty;
-			velX = 0;
-			velY = 0;
-			percent = 0;
-			state = STATE_NEUTRAL;
+		if (x < (0 - 100) || x + w > (1200 + 100) || y < (0 - 100) || y + h > (675 + 100)) {
+			if (lives > 1) {
+				x = startx;
+				y = starty;
+				velX = 0;
+				velY = 0;
+				percent = 0;
+				state = STATE_NEUTRAL;
+			}
+			lives--;
 		}
 	}
 
@@ -1854,7 +1902,7 @@ public class Character {
 		for (Character person : myGame.characters) {
 			if (grabBox != null)
 				if (person.getHurtbox().getRect().intersects(grabBox) && person.getState() != STATE_GRAB
-						&& person.getState() != STATE_DODGE) {
+						&& person.getState() != STATE_DODGE && person != this) {
 					velX = 0;
 					velY = 0;
 					grabbedPlayer = person;
@@ -2241,7 +2289,7 @@ public class Character {
 					if (state == STATE_UPSPECIAL)
 						enterHelpless();
 					else {
-							state = STATE_NEUTRAL;
+						state = STATE_NEUTRAL;
 					}
 				}
 				break;
@@ -2277,11 +2325,11 @@ public class Character {
 	}
 
 	public double getVelX() {
-		return velY;
+		return velX;
 	}
 
 	public double getVelY() {
-		return velX;
+		return velY;
 	}
 
 	public double getWidth() {
@@ -2703,6 +2751,22 @@ public class Character {
 
 	public void setMyGame(Game myGame) {
 		this.myGame = myGame;
+	}
+
+	public String getPlayerName() {
+		return playerName;
+	}
+
+	public void setPlayerName(String playerName) {
+		this.playerName = playerName;
+	}
+
+	public int getLives() {
+		return lives;
+	}
+
+	public void setLives(int lives) {
+		this.lives = lives;
 	}
 
 }
