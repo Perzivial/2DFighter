@@ -13,6 +13,7 @@ public class CharacterIcon {
 	int y;
 	BufferedImage img;
 	boolean isChoosingKeyBoard = true;
+	boolean isAiController = false;
 	ArrayList<Character> characters;
 	Game mygame;
 	public CharacterIcon(int posx, int posy, ArrayList<Character> chars, Game gameinstance) {

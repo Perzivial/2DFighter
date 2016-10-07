@@ -156,6 +156,7 @@ public class Character {
 
 	// sounds
 	SoundArray hurtsounds;
+	Sound stockLoss;
 
 	private double startx;
 	private double starty;
@@ -231,6 +232,7 @@ public class Character {
 	public String playerName = "Player ";
 	private int lives = 3;
 	ArrayList<Particle> particles = new ArrayList<Particle>();
+	private boolean inputEnabled = true;
 
 	public Character(int posx, int posy, int upKey, int downKey, int leftKey, int rightKey, int modifierKey,
 			int jumpKey, int attackKey, int specialKey, int shieldKey, int grabKey, Game gameinstance) {
@@ -422,6 +424,7 @@ public class Character {
 		hurtsounds = new SoundArray(new Sound("sound/" + name + "/hurtsound.wav"),
 				new Sound("sound/" + name + "/hurtsound2.wav"), new Sound("sound/" + name + "/hurtsound3.wav"));
 		hurtsounds.lowerSounds();
+		stockLoss = new Sound("sound/" + name + "/hurtsound.wav");
 	}
 
 	public void initializeImages() {
@@ -948,6 +951,7 @@ public class Character {
 	}
 
 	public void placeShield() {
+		
 		shield = new Ellipse2D.Double();
 		if (!isJumpButtonDownController() && state != STATE_JUMPSQUAT && state != STATE_JUMP) {
 			if (isShielding && state != STATE_DODGE && state != STATE_LAG && !isJumpButtonDownController()) {
@@ -992,6 +996,7 @@ public class Character {
 	}
 
 	public void attemptToShield() {
+		if(inputEnabled){
 		if (state != STATE_GRABBED && state != STATE_GRAB && state != STATE_HELPLESS) {
 			if (isController) {
 				if (myController != null && getPortNum() == myController.getPortNumber())
@@ -1043,6 +1048,7 @@ public class Character {
 					}
 				}
 			}
+		}
 		}
 	}
 
@@ -1144,68 +1150,71 @@ public class Character {
 				state = STATE_NEUTRAL;
 			}
 			lives--;
+			if (lives > -1)
+				stockLoss.play();
 		}
 	}
 
 	public void handleInput() {
-		if (!isController) {
-			if (state != STATE_HITSTUN) {
-				if (state == STATE_NEUTRAL || !isGrounded || state == STATE_CROUCH) {
-					// Jumping code
-					if (isPressing(keyJump)) {
-						jump();
+		if (inputEnabled) {
+			if (!isController) {
+				if (state != STATE_HITSTUN) {
+					if (state == STATE_NEUTRAL || !isGrounded || state == STATE_CROUCH) {
+						// Jumping code
+						if (isPressing(keyJump)) {
+							jump();
+						}
+						// Horizontal Movement code
+						if (isPressing(keyLeft)) {
+							runLeft();
+						}
+						if (isPressing(keyRight)) {
+							runRight();
+						}
 					}
-					// Horizontal Movement code
-					if (isPressing(keyLeft)) {
-						runLeft();
+					if (isGrounded) {
+						if (state == STATE_NEUTRAL && isPressing(keyDown)) {
+							state = STATE_CROUCH;
+						}
+						if (state == STATE_CROUCH && !isPressing(keyDown)) {
+							state = STATE_NEUTRAL;
+						}
 					}
-					if (isPressing(keyRight)) {
-						runRight();
+				}
+				if (!isGrounded && !isPressing(keyAttack) && state == STATE_NEUTRAL) {
+					if (Math.abs(velY) < 3) {
+						if (isPressing(keyDown))
+							velY = fallSpeed * 10;
+					}
+				}
+			} else {
+				if (state != STATE_HITSTUN) {
+					if (state == STATE_NEUTRAL || !isGrounded) {
+						if (isAxisRight)
+							runRight();
+						if (isAxisLeft)
+							runLeft();
 					}
 				}
 				if (isGrounded) {
-					if (state == STATE_NEUTRAL && isPressing(keyDown)) {
+					if (state == STATE_NEUTRAL && isAxisDown) {
 						state = STATE_CROUCH;
 					}
-					if (state == STATE_CROUCH && !isPressing(keyDown)) {
+					if (state == STATE_CROUCH && !isAxisDown) {
 						state = STATE_NEUTRAL;
+
+					}
+				}
+				if (!isGrounded && !isAttackButtonDownController() && state == STATE_NEUTRAL) {
+					if (Math.abs(velY) < 3) {
+						if (isAxisDown)
+							velY = fallSpeed * 10;
 					}
 				}
 			}
-			if (!isGrounded && !isPressing(keyAttack) && state == STATE_NEUTRAL) {
-				if (Math.abs(velY) < 3) {
-					if (isPressing(keyDown))
-						velY = fallSpeed * 10;
-				}
-			}
-		} else {
-			if (state != STATE_HITSTUN) {
-				if (state == STATE_NEUTRAL || !isGrounded) {
-					if (isAxisRight)
-						runRight();
-					if (isAxisLeft)
-						runLeft();
-				}
-			}
-			if (isGrounded) {
-				if (state == STATE_NEUTRAL && isAxisDown) {
-					state = STATE_CROUCH;
-				}
-				if (state == STATE_CROUCH && !isAxisDown) {
-					state = STATE_NEUTRAL;
-
-				}
-			}
-			if (!isGrounded && !isAttackButtonDownController() && state == STATE_NEUTRAL) {
-				if (Math.abs(velY) < 3) {
-					if (isAxisDown)
-						velY = fallSpeed * 10;
-				}
-			}
+			if (!isController)
+				chooseAttack();
 		}
-		if (!isController)
-			chooseAttack();
-
 	}
 
 	public void runLeft() {
@@ -1235,6 +1244,7 @@ public class Character {
 					else
 						velX = runSpeed;
 					direction = DIRECTION_RIGHT;
+					if(inputEnabled)
 					rotateRunArray();
 				}
 			} else if (velX < maxAirSpeed && state != STATE_AIRDODGE && canAirDodge && state != STATE_GRABBED) {
@@ -1632,6 +1642,10 @@ public class Character {
 		}
 	}
 
+	public void disableInput() {
+		inputEnabled = false;
+	}
+
 	public void chooseAttack(Controller myController) {
 		if (canAttack()) {
 			boolean canAttack = true;
@@ -1850,10 +1864,12 @@ public class Character {
 	}
 
 	public void applyKnockback(double newVelX, double newVelY, int direction2) {
-		double dampenedpercent = percent / 100;
+
+		double dampenedpercent = percent / 50;
 		velX = (newVelX * (dampenedpercent + 1));
 		velY = newVelY * (dampenedpercent + 1);
 		System.out.println(direction2);
+
 	}
 
 	public void shouldBounceOffGround() {
@@ -1863,6 +1879,7 @@ public class Character {
 	}
 
 	public void tryGrab() {
+		if(inputEnabled){
 		if (isGrounded) {
 			if (!isController) {
 				if (isPressing(keyGrab)) {
@@ -1870,6 +1887,7 @@ public class Character {
 						grab();
 				}
 			}
+		}
 		}
 	}
 
@@ -2176,6 +2194,7 @@ public class Character {
 	}
 
 	public void chargeNeutralSpecial() {
+		if(inputEnabled){
 		if (state == STATE_NEUTRALSPECIAL && hitboxes.size() == 0) {
 			if (isController) {
 				if (isSpecialButtonDownController() && neutralSpecialCharge < 1) {
@@ -2201,10 +2220,12 @@ public class Character {
 		} else if (neutralSpecialCharge != 0) {
 			neutralSpecialCharge = 0;
 		}
+		}
 	}
 	// end of attack codes
 
 	public void doSpecialAttacks() {
+		if(inputEnabled){
 		if (state == STATE_NEUTRAL || state == STATE_CROUCH) {
 			if (isController) {
 				if (isSpecialButtonDownController()) {
@@ -2259,6 +2280,7 @@ public class Character {
 					state = STATE_NEUTRALSPECIAL;
 				}
 			}
+		}
 		}
 		// smashAttackChargePercent = 1.0;
 	}

@@ -25,6 +25,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
 
 import javax.swing.JComponent;
 import net.java.games.input.*;
@@ -33,7 +34,8 @@ import net.java.games.input.Controller.Type;
 public class Game extends JComponent implements KeyListener {
 	// screen related variables
 	public static final int DEFAULT_SCREEN_SIZE_X = 1200;
-	public static final int DEFAULT_SCREEN_SIZE_Y = 675;
+	//public static final int DEFAULT_SCREEN_SIZE_Y = 675;
+	public static final int DEFAULT_SCREEN_SIZE_Y = (int)(1200 / 1.6);
 	static Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 	static double screenWidth = screenSize.getWidth();
 	static double screenHeight = screenSize.getHeight();
@@ -50,14 +52,13 @@ public class Game extends JComponent implements KeyListener {
 	public static Color transparentblue = new Color(0, 0, 255, 75);
 	public static Color transparentpurple = new Color(100, 0, 100, 50);
 
-	boolean shouldShowHitboxes = true;
+	boolean shouldShowHitboxes = false;
 	ArrayList<Hitbox> hitboxes = new ArrayList<Hitbox>();
-	public static final Hitbox GROUND_HITBOX = new Hitbox(200, 500, 720, 175, TYPE_GROUND);
+	public static final Hitbox GROUND_HITBOX = new Hitbox(200, 600, 720, 175, TYPE_GROUND);
 	public static ArrayList<Hitbox> PLATFORMS = new ArrayList<Hitbox>();
 
 	ArrayList<Character> characters = new ArrayList<Character>();
-	Character GOE = new KidGoku(500, 400, KeyEvent.VK_UP, KeyEvent.VK_DOWN, KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT,
-			KeyEvent.VK_RIGHT, KeyEvent.VK_SPACE, KeyEvent.VK_Q, KeyEvent.VK_W, KeyEvent.VK_E, KeyEvent.VK_R, this);
+	ArrayList<AiController> aiList = new ArrayList<AiController>();
 	// this controls the screen state
 	private int screenState = 2;
 	private final static int SCREEN_STATE_INGAME = 0;
@@ -94,6 +95,7 @@ public class Game extends JComponent implements KeyListener {
 	ArrayList<CharacterIcon> charIcons = new ArrayList<CharacterIcon>();
 
 	// music
+	Sound gameStart = new Sound("sound/music/gamestart.wav");
 	Sound menuMusic = new Sound("sound/music/menutheme.wav");
 	Sound headchalapiano = new Sound("sound/music/headchalapiano.wav");
 	Sound headchalaremix = new Sound("sound/music/headchalaremix.wav");
@@ -103,22 +105,36 @@ public class Game extends JComponent implements KeyListener {
 	Character winningPlayer;
 	int winScreenCounter = 120;
 	int dayTime = 0;
+	int shakeScreenCounter = 0;
+	
+	Character GOE = new KidGoku(500, 400, KeyEvent.VK_UP, KeyEvent.VK_DOWN, KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT,
+			KeyEvent.VK_RIGHT, KeyEvent.VK_SPACE, KeyEvent.VK_Q, KeyEvent.VK_W, KeyEvent.VK_E, KeyEvent.VK_R, this);
+
+	Character GOEAI = new KidGoku(500, 400, KeyEvent.VK_UP, KeyEvent.VK_DOWN, KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT,
+			KeyEvent.VK_RIGHT, KeyEvent.VK_SPACE, KeyEvent.VK_Q, KeyEvent.VK_W, KeyEvent.VK_E, KeyEvent.VK_R, this);
+	AiController GOEAIController = new AiController(GOEAI, this);
+
 	// characters are all kept in an arraylist, some of them will in fact be an
 	// extension of the character class
 	public Game() throws IOException {
 		hitboxes.add(GROUND_HITBOX);
 		doControllerThings();
 
+		//GOEAI.disableInput();
+
 		//characters.add(GOE);
+		//characters.add(GOEAI);
+		//aiList.add(GOEAIController);
+
 		for (Controller control : ca) {
 			System.out.println(control.getName());
 		}
 		addCharIcons();
 		initializeConfig();
 
-		PLATFORMS.add(new Hitbox(300, 430, 100, 20, TYPE_GROUND));
-		PLATFORMS.add(new Hitbox(720, 430, 100, 20, TYPE_GROUND));
-		PLATFORMS.add(new Hitbox(380, 350, 360, 20, TYPE_GROUND));
+		PLATFORMS.add(new Hitbox(300, 530, 100, 20, TYPE_GROUND));
+		PLATFORMS.add(new Hitbox(720, 530, 100, 20, TYPE_GROUND));
+		PLATFORMS.add(new Hitbox(380, 450, 360, 20, TYPE_GROUND));
 	}
 
 	public void initializeConfig() throws IOException {
@@ -159,11 +175,11 @@ public class Game extends JComponent implements KeyListener {
 		} else {
 			music.stopAllSounds();
 		}
-		if(screenState == SCREEN_STATE_CHARACTER_SELECT || screenState == SCREEN_STATE_CHOOSE_CONTROL_SCHEME){
-			if(!menuMusic.isrunning() && musicEnabled){
+		if (screenState == SCREEN_STATE_CHARACTER_SELECT || screenState == SCREEN_STATE_CHOOSE_CONTROL_SCHEME) {
+			if (!menuMusic.isrunning() && musicEnabled) {
 				menuMusic.play();
 			}
-		}else{
+		} else {
 			menuMusic.stop();
 		}
 		getControllerInput();
@@ -171,7 +187,7 @@ public class Game extends JComponent implements KeyListener {
 		AffineTransform oldTransform = g2.getTransform();
 		graphicsSettings(g2);
 		if (!isnormalscreen) {
-			g2.translate(0, (screenWidth / (screenHeight / DEFAULT_SCREEN_SIZE_X) - DEFAULT_SCREEN_SIZE_Y) / 16);
+			//g2.translate(0, (screenWidth / (screenHeight / DEFAULT_SCREEN_SIZE_X) - DEFAULT_SCREEN_SIZE_Y) / 16);
 			g2.scale(screenWidth / DEFAULT_SCREEN_SIZE_X, (screenHeight / DEFAULT_SCREEN_SIZE_X) / 0.625);
 
 		}
@@ -180,11 +196,13 @@ public class Game extends JComponent implements KeyListener {
 		switch (screenState) {
 		case (SCREEN_STATE_INGAME):
 			// basic background stuff to build scene
+			applyShakeScreen(g2);
 			shouldPlayerWin();
 			drawBackground(g);
 			drawGround(g);
 			doPlayerPhysics(g);
 			doPlayerDrawing(g);
+			doAIThings();
 			doProjectileThings(g);
 			// draws hitboxes, should be after all other drawing code
 			drawHitBoxes(g, hitboxes);
@@ -239,7 +257,7 @@ public class Game extends JComponent implements KeyListener {
 		// TODO the character select screen
 		case (SCREEN_STATE_CHARACTER_SELECT):
 			g.setColor(new Color(149, 214, 223));
-			g.fillRect(0, 0, 1200, 675);
+			g.fillRect(0, 0, DEFAULT_SCREEN_SIZE_X, DEFAULT_SCREEN_SIZE_Y);
 			if (keysPressed.contains(KeyEvent.VK_UP))
 				charSelectY -= 10;
 			if (keysPressed.contains(KeyEvent.VK_DOWN))
@@ -281,23 +299,24 @@ public class Game extends JComponent implements KeyListener {
 		case (SCREEN_STATE_WIN_SCREEN):
 			g.setColor(Color.white);
 			g.drawString("The winner is: " + winningPlayer.playerName, 20, 40);
-			winScreenCounter --;
-			if(winScreenCounter <= 0){
+			winScreenCounter--;
+			if (winScreenCounter <= 0) {
 				screenState = SCREEN_STATE_CHARACTER_SELECT;
 				characters.clear();
+				aiList.clear();
 				winScreenCounter = 120;
-			}				
+			}
 			break;
 		}
 		drawBlackBars(g);
 		g2.setTransform(oldTransform);
 
 	}
-	
-	public void doDayCycle(){
-		
+
+	public void doDayCycle() {
+
 	}
-	
+
 	public void drawBlackBars(Graphics g) {
 		g.setColor(Color.BLACK);
 		g.fillRect(-100, -100, DEFAULT_SCREEN_SIZE_X + 100, 100);
@@ -386,6 +405,12 @@ public class Game extends JComponent implements KeyListener {
 		checkForAndExecutePlayerHitDectection((Graphics2D) g);
 	}
 
+	public void doAIThings() {
+		for (AiController ai : aiList) {
+			ai.update();
+		}
+	}
+
 	public BufferedImage initializeImage(String url, int scaleX, int scaleY) {
 		try {
 			BufferedImage buff = getScaledInstance(new Image(url).img, scaleX, scaleY,
@@ -451,8 +476,8 @@ public class Game extends JComponent implements KeyListener {
 		for (int i = 0; i < characters.size(); i++) {
 			int placementX = getSpaceBetweenNumbers / 2 + (getSpaceBetweenNumbers * i + 1);
 
-			RoundRectangle2D rounded = new RoundRectangle2D.Double(placementX - 50, 550, 120, 60, 30, 30);
-			RoundRectangle2D rounded2 = new RoundRectangle2D.Double(placementX - 60, 540, 140, 80, 30, 30);
+			RoundRectangle2D rounded = new RoundRectangle2D.Double(placementX - 50, 650, 120, 60, 30, 30);
+			RoundRectangle2D rounded2 = new RoundRectangle2D.Double(placementX - 60, 640, 140, 80, 30, 30);
 			g.setColor(Color.white);
 			g2.fill(rounded2);
 			g.setColor(new Color(149, 214, 223));
@@ -461,12 +486,12 @@ public class Game extends JComponent implements KeyListener {
 			Character person = characters.get(i);
 			g.setColor(Color.black);
 			g.setFont(new Font("Futura", Font.PLAIN, 15));
-			g.drawString(String.valueOf((int) person.getpercentage()) + " %", placementX + 25, 575);
+			g.drawString(String.valueOf((int) person.getpercentage()) + " %", placementX + 25, 675);
 
-			g.drawString(person.name, placementX - 40, 600);
+			g.drawString(person.name, placementX - 40, 700);
 
 			for (int o = 0; o < person.getLives(); o++) {
-				g.drawImage(person.livesIconImage, placementX + (o * 22) - 45, 560, 20, 20, null);
+				g.drawImage(person.livesIconImage, placementX + (o * 22) - 45, 660, 20, 20, null);
 			}
 		}
 	}
@@ -518,27 +543,27 @@ public class Game extends JComponent implements KeyListener {
 						}
 					}
 			}
-			
+
 		}
 		for (Projectile proj : projectiles) {
-			if(proj.x < -50)
+			if (proj.x < -50)
 				projectiles.remove(proj);
-			if(proj.x > DEFAULT_SCREEN_SIZE_X +50)
+			if (proj.x > DEFAULT_SCREEN_SIZE_X + 50)
 				projectiles.remove(proj);
 		}
 	}
 
 	public void drawBackground(Graphics g) {
 		g.setColor(Color.white);
-		g.fillRect(0, 0, 1200, 675);
-		g.drawImage(sky, 0, 0, 1200, 675, null);
+		g.fillRect(0, 0, 1200, (int)(1200/1.6));
+		g.drawImage(sky, 0, 0, DEFAULT_SCREEN_SIZE_X,(int) (DEFAULT_SCREEN_SIZE_X / 1.6), null);
 	}
 
 	public void drawGround(Graphics g) {
 		// g.setColor(Color.black);
 		// Graphics2D g2 = (Graphics2D) g;
 		// g2.fill(GROUND_HITBOX.getRect());
-		g.drawImage(ground, (int) GROUND_HITBOX.getX(), (int) GROUND_HITBOX.getY() - 43, (int) GROUND_HITBOX.getWidth(),
+		g.drawImage(ground, (int) GROUND_HITBOX.getX(), ((int) GROUND_HITBOX.getY() - 43), (int) GROUND_HITBOX.getWidth(),
 				(int) GROUND_HITBOX.getHeight() + 43, null);
 		for (Hitbox platform : PLATFORMS) {
 			g.drawImage(this.platform, (int) platform.getX(), (int) platform.getY() - 3, (int) platform.getWidth(),
@@ -641,7 +666,7 @@ public class Game extends JComponent implements KeyListener {
 									person1.applyDamage(hitbox.getDamage());
 									hitbox.playerHitList.add(person1);
 									person1.hurtsounds.getRandomSound().play();
-
+									shakeScreen(1 + (int)(person1.percent/10) + (int)(hitbox.getDamage()/10));
 								}
 							}
 						}
@@ -692,7 +717,19 @@ public class Game extends JComponent implements KeyListener {
 			System.out.println("----");
 		}
 	}
+	public void shakeScreen(int time){
+		shakeScreenCounter = time;
+	}
+	public void applyShakeScreen(Graphics2D g2){
+	if(shakeScreenCounter > 0){
+		shakeScreenCounter --;
+		Random rand = new Random();
+		g2.translate(-1, -1);
+		g2.scale(1.005, 1.005);
 
+		g2.translate(rand.nextInt(4) - 2, rand.nextInt(4) - 2);
+	}
+	}
 	public void getControllerInput() {
 		double axisXinput = 0;
 		for (Controller currentController : controllers) {
@@ -795,8 +832,8 @@ public class Game extends JComponent implements KeyListener {
 					case (1):
 						if (comp.getPollData() > .5) {
 							boolean canChange = true;
-							for(Character person2: characters){
-								if(person.getMyController() == currentController)
+							for (Character person2 : characters) {
+								if (person.getMyController() == currentController)
 									canChange = false;
 							}
 							person.changeController(currentController);
@@ -998,20 +1035,32 @@ public class Game extends JComponent implements KeyListener {
 			if (e.getKeyCode() == KeyEvent.VK_ENTER && characters.size() > 0) {
 				screenState = SCREEN_STATE_INGAME;
 				keysPressed.clear();
+				menuMusic.stop();
+				gameStart.play();
 			}
 			break;
 		case (SCREEN_STATE_CHOOSE_CONTROL_SCHEME):
 			if (e.getKeyCode() == KeyEvent.VK_LEFT || e.getKeyCode() == KeyEvent.VK_RIGHT)
 				selectedIcon.isChoosingKeyBoard = !selectedIcon.isChoosingKeyBoard;
 			if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-				if(characters.size() < 4)
-				selectedIcon.addCharacter();
+				if (characters.size() < 4)
+					selectedIcon.addCharacter();
 				screenState = SCREEN_STATE_CHARACTER_SELECT;
 				keysPressed.clear();
 				selectedIcon = null;
 			}
 			if (e.getKeyCode() == KeyEvent.VK_ESCAPE)
 				screenState = SCREEN_STATE_CHARACTER_SELECT;
+			if (e.getKeyCode() == KeyEvent.VK_DOWN) {
+				if (characters.size() < 4) {
+					selectedIcon.isAiController = true;
+					selectedIcon.addCharacter();
+					selectedIcon.isAiController = false;
+				}
+				screenState = SCREEN_STATE_CHARACTER_SELECT;
+				keysPressed.clear();
+				selectedIcon = null;
+			}
 			break;
 		}
 	}

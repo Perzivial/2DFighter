@@ -45,14 +45,14 @@ public class Gameviewer extends JFrame {
 		 */
 		frame = new JFrame();
 		frame.add(thegame);
-		frame.setSize(1200, 675);
+		frame.setSize(1200, (int)(1200 /1.6));
 		frame.setLocationRelativeTo(null);
 		frame.setTitle("Smash");
 		frame.setResizable(false);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		thegame.addKeyListener(thegame);
 		thegame.setFocusable(true);
-		thegame.setPreferredSize(new Dimension(1200 * 100, 675 * 100));
+		//thegame.setPreferredSize(new Dimension(1200 * 100, 675 * 100));
 		if (isMacOSX()) {
 			enableFullScreenMode(frame);
 		}

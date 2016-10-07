@@ -14,6 +14,7 @@ public class KidGokuIcon extends CharacterIcon {
 	}
 
 	public void addCharacter() {
+		if(!isAiController){
 		if (!isChoosingKeyBoard) {
 			Character KidGokuController = new KidGoku(300, 450, "Xbox 360 Wired Controller", "x", "y", "rx", "ry", "z",
 					"rz", .5, .2, "1", "2", "3", "5", mygame);
@@ -24,5 +25,14 @@ public class KidGokuIcon extends CharacterIcon {
 					KeyEvent.VK_E, KeyEvent.VK_R, mygame);
 			characters.add(KidGokuKeyBoard);
 		}
+	}
+	else{
+		Character KidGokuAi = new KidGoku(500, 400, KeyEvent.VK_UP, KeyEvent.VK_DOWN, KeyEvent.VK_LEFT,
+				KeyEvent.VK_RIGHT, KeyEvent.VK_RIGHT, KeyEvent.VK_SPACE, KeyEvent.VK_Q, KeyEvent.VK_W,
+				KeyEvent.VK_E, KeyEvent.VK_R, mygame);
+		mygame.aiList.add(new AiController(KidGokuAi, mygame));
+		KidGokuAi.disableInput();
+		characters.add(KidGokuAi);
+	}
 	}
 }

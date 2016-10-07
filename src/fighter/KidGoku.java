@@ -54,9 +54,9 @@ public class KidGoku extends Character {
 		if (hitboxes.size() > 0)
 			if (state == STATE_NEUTRALSPECIAL && hitboxes.get(0).isActive) {
 				if (direction == DIRECTION_RIGHT)
-					g.drawImage(chargeBeamBlueImage, (int) x + w + 8, (int) y, 1000, h, null);
+					g.drawImage(chargeBeamBlueImage, (int) x + w + 12, (int) y, 1000, h, null);
 				else
-					g.drawImage(chargeBeamBlueImage, (int) x - 1000 - 8, (int) y, 1000, h, null);
+					g.drawImage(chargeBeamBlueImage, (int) x - 1000 - 12, (int) y, 1000, h, null);
 			}
 		
 		if (state == STATE_DOWNSPECIAL && hitboxes.get(0).isActive) {
@@ -273,6 +273,5 @@ public class KidGoku extends Character {
 	public void neutralSpecial() {
 		imageXTransform = 1.3;
 		hitboxes.add(new AttackHitbox(this, w - 2, (h / 3 ) + 10, 1000, 15, 10 + percent / 10, -5, 20, 60, 40, 60, 1));
-		Random rand = new Random();
 	}
 }
