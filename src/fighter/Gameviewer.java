@@ -72,7 +72,7 @@ public class Gameviewer extends JFrame {
 					if (!thegame.isnormalscreen)
 						frame.setSize((int) width, (int) height);
 					else
-						frame.setSize(1200, 675);
+						frame.setSize(1200, (int)(1200 /1.6));
 					System.out.println("Window has ben resized, scaling accordingly");
 				}
 			}

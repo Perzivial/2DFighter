@@ -82,7 +82,7 @@ public class KidGoku extends Character {
 	@Override
 	public void jab() {
 		imageXTransform = 1.32;
-		hitboxes.add(new AttackHitbox(this, w - 5, 25, 25, 25, .5, -1, 10, 5, 3, 3, .1));
+		hitboxes.add(new AttackHitbox(this, w - 5, 25, 25, 25, 2, -1, 10, 5, 3, 3, .1));
 		state = STATE_ATTACK;
 		velX += direction * 2;
 	}
@@ -92,7 +92,7 @@ public class KidGoku extends Character {
 		imageXTransform = 1.348;
 		imageYTransform = 1.0263157895;
 
-		hitboxes.add(new AttackHitbox(this, w, 25, 25, 25, .5, -1, 10, 5, 3, 3, .1));
+		hitboxes.add(new AttackHitbox(this, w, 25, 25, 25, 3, -1, 10, 5, 3, 3, .1));
 
 		state = STATE_ATTACKSIDE;
 		velX += direction * 5;
@@ -129,8 +129,8 @@ public class KidGoku extends Character {
 	public void fair() {
 		imageXTransform = 1.276;
 
-		hitboxes.add(new AttackHitbox(this, w - 10, 35, 25, 15, .5, -1, 10, 30, 3, 6, .1));
-		hitboxes.add(new AttackHitbox(this, w - 10, 45, 25, 15, .5, -1, 10, 30, 3, 6, .1));
+		hitboxes.add(new AttackHitbox(this, w - 10, 35, 25, 15, 3, -1, 10, 30, 3, 6, .1));
+		hitboxes.add(new AttackHitbox(this, w - 10, 45, 25, 15, 3, -1, 10, 30, 3, 6, .1));
 		state = STATE_ATTACK_FAIR;
 		velX += direction * 10;
 	}
@@ -139,7 +139,7 @@ public class KidGoku extends Character {
 	public void bair() {
 		imageXTransform = 1.196;
 
-		hitboxes.add(new AttackHitbox(this, -15, 20, 25, 15, -.5, -1, 10, 60, 3, 6, .1));
+		hitboxes.add(new AttackHitbox(this, -15, 20, 25, 15, -10, -1, 10, 60, 3, 6, .1));
 		state = STATE_ATTACK_BAIR;
 	}
 

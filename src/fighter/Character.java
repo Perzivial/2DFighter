@@ -1901,7 +1901,7 @@ public class Character {
 	}
 
 	public void grab() {
-		if (state == STATE_NEUTRAL) {
+		if (state == STATE_NEUTRAL || !inputEnabled) {
 			state = STATE_GRAB;
 			grabCounter = grabLength;
 		}

@@ -489,7 +489,9 @@ public class Game extends JComponent implements KeyListener {
 			g.drawString(String.valueOf((int) person.getpercentage()) + " %", placementX + 25, 675);
 
 			g.drawString(person.name, placementX - 40, 700);
-
+			
+			g.drawString("P" + (i + 1), placementX + 25, 700);
+			
 			for (int o = 0; o < person.getLives(); o++) {
 				g.drawImage(person.livesIconImage, placementX + (o * 22) - 45, 660, 20, 20, null);
 			}
@@ -638,13 +640,13 @@ public class Game extends JComponent implements KeyListener {
 								// with the hitbox
 								// then check if it is not colliding with the
 								// shield
-								for (int i = 1; i < 6; i++) {
-									for (int o = 1; o < 6; o++) {
+								for (int i = 1; i < 3; i++) {
+									for (int o = 1; o < 3; o++) {
 
 										Rectangle2D miniRect = new Rectangle2D.Double(
-												(hitbox.getX() + (hitbox.getWidth() * i) / 6) - hitbox.getWidth() / 6,
-												(hitbox.getY() + (hitbox.getHeight() * o) / 6) - hitbox.getHeight() / 6,
-												hitbox.getWidth() / 6, hitbox.getHeight() / 6);
+												(hitbox.getX() + (hitbox.getWidth() * i) / 3) - hitbox.getWidth() / 3,
+												(hitbox.getY() + (hitbox.getHeight() * o) / 3) - hitbox.getHeight() / 3,
+												hitbox.getWidth() / 3, hitbox.getHeight() / 3);
 
 										if (miniRect.intersects(hitbox.getRect())) {
 
