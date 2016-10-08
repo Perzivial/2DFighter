@@ -510,7 +510,6 @@ public class Character {
 			// until the target size is reached
 			w = img.getWidth();
 			h = img.getHeight();
-			System.out.println("1");
 		} else {
 			// Use one-step technique: scale directly from original
 			// size to target size with a single drawImage() call
@@ -536,7 +535,6 @@ public class Character {
 			g2.drawImage(ret, 0, 0, w, h, null);
 			g2.dispose();
 			ret = tmp;
-			System.out.println("2");
 		} while (w != targetWidth || h != targetHeight);
 		return ret;
 	}
@@ -1316,7 +1314,7 @@ public class Character {
 						jumpKeyDownHistory[0] = true;
 						keysPressed.remove(keyJump);
 					}
-				} else if (state != STATE_SMASH_ATTACK_CHARGE) {
+				} else if (state == STATE_NEUTRAL || state == STATE_CROUCH) {
 					if (isGrounded) {
 						enterJumpSquat();
 					} else if (hasDoubleJump) {
