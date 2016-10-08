@@ -1,6 +1,8 @@
 package fighter;
 
 import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 
 public class Projectile {
@@ -12,7 +14,7 @@ public class Projectile {
 	double velY;
 	BufferedImage img;
 	AttackHitbox myHitbox;
-
+	int rotateamount;
 	public Projectile(int posx, int posy, int mywidth, int myheight, double velx, double vely, BufferedImage image, Character chara) {
 		x = posx;
 		y = posy;
@@ -25,10 +27,15 @@ public class Projectile {
 	}
 
 	public void draw(Graphics g) {
+		Graphics2D g2 = (Graphics2D)g;
+		AffineTransform old = g2.getTransform();
+		g2.rotate(rotateamount, (int)(x + w/2),(int)( y + h/2));
 		myHitbox.updateLocation(x, y, w, h);
 		x += velX;
 		y += velY;
 		g.drawImage(img, x, y, w, h, null);
+		rotateamount ++;
+		g2.setTransform(old);
 	}
 
 	public int getX() {

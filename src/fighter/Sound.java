@@ -25,10 +25,9 @@ public class Sound {
 	boolean ismuted;
 	Mixer.Info[] infos = AudioSystem.getMixerInfo();
 	Line[] lines;
-	boolean isdisabled = false;
+	boolean isdisabled = true;
 
 	public Sound(String fileName) {
-		if (!isdisabled) {
 		// specify the sound to play
 		// (assuming the sound can be played by the audio system)
 		// from a wave File
@@ -75,7 +74,7 @@ public class Sound {
 			Mixer mixer = AudioSystem.getMixer(info);
 			lines = mixer.getSourceLines();
 		}
-		}
+		
 	}
 
 	public void play() {

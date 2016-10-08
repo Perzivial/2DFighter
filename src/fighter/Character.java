@@ -428,6 +428,7 @@ public class Character {
 	}
 
 	public void initializeImages() {
+		try{
 		neutralImage = initializeImage("img/" + name + "/neutral.png");
 		run1Image = initializeImage("img/" + name + "/run1.png");
 		run2Image = initializeImage("img/" + name + "/run2.png");
@@ -491,6 +492,9 @@ public class Character {
 		chargeBeamBlueImage = initializeImage("img/" + name + "/chargebeamblue.png");
 		kiBlastBlueImage = initializeImage("img/misc/kiblastblue.png");
 		livesIconImage = initializeImage("img/" + name + "/livesicon.png", 20, 20);
+		}catch(Exception e){
+			System.out.println("a problem occured");
+		}
 	}
 
 	// not my code. only have some idea of how this works
@@ -548,6 +552,10 @@ public class Character {
 					isRunning = true;
 			} else if (isPressing(keyLeft) || isPressing(keyRight))
 				isRunning = true;
+			if(!inputEnabled){
+				if(Math.abs(velX) > .1)
+					isRunning = true;
+			}
 			if (isGrounded) {
 				if (!isRunning) {
 					if (direction == DIRECTION_RIGHT) {
@@ -938,15 +946,15 @@ public class Character {
 	}
 
 	public void rotateRunArray() {
-		if (runIndexChangeCounter <= 0) {
+		if (getRunIndexChangeCounter() <= 0) {
 			if (runIndex < runImages.size() - 1) {
 				runIndex++;
 			} else {
 				runIndex = 0;
 			}
-			runIndexChangeCounter = runIndexChangeInterval;
+			setRunIndexChangeCounter(runIndexChangeInterval);
 		} else {
-			runIndexChangeCounter--;
+			setRunIndexChangeCounter(getRunIndexChangeCounter() - 1);
 		}
 	}
 
@@ -1244,7 +1252,7 @@ public class Character {
 					else
 						velX = runSpeed;
 					direction = DIRECTION_RIGHT;
-					if(inputEnabled)
+					
 					rotateRunArray();
 				}
 			} else if (velX < maxAirSpeed && state != STATE_AIRDODGE && canAirDodge && state != STATE_GRABBED) {
@@ -2807,6 +2815,14 @@ public class Character {
 
 	public void setLives(int lives) {
 		this.lives = lives;
+	}
+
+	public int getRunIndexChangeCounter() {
+		return runIndexChangeCounter;
+	}
+
+	public void setRunIndexChangeCounter(int runIndexChangeCounter) {
+		this.runIndexChangeCounter = runIndexChangeCounter;
 	}
 
 }
