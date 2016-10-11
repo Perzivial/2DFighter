@@ -37,6 +37,7 @@ import net.java.games.input.*;
 import net.java.games.input.Controller.Type;
 
 public class Game extends JComponent implements KeyListener {
+	public static Helper help = new Helper();
 	// screen related variables
 	public static final int DEFAULT_SCREEN_SIZE_X = 1200;
 	// public static final int DEFAULT_SCREEN_SIZE_Y = 675;
@@ -98,10 +99,12 @@ public class Game extends JComponent implements KeyListener {
 	static ArrayList<Controller> controllers = new ArrayList<Controller>();
 	static ArrayList<Projectile> projectiles = new ArrayList<Projectile>();
 	// images
+	BufferedImage mountains = new Image("img/misc/mountains.png").img;
 	BufferedImage sky = new Image("img/misc/sky.png").img;
 	BufferedImage ground = new Image("img/misc/ground.png").img;
 	BufferedImage platform = new Image("img/misc/platform.png").img;
 	ArrayList<CharacterIcon> charIcons = new ArrayList<CharacterIcon>();
+	ArrayList<Cloud> clouds = new ArrayList<Cloud>();
 
 	// music
 	Sound gameStart = new Sound("sound/music/gamestart.wav");
@@ -164,6 +167,15 @@ public class Game extends JComponent implements KeyListener {
 		PLATFORMS.add(new Hitbox(300, 530, 100, 20, TYPE_GROUND));
 		PLATFORMS.add(new Hitbox(720, 530, 100, 20, TYPE_GROUND));
 		PLATFORMS.add(new Hitbox(380, 450, 360, 20, TYPE_GROUND));
+
+		initializeEnvironment();
+	}
+
+	public void initializeEnvironment() {
+		for (int i = 0; i < 3; i++)
+			clouds.add(new Cloud(help.randInt(-50, DEFAULT_SCREEN_SIZE_X + 50),
+					help.randInt(-50, DEFAULT_SCREEN_SIZE_Y + 50)));
+
 	}
 
 	public void initializeConfig() throws IOException {
@@ -250,6 +262,13 @@ public class Game extends JComponent implements KeyListener {
 			drawSun(g2);
 			g2.translate(cameraLocationX, cameraLocationY);
 
+			g2.setTransform(oldTransform2);
+			drawMountain(g);
+			
+			g2.setTransform(newTransform);
+			
+			drawClouds(g2);
+			
 			drawGround(g);
 			doPlayerPhysics(g);
 			doPlayerDrawing(g);
@@ -371,6 +390,7 @@ public class Game extends JComponent implements KeyListener {
 		}
 
 		if (screenState == SCREEN_STATE_INGAME) {
+			overlayColour(g);
 			drawPlayerPercentage(g);
 
 		}
@@ -446,6 +466,7 @@ public class Game extends JComponent implements KeyListener {
 			totalVelX += person.getVelX();
 			totalVelY += person.getVelY();
 		}
+
 		personAverageX = totalX / characters.size();
 		personAverageY = totalY / characters.size();
 		averageVelX = totalVelX / characters.size();
@@ -466,18 +487,19 @@ public class Game extends JComponent implements KeyListener {
 		// players location
 		// if the players are on the left side of the stage, then give them more
 		// space on the opposite side
-		if (personAverageX < 344) {
+		if (personAverageX > 744) {
 			if (cameraLocationX < 75)
 				cameraLocationVelX += .05;
 			else
 				cameraLocationVelX /= 1.1;
 
-		} else if (personAverageX > 744) {
+		} else if (personAverageX < 344) {
 			if (cameraLocationX > -75)
 				cameraLocationVelX -= .05;
 			else
 				cameraLocationVelX /= 1.1;
 		} else {
+			
 			if (cameraLocationX < -5)
 				cameraLocationVelX += .03;
 			else if (cameraLocationX > 5)
@@ -699,7 +721,6 @@ public class Game extends JComponent implements KeyListener {
 			g.drawImage(sky, 0, 0, DEFAULT_SCREEN_SIZE_X, (int) (DEFAULT_SCREEN_SIZE_X / 1.6), null);
 		else
 			g.drawImage(sky, 0, 0, (int) screenWidth, (int) screenHeight, null);
-
 	}
 
 	public void drawSun(Graphics2D g2) {
@@ -711,21 +732,56 @@ public class Game extends JComponent implements KeyListener {
 		}
 
 		if (sunimage1)
-			g2.drawImage(sunimg, (int) (dayTime * 300)-1100, (int) (Math.sin(dayTime) * 300) + 300, 400, 400, this);
-		// g2.drawImage(sunimg, (int) (dayTimer * 0.5), (int)
-		// ((DEFAULT_SCREEN_SIZE_Y / 2)), 400, 400, this);
-		else
-			g2.drawImage(sun2img, (int) (dayTime * 300)-1100, (int) (Math.sin(dayTime) * 300) + 300, 400, 400, this);
-		// g2.drawImage(sun2img, (int) (dayTimer * 0.5), (int)
-		// ((DEFAULT_SCREEN_SIZE_Y / 2)), 400, 400, this);
-		System.out.println(dayTime);
+			g2.drawImage(sunimg, (int) (dayTime * 300) - 1100, (int) (Math.sin(dayTime) * 150) + 300, 400, 400, this);
 
+		else
+			g2.drawImage(sun2img, (int) (dayTime * 300) - 1100, (int) (Math.sin(dayTime) * 150) + 300, 400, 400, this);
+
+	}
+
+	public void overlayColour(Graphics g) {
+		g.setColor(new Color(0, 0, 180, 80 - (int) (Math.sin(dayTime - 2.5) * 50)));
+
+		if (isnormalscreen)
+			g.fillRect(0, 0, DEFAULT_SCREEN_SIZE_X, DEFAULT_SCREEN_SIZE_Y);
+		else
+			g.fillRect(0, 0, (int) screenWidth, (int) screenHeight);
+	}
+
+	public void drawMountain(Graphics g) {
+		if (isnormalscreen)
+			g.drawImage(mountains, 0, 0, DEFAULT_SCREEN_SIZE_X, (int) (DEFAULT_SCREEN_SIZE_X / 1.6), null);
+		else
+			g.drawImage(mountains, 0, 0, (int) screenWidth, (int) screenHeight, null);
+	}
+
+	public void drawClouds(Graphics2D g2) {
+		g2.translate(-cameraLocationX, -cameraLocationY);
+		Random rand = new Random();
+		int randInt = rand.nextInt(300);
+		if (randInt == 27) {
+			clouds.add(new Cloud(-300, help.randInt(-50, DEFAULT_SCREEN_SIZE_Y + 50)));
+		}
+		for (Cloud current : clouds) {
+			current.draw(g2);
+
+		}
+		// second loop for deleting
+		for (Cloud current : clouds) {
+
+			if (current.x > DEFAULT_SCREEN_SIZE_X + 300) {
+				clouds.remove(current);
+				break;
+			}
+		}
+		g2.translate(-cameraLocationX, -cameraLocationY);
 	}
 
 	public void drawGround(Graphics g) {
 		// g.setColor(Color.black);
 		// Graphics2D g2 = (Graphics2D) g;
 		// g2.fill(GROUND_HITBOX.getRect());
+
 		g.drawImage(ground, (int) GROUND_HITBOX.getX(), ((int) GROUND_HITBOX.getY() - 43),
 				(int) GROUND_HITBOX.getWidth(), (int) GROUND_HITBOX.getHeight() + 43, null);
 		for (Hitbox platform : PLATFORMS) {
