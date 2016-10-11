@@ -396,7 +396,7 @@ public class Character {
 
 	public BufferedImage initializeImage(String url) {
 		try {
-			BufferedImage buff = getScaledInstance(new Image(url).img, w * 2, h * 2,
+			BufferedImage buff = getScaledInstance(new Image(url).img, w * 3, h * 3,
 					RenderingHints.VALUE_INTERPOLATION_BILINEAR, false);
 			return buff;
 		} catch (NullPointerException e) {

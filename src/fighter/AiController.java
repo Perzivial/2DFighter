@@ -37,7 +37,7 @@ public class AiController {
 				if (followedCharacter == null)
 					followedCharacter = person;
 				else {
-					if (person.percent > followedCharacter.percent) {
+					if (person.percent > followedCharacter.percent && person.getLives() > 0) {
 						followedCharacter = person;
 					}
 				}
@@ -47,11 +47,18 @@ public class AiController {
 		getDistanceToX();
 		getDistanceToY();
 		if (distanceToX > 50) {
-			if (followedCharacter.getX() - 1 < connectedCharacter.getX()) {
-				connectedCharacter.runLeft();
-			} else if (followedCharacter.getX() + 1 > connectedCharacter.getX()) {
-				connectedCharacter.runRight();
+			if (connectedCharacter.state == Character.STATE_NEUTRAL) {
+				Random rand = new Random();
+				int randomChoice = rand.nextInt(10) - 5;
+
+				if (followedCharacter.getX() - 1 < connectedCharacter.getX()) {
+					connectedCharacter.runLeft();
+				} else if (followedCharacter.getX() + 1 > connectedCharacter.getX()) {
+					connectedCharacter.runRight();
+				}
+
 			}
+
 		} else {
 			chooseRandomAttack();
 		}
@@ -147,7 +154,7 @@ public class AiController {
 				} else if (distanceToX < 30) {
 					connectedCharacter.jab();
 					attackWindow = 20;
-				} else if (distanceToX < 50) {
+				} else{
 					connectedCharacter.dTilt();
 					attackWindow = 20;
 				}
@@ -163,9 +170,6 @@ public class AiController {
 					connectedCharacter.downSpecial();
 					connectedCharacter.state = Character.STATE_DOWNSPECIAL;
 					System.out.println("derp");
-					attackWindow = 60;
-				} else {
-					connectedCharacter.forwardSpecial();
 					attackWindow = 60;
 				}
 			}

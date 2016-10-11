@@ -3,6 +3,7 @@ package fighter;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
+import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 
 public class Projectile {
@@ -14,8 +15,10 @@ public class Projectile {
 	double velY;
 	BufferedImage img;
 	AttackHitbox myHitbox;
-	int rotateamount;
-	public Projectile(int posx, int posy, int mywidth, int myheight, double velx, double vely, BufferedImage image, Character chara) {
+	double rotateamount;
+
+	public Projectile(int posx, int posy, int mywidth, int myheight, double velx, double vely, BufferedImage image,
+			Character chara) {
 		x = posx;
 		y = posy;
 		w = mywidth;
@@ -27,14 +30,39 @@ public class Projectile {
 	}
 
 	public void draw(Graphics g) {
-		Graphics2D g2 = (Graphics2D)g;
+		Graphics2D g2 = (Graphics2D) g;
 		AffineTransform old = g2.getTransform();
-		g2.rotate(rotateamount, (int)(x + w/2),(int)( y + h/2));
+
+		// Rotation information
+		
+		if (rotateamount > 4.0){
+			rotateamount = 0;
+		}else
+		rotateamount += 0.25;
+		double rotationRequired = 90;
+			System.out.println(rotateamount);
+		if (rotateamount < 1)
+			rotationRequired = Math.toRadians(90);
+		else if (rotateamount < 2)
+			rotationRequired = Math.toRadians(180);
+		else if (rotateamount < 3)
+			rotationRequired = Math.toRadians(270);
+		else
+			rotationRequired = Math.toRadians(360);
+		
+		double locationX = img.getWidth() / 2;
+		double locationY = img.getHeight() / 2;
+		AffineTransform tx = AffineTransform.getRotateInstance(rotationRequired, locationX, locationY);
+		AffineTransformOp op = new AffineTransformOp(tx, AffineTransformOp.TYPE_BILINEAR);
+
+		// Drawing the rotated image at the required drawing locations
+		g2.drawImage(op.filter(img, null), x, y, (int)(w*1.3), (int)(h*1.3), null);
+
 		myHitbox.updateLocation(x, y, w, h);
 		x += velX;
 		y += velY;
-		g.drawImage(img, x, y, w, h, null);
-		rotateamount ++;
+		// g.drawImage(img, x, y, w, h, null);
+
 		g2.setTransform(old);
 	}
 

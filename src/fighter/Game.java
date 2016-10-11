@@ -5,16 +5,21 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.MouseInfo;
+import java.awt.PointerInfo;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.awt.Transparency;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.RoundRectangle2D;
+import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -34,8 +39,8 @@ import net.java.games.input.Controller.Type;
 public class Game extends JComponent implements KeyListener {
 	// screen related variables
 	public static final int DEFAULT_SCREEN_SIZE_X = 1200;
-	//public static final int DEFAULT_SCREEN_SIZE_Y = 675;
-	public static final int DEFAULT_SCREEN_SIZE_Y = (int)(1200 / 1.6);
+	// public static final int DEFAULT_SCREEN_SIZE_Y = 675;
+	public static final int DEFAULT_SCREEN_SIZE_Y = (int) (1200 / 1.6);
 	static Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 	static double screenWidth = screenSize.getWidth();
 	static double screenHeight = screenSize.getHeight();
@@ -78,6 +83,7 @@ public class Game extends JComponent implements KeyListener {
 			DEFAULT_SCREEN_SIZE_Y * 2);
 	BufferedImage pressenterImage = initializeImage("img/misc/pressenter.png", DEFAULT_SCREEN_SIZE_X * 2,
 			DEFAULT_SCREEN_SIZE_Y * 2);
+	BufferedImage sunimg = initializeImage("img/misc/sun.png", 900, 900);
 	Rectangle selectionRect;
 	boolean isSelecting = false;
 	CharacterIcon selectedIcon = null;
@@ -106,7 +112,7 @@ public class Game extends JComponent implements KeyListener {
 	int winScreenCounter = 120;
 	int dayTime = 0;
 	int shakeScreenCounter = 0;
-	
+
 	Character GOE = new Asriel(500, 400, KeyEvent.VK_UP, KeyEvent.VK_DOWN, KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT,
 			KeyEvent.VK_RIGHT, KeyEvent.VK_SPACE, KeyEvent.VK_Q, KeyEvent.VK_W, KeyEvent.VK_E, KeyEvent.VK_R, this);
 
@@ -114,17 +120,26 @@ public class Game extends JComponent implements KeyListener {
 			KeyEvent.VK_RIGHT, KeyEvent.VK_SPACE, KeyEvent.VK_Q, KeyEvent.VK_W, KeyEvent.VK_E, KeyEvent.VK_R, this);
 	AiController GOEAIController = new AiController(GOEAI, this);
 
+	double cameraLocationX = 0;
+	double cameraLocationY = 0;
+
+	double cameraLocationVelX = 0;
+	double cameraLocationVelY = 0;
+
+	int personAverageX = 0;
+	int personAverageY = 0;
+
 	// characters are all kept in an arraylist, some of them will in fact be an
 	// extension of the character class
 	public Game() throws IOException {
 		hitboxes.add(GROUND_HITBOX);
 		doControllerThings();
 
-		//GOEAI.disableInput();
+		// GOEAI.disableInput();
 
-		//characters.add(GOE);
-		//characters.add(GOEAI);
-		//aiList.add(GOEAIController);
+		// characters.add(GOE);
+		// characters.add(GOEAI);
+		// aiList.add(GOEAIController);
 
 		for (Controller control : ca) {
 			System.out.println(control.getName());
@@ -186,19 +201,41 @@ public class Game extends JComponent implements KeyListener {
 		Graphics2D g2 = (Graphics2D) g;
 		AffineTransform oldTransform = g2.getTransform();
 		graphicsSettings(g2);
+
+		AffineTransform oldTransform2 = g2.getTransform();
+		if (screenState == SCREEN_STATE_INGAME) {
+			g2.scale(1.2, 1.2);
+			g2.translate(DEFAULT_SCREEN_SIZE_X * -0.08333333333 * 0.625, DEFAULT_SCREEN_SIZE_Y * -0.08333333333);
+			g2.translate(0, -20);
+			g2.translate(cameraLocationX, cameraLocationY);
+		}
+
 		if (!isnormalscreen) {
-			//g2.translate(0, (screenWidth / (screenHeight / DEFAULT_SCREEN_SIZE_X) - DEFAULT_SCREEN_SIZE_Y) / 16);
+			// g2.translate(0, (screenWidth / (screenHeight /
+			// DEFAULT_SCREEN_SIZE_X) - DEFAULT_SCREEN_SIZE_Y) / 16);
 			g2.scale(screenWidth / DEFAULT_SCREEN_SIZE_X, (screenHeight / DEFAULT_SCREEN_SIZE_X) / 0.625);
 
 		}
+
 		g2.setColor(Color.white);
 		g2.fillRect(0, 0, WIDTH, HEIGHT);
 		switch (screenState) {
 		case (SCREEN_STATE_INGAME):
 			// basic background stuff to build scene
 			applyShakeScreen(g2);
+			AffineTransform newTransform = g2.getTransform();
+			// creates a new camera transform to set to after it draws the
+			// background
 			shouldPlayerWin();
+
+			g2.setTransform(oldTransform2);
 			drawBackground(g);
+			g2.setTransform(newTransform);
+
+			g2.translate(-cameraLocationX, -cameraLocationY);
+			drawSun(g2);
+			g2.translate(cameraLocationX, cameraLocationY);
+
 			drawGround(g);
 			doPlayerPhysics(g);
 			doPlayerDrawing(g);
@@ -207,8 +244,7 @@ public class Game extends JComponent implements KeyListener {
 			// draws hitboxes, should be after all other drawing code
 			drawHitBoxes(g, hitboxes);
 			drawPlayerHitboxes(g);
-			drawPlayerPercentage(g);
-
+			dayTime++;
 			break;
 		case (SCREEN_STATE_ADDCHARACTER):
 			g.setColor(Color.WHITE);
@@ -308,7 +344,22 @@ public class Game extends JComponent implements KeyListener {
 			}
 			break;
 		}
+
+		g2.setTransform(oldTransform);
+		if (!isnormalscreen) {
+			// g2.translate(0, (screenWidth / (screenHeight /
+			// DEFAULT_SCREEN_SIZE_X) - DEFAULT_SCREEN_SIZE_Y) / 16);
+			g2.scale(screenWidth / DEFAULT_SCREEN_SIZE_X, (screenHeight / DEFAULT_SCREEN_SIZE_X) / 0.625);
+
+		}
+
+		if (screenState == SCREEN_STATE_INGAME) {
+			drawPlayerPercentage(g);
+
+		}
+
 		drawBlackBars(g);
+
 		g2.setTransform(oldTransform);
 
 	}
@@ -363,12 +414,73 @@ public class Game extends JComponent implements KeyListener {
 	}
 
 	public void doPlayerDrawing(Graphics g) {
+		int totalX = 0;
+		int totalY = 0;
+		int averageVelX = 0;
+		int totalVelX = 0;
+		int averageVelY = 0;
+		int totalVelY = 0;
 		for (Character person : characters) {
 			if (person.getMyGame() != this)
 				person.setMyGame(this);
 			person.draw(g);
-
+			totalX += person.getX();
+			totalY += person.getY();
+			totalVelX += person.getVelX();
+			totalVelY += person.getVelY();
 		}
+		personAverageX = totalX / characters.size();
+		personAverageY = totalY / characters.size();
+		averageVelX = totalVelX / characters.size();
+		averageVelY = totalVelY / characters.size();
+		/*
+		 * int tempCameraLocationX = (int)(personAverageX -
+		 * DEFAULT_SCREEN_SIZE_X / 2.3); int tempCameraLocationY =
+		 * personAverageY - DEFAULT_SCREEN_SIZE_Y / 2;
+		 */
+		int tempCameraLocationX = ((int) ((personAverageX / 2) - (DEFAULT_SCREEN_SIZE_X / 4.3)));
+		int tempCameraLocationY = personAverageY - DEFAULT_SCREEN_SIZE_Y / 2;
+		/*
+		 * if (personAverageX < 444 && cameraLocationVelX > .5)
+		 * cameraLocationVelX = 1; if (personAverageX > 644 &&
+		 * cameraLocationVelX < -.5) cameraLocationVelX = -1;
+		 */
+		// if the players are on the left side of the stage, then give them more
+		// space on the opposite side
+		if (personAverageX < 344) {
+			if (cameraLocationX < 60)
+				cameraLocationVelX += .05;
+			else
+				cameraLocationVelX /= 1.1;
+		} else if (personAverageX > 744) {
+			if (cameraLocationX > -35)
+				cameraLocationVelX -= .05;
+			else
+				cameraLocationVelX /= 1.1;
+		} else {
+			if(cameraLocationX < -5)
+				cameraLocationVelX += .03;
+			else if(cameraLocationX > 5)
+				cameraLocationVelX -= .03;
+			else
+				cameraLocationVelX /=1.2;
+		}
+
+		if (cameraLocationY > -15)
+			cameraLocationVelY -= .01;
+		else if (cameraLocationY < 15)
+			cameraLocationVelY += .01;
+
+		if (cameraLocationY < -15 || cameraLocationY > 15)
+			if (Math.abs(cameraLocationVelY) > 0) {
+				cameraLocationVelY /= 1.05;
+			}
+
+		cameraLocationX += cameraLocationVelX;
+		cameraLocationY += cameraLocationVelY;
+		g.setColor(Color.red);
+		g.drawRect(((int) cameraLocationX + DEFAULT_SCREEN_SIZE_X / 2) - 50,
+				((int) cameraLocationY + DEFAULT_SCREEN_SIZE_Y / 2) - 20, 40, 40);
 	}
 
 	public void doPlayerPhysics(Graphics g) {
@@ -489,9 +601,9 @@ public class Game extends JComponent implements KeyListener {
 			g.drawString(String.valueOf((int) person.getpercentage()) + " %", placementX + 25, 675);
 
 			g.drawString(person.name, placementX - 40, 700);
-			
+
 			g.drawString("P" + (i + 1), placementX + 25, 700);
-			
+
 			for (int o = 0; o < person.getLives(); o++) {
 				g.drawImage(person.livesIconImage, placementX + (o * 22) - 45, 660, 20, 20, null);
 			}
@@ -548,25 +660,40 @@ public class Game extends JComponent implements KeyListener {
 
 		}
 		for (Projectile proj : projectiles) {
-			if (proj.x < -50)
+			if (proj.x < -50) {
 				projectiles.remove(proj);
-			if (proj.x > DEFAULT_SCREEN_SIZE_X + 50)
+				break;
+			}
+			if (proj.x > DEFAULT_SCREEN_SIZE_X + 50) {
 				projectiles.remove(proj);
+				break;
+			}
 		}
 	}
 
 	public void drawBackground(Graphics g) {
 		g.setColor(Color.white);
-		g.fillRect(0, 0, 1200, (int)(1200/1.6));
-		g.drawImage(sky, 0, 0, DEFAULT_SCREEN_SIZE_X,(int) (DEFAULT_SCREEN_SIZE_X / 1.6), null);
+		g.fillRect(0, 0, 1200, (int) (1200 / 1.6));
+		if (isnormalscreen)
+			g.drawImage(sky, 0, 0, DEFAULT_SCREEN_SIZE_X, (int) (DEFAULT_SCREEN_SIZE_X / 1.6), null);
+		else
+			g.drawImage(sky, 0, 0, (int) screenWidth, (int) screenHeight, null);
+
+	}
+
+	public void drawSun(Graphics2D g2) {
+		int dayTimer = -750 + dayTime;
+		g2.drawImage(sunimg, (int) (dayTime * 0.5),
+				(int) ((DEFAULT_SCREEN_SIZE_Y / 2) - 100 / Math.abs(dayTimer * .001)), 400, 400, this);
+
 	}
 
 	public void drawGround(Graphics g) {
 		// g.setColor(Color.black);
 		// Graphics2D g2 = (Graphics2D) g;
 		// g2.fill(GROUND_HITBOX.getRect());
-		g.drawImage(ground, (int) GROUND_HITBOX.getX(), ((int) GROUND_HITBOX.getY() - 43), (int) GROUND_HITBOX.getWidth(),
-				(int) GROUND_HITBOX.getHeight() + 43, null);
+		g.drawImage(ground, (int) GROUND_HITBOX.getX(), ((int) GROUND_HITBOX.getY() - 43),
+				(int) GROUND_HITBOX.getWidth(), (int) GROUND_HITBOX.getHeight() + 43, null);
 		for (Hitbox platform : PLATFORMS) {
 			g.drawImage(this.platform, (int) platform.getX(), (int) platform.getY() - 3, (int) platform.getWidth(),
 					(int) platform.getHeight(), null);
@@ -668,7 +795,7 @@ public class Game extends JComponent implements KeyListener {
 									person1.applyDamage(hitbox.getDamage());
 									hitbox.playerHitList.add(person1);
 									person1.hurtsounds.getRandomSound().play();
-									shakeScreen(1 + (int)(person1.percent/10) + (int)(hitbox.getDamage()/10));
+									shakeScreen(1 + (int) (person1.percent / 10) + (int) (hitbox.getDamage() / 10));
 								}
 							}
 						}
@@ -719,19 +846,22 @@ public class Game extends JComponent implements KeyListener {
 			System.out.println("----");
 		}
 	}
-	public void shakeScreen(int time){
+
+	public void shakeScreen(int time) {
 		shakeScreenCounter = time;
 	}
-	public void applyShakeScreen(Graphics2D g2){
-	if(shakeScreenCounter > 0){
-		shakeScreenCounter --;
-		Random rand = new Random();
-		g2.translate(-1, -1);
-		g2.scale(1.005, 1.005);
 
-		g2.translate(rand.nextInt(4) - 2, rand.nextInt(4) - 2);
+	public void applyShakeScreen(Graphics2D g2) {
+		if (shakeScreenCounter > 0) {
+			shakeScreenCounter--;
+			Random rand = new Random();
+			g2.translate(-1, -1);
+			g2.scale(1.005, 1.005);
+
+			g2.translate(rand.nextInt(4) - 2, rand.nextInt(4) - 2);
+		}
 	}
-	}
+
 	public void getControllerInput() {
 		double axisXinput = 0;
 		for (Controller currentController : controllers) {
@@ -943,6 +1073,10 @@ public class Game extends JComponent implements KeyListener {
 			if (e.getKeyCode() == KeyEvent.VK_ESCAPE)
 				screenState = SCREEN_STATE_ADDCHARACTER;
 			// in game play code above here
+			if (e.getKeyCode() == KeyEvent.VK_L) {
+				System.out.println(cameraLocationX);
+				System.out.println(cameraLocationY);
+			}
 			break;
 
 		case (SCREEN_STATE_ADDCHARACTER):
@@ -1079,13 +1213,11 @@ public class Game extends JComponent implements KeyListener {
 				shouldShowHitboxes = !shouldShowHitboxes;
 			}
 			break;
-		case (SCREEN_STATE_ADDCHARACTER):
-
-			break;
 
 		case SCREEN_STATE_CHARACTER_SELECT:
 			keysPressed.remove(e.getKeyCode());
 			break;
 		}
 	}
+
 }
