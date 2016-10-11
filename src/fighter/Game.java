@@ -42,8 +42,8 @@ public class Game extends JComponent implements KeyListener {
 	// public static final int DEFAULT_SCREEN_SIZE_Y = 675;
 	public static final int DEFAULT_SCREEN_SIZE_Y = (int) (1200 / 1.6);
 	static Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-	static double screenWidth = screenSize.getWidth();
-	static double screenHeight = screenSize.getHeight();
+	public static double screenWidth = screenSize.getWidth();
+	public static double screenHeight = screenSize.getHeight();
 	boolean isnormalscreen = true;
 
 	// types of hitboxes. affects how they are drawn, among other things
@@ -84,6 +84,9 @@ public class Game extends JComponent implements KeyListener {
 	BufferedImage pressenterImage = initializeImage("img/misc/pressenter.png", DEFAULT_SCREEN_SIZE_X * 2,
 			DEFAULT_SCREEN_SIZE_Y * 2);
 	BufferedImage sunimg = initializeImage("img/misc/sun.png", 900, 900);
+	BufferedImage sun2img = initializeImage("img/misc/sun2.png", 900, 900);
+	boolean sunimage1 = true;
+	int sunimgcounter = 30;
 	Rectangle selectionRect;
 	boolean isSelecting = false;
 	CharacterIcon selectedIcon = null;
@@ -106,11 +109,21 @@ public class Game extends JComponent implements KeyListener {
 	Sound headchalapiano = new Sound("sound/music/headchalapiano.wav");
 	Sound headchalaremix = new Sound("sound/music/headchalaremix.wav");
 	SoundArray music = new SoundArray(headchalapiano, headchalaremix);
+
+	// misc sounds
+	Sound hitsound1 = new Sound("sound/misc/hitsound1.wav");
+	Sound hitsound2 = new Sound("sound/misc/hitsound2.wav");
+	Sound hitsound3 = new Sound("sound/misc/hitsound3.wav");
+	Sound hitsound4 = new Sound("sound/misc/hitsound4.wav");
+	Sound hitsound5 = new Sound("sound/misc/hitsound5.wav");
+	Sound hitsound6 = new Sound("sound/misc/hitsound6.wav");
+	SoundArray hitSounds = new SoundArray(hitsound2, hitsound2, hitsound3, hitsound4, hitsound5, hitsound6);
+
 	boolean canPlayMusic = false;
 	boolean musicEnabled = true;
 	Character winningPlayer;
 	int winScreenCounter = 120;
-	int dayTime = 0;
+	double dayTime = 2.3;
 	int shakeScreenCounter = 0;
 
 	Character GOE = new Asriel(500, 400, KeyEvent.VK_UP, KeyEvent.VK_DOWN, KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT,
@@ -132,6 +145,7 @@ public class Game extends JComponent implements KeyListener {
 	// characters are all kept in an arraylist, some of them will in fact be an
 	// extension of the character class
 	public Game() throws IOException {
+
 		hitboxes.add(GROUND_HITBOX);
 		doControllerThings();
 
@@ -244,7 +258,8 @@ public class Game extends JComponent implements KeyListener {
 			// draws hitboxes, should be after all other drawing code
 			drawHitBoxes(g, hitboxes);
 			drawPlayerHitboxes(g);
-			dayTime++;
+
+			doDayCycle();
 			break;
 		case (SCREEN_STATE_ADDCHARACTER):
 			g.setColor(Color.WHITE);
@@ -341,6 +356,8 @@ public class Game extends JComponent implements KeyListener {
 				characters.clear();
 				aiList.clear();
 				winScreenCounter = 120;
+				cameraLocationX = 0;
+				cameraLocationY = 0;
 			}
 			break;
 		}
@@ -365,7 +382,7 @@ public class Game extends JComponent implements KeyListener {
 	}
 
 	public void doDayCycle() {
-
+		dayTime += .001;
 	}
 
 	public void drawBlackBars(Graphics g) {
@@ -445,25 +462,28 @@ public class Game extends JComponent implements KeyListener {
 		 * cameraLocationVelX = 1; if (personAverageX > 644 &&
 		 * cameraLocationVelX < -.5) cameraLocationVelX = -1;
 		 */
+		// decided to put stage movement code in here cause it is relient on the
+		// players location
 		// if the players are on the left side of the stage, then give them more
 		// space on the opposite side
 		if (personAverageX < 344) {
-			if (cameraLocationX < 60)
+			if (cameraLocationX < 75)
 				cameraLocationVelX += .05;
 			else
 				cameraLocationVelX /= 1.1;
+
 		} else if (personAverageX > 744) {
-			if (cameraLocationX > -35)
+			if (cameraLocationX > -75)
 				cameraLocationVelX -= .05;
 			else
 				cameraLocationVelX /= 1.1;
 		} else {
-			if(cameraLocationX < -5)
+			if (cameraLocationX < -5)
 				cameraLocationVelX += .03;
-			else if(cameraLocationX > 5)
+			else if (cameraLocationX > 5)
 				cameraLocationVelX -= .03;
 			else
-				cameraLocationVelX /=1.2;
+				cameraLocationVelX /= 1.2;
 		}
 
 		if (cameraLocationY > -15)
@@ -479,8 +499,9 @@ public class Game extends JComponent implements KeyListener {
 		cameraLocationX += cameraLocationVelX;
 		cameraLocationY += cameraLocationVelY;
 		g.setColor(Color.red);
-		g.drawRect(((int) cameraLocationX + DEFAULT_SCREEN_SIZE_X / 2) - 50,
-				((int) cameraLocationY + DEFAULT_SCREEN_SIZE_Y / 2) - 20, 40, 40);
+		if (shouldShowHitboxes)
+			g.drawRect(((int) cameraLocationX + DEFAULT_SCREEN_SIZE_X / 2) - 50,
+					((int) cameraLocationY + DEFAULT_SCREEN_SIZE_Y / 2) - 20, 40, 40);
 	}
 
 	public void doPlayerPhysics(Graphics g) {
@@ -682,9 +703,22 @@ public class Game extends JComponent implements KeyListener {
 	}
 
 	public void drawSun(Graphics2D g2) {
-		int dayTimer = -750 + dayTime;
-		g2.drawImage(sunimg, (int) (dayTime * 0.5),
-				(int) ((DEFAULT_SCREEN_SIZE_Y / 2) - 100 / Math.abs(dayTimer * .001)), 400, 400, this);
+
+		sunimgcounter--;
+		if (sunimgcounter <= 0) {
+			sunimage1 = !sunimage1;
+			sunimgcounter = 30;
+		}
+
+		if (sunimage1)
+			g2.drawImage(sunimg, (int) (dayTime * 300)-1100, (int) (Math.sin(dayTime) * 300) + 300, 400, 400, this);
+		// g2.drawImage(sunimg, (int) (dayTimer * 0.5), (int)
+		// ((DEFAULT_SCREEN_SIZE_Y / 2)), 400, 400, this);
+		else
+			g2.drawImage(sun2img, (int) (dayTime * 300)-1100, (int) (Math.sin(dayTime) * 300) + 300, 400, 400, this);
+		// g2.drawImage(sun2img, (int) (dayTimer * 0.5), (int)
+		// ((DEFAULT_SCREEN_SIZE_Y / 2)), 400, 400, this);
+		System.out.println(dayTime);
 
 	}
 
@@ -794,6 +828,7 @@ public class Game extends JComponent implements KeyListener {
 									person1.applyHitstun(hitbox.getHitstunLength());
 									person1.applyDamage(hitbox.getDamage());
 									hitbox.playerHitList.add(person1);
+									hitSounds.getRandomSound().play();
 									person1.hurtsounds.getRandomSound().play();
 									shakeScreen(1 + (int) (person1.percent / 10) + (int) (hitbox.getDamage() / 10));
 								}

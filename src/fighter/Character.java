@@ -396,8 +396,8 @@ public class Character {
 
 	public BufferedImage initializeImage(String url) {
 		try {
-			BufferedImage buff = getScaledInstance(new Image(url).img, w * 3, h * 3,
-					RenderingHints.VALUE_INTERPOLATION_BILINEAR, false);
+			//BufferedImage buff = getScaledInstance(new Image(url).img, w * 6, h * 6,RenderingHints.VALUE_INTERPOLATION_BILINEAR, false);
+			BufferedImage buff = getScaledInstance(new Image(url).img, (int)(w * myGame.screenWidth/640), (int)(h * myGame.screenHeight/400),RenderingHints.VALUE_INTERPOLATION_BILINEAR, false);
 			return buff;
 		} catch (NullPointerException e) {
 			System.out.println("error");

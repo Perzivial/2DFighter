@@ -25,7 +25,7 @@ public class Sound {
 	boolean ismuted;
 	Mixer.Info[] infos = AudioSystem.getMixerInfo();
 	Line[] lines;
-	boolean isdisabled = false;
+	boolean isdisabled = true;
 
 	public Sound(String fileName) {
 		// specify the sound to play
