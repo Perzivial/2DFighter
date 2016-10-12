@@ -119,4 +119,12 @@ public class Asriel extends Character {
 		
 		state = STATE_ATTACK_UAIR;
 	}
+	@Override
+	public void nair(){
+		imageXTransform = 1.1299093656;
+		
+		hitboxes.add(new AttackHitbox(this, w - 20, 20, 25, 25, 0, -5, 5, 20, 20, 10, .1));
+		hitboxes.add(new AttackHitbox(this, 0, 20, 25, 25, 0, -5, 5, 20, 20, 10, .1));
+		state = STATE_ATTACK_NAIR;
+	}
 }

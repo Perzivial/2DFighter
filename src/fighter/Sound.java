@@ -1,8 +1,14 @@
 package fighter;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
 
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
@@ -25,9 +31,41 @@ public class Sound {
 	boolean ismuted;
 	Mixer.Info[] infos = AudioSystem.getMixerInfo();
 	Line[] lines;
-	boolean isdisabled = false;
+	static Boolean isdisabled;
 
 	public Sound(String fileName) {
+
+		if (isdisabled == null) {
+
+			List<String> lines = null;
+			try {
+				lines = Files.readAllLines(Paths.get("config/game.txt"));
+			} catch (IOException e) {
+				System.out.println("Did not find any game.txt file in /config, creating one");
+				File dir = new File("config");
+				@SuppressWarnings("unused")
+				boolean successful = dir.mkdir();
+				PrintWriter writer;
+
+				try {
+					writer = new PrintWriter("config/game.txt");
+					lines = Files.readAllLines(Paths.get("config/game.txt"));
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+			if (lines.size() > 1)
+				if (lines.get(1).equals("false")) {
+					isdisabled = true;
+					System.out.println("setting sound effects to disabled");
+				} else {
+					isdisabled = false;
+					System.out.println("setting sound effects to enabled");
+				}
+
+		}
+
 		// specify the sound to play
 		// (assuming the sound can be played by the audio system)
 		// from a wave File
@@ -74,7 +112,7 @@ public class Sound {
 			Mixer mixer = AudioSystem.getMixer(info);
 			lines = mixer.getSourceLines();
 		}
-		
+
 	}
 
 	public void play() {
@@ -106,10 +144,10 @@ public class Sound {
 			return true;
 		return false;
 	}
-public void reducesound(){
-	FloatControl gainControl = 
-		    (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
+
+	public void reducesound() {
+		FloatControl gainControl = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
 		gainControl.setValue(-10.0f);
-}
+	}
 
 }
