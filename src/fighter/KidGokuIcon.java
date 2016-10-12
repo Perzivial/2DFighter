@@ -6,8 +6,8 @@ import java.util.ArrayList;
 
 public class KidGokuIcon extends CharacterIcon {
 
-	public KidGokuIcon(int posx, int posy, ArrayList<Character> chars, Game gameinstance) {
-		super(posx, posy, chars, gameinstance);
+	public KidGokuIcon(int row, ArrayList<Character> chars, Game gameinstance) {
+		super(row,chars, gameinstance);
 		img = new Image("img/icons/kidgoku.png").getScaledInstance(new Image("img/icons/kidgoku.png").img, 200, 200,
 				RenderingHints.VALUE_INTERPOLATION_BILINEAR, false);
 

@@ -198,7 +198,37 @@ public class Game extends JComponent implements KeyListener {
 	}
 
 	public void addCharIcons() {
-		charIcons.add(new KidGokuIcon(100, 100, characters, this));
+		// kid goku
+		charIcons.add(new KidGokuIcon(0,characters, this));
+
+		charIcons.add(new AsrielIcon(0,characters, this));
+
+		for (int i = 0; i < charIcons.size(); i++) {
+			CharacterIcon icon = charIcons.get(i);
+			icon.x = 100 + (150 * i);
+			icon.interactRect = icon.interactRect = new Rectangle(icon.x, icon.y, 100, 100);
+		}
+	}
+
+	public void drawIcons(Graphics g) {
+		switch (screenState) {
+		case (SCREEN_STATE_CHARACTER_SELECT):
+
+			for (CharacterIcon icon : charIcons) {
+				icon.draw(g);
+
+			}
+			if (isSelecting)
+				for (CharacterIcon icon : charIcons) {
+					if (icon.interactRect.intersects(selectionRect)) {
+						selectedIcon = icon;
+						screenState = SCREEN_STATE_CHOOSE_CONTROL_SCHEME;
+						keysPressed.clear();
+						break;
+					}
+				}
+			break;
+		}
 	}
 
 	// the drawing is state dependent, meaning that depending on how the state
@@ -248,6 +278,7 @@ public class Game extends JComponent implements KeyListener {
 		switch (screenState) {
 		case (SCREEN_STATE_INGAME):
 			// basic background stuff to build scene
+			AffineTransform newTransformnoShake = g2.getTransform();
 			applyShakeScreen(g2);
 			AffineTransform newTransform = g2.getTransform();
 			// creates a new camera transform to set to after it draws the
@@ -256,11 +287,8 @@ public class Game extends JComponent implements KeyListener {
 
 			g2.setTransform(oldTransform2);
 			drawBackground(g);
-			
 
-
-			
-			g2.setTransform(newTransform);
+			g2.setTransform(newTransformnoShake);
 			g2.translate(-cameraLocationX, -cameraLocationY);
 			drawSun(g2);
 			g2.translate(cameraLocationX, cameraLocationY);
@@ -415,27 +443,6 @@ public class Game extends JComponent implements KeyListener {
 		g.fillRect(DEFAULT_SCREEN_SIZE_X, -100, 100, 100);
 	}
 
-	public void drawIcons(Graphics g) {
-		switch (screenState) {
-		case (SCREEN_STATE_CHARACTER_SELECT):
-
-			for (CharacterIcon icon : charIcons) {
-				icon.draw(g);
-
-			}
-			if (isSelecting)
-				for (CharacterIcon icon : charIcons) {
-					if (icon.interactRect.intersects(selectionRect)) {
-						selectedIcon = icon;
-						screenState = SCREEN_STATE_CHOOSE_CONTROL_SCHEME;
-						keysPressed.clear();
-						break;
-					}
-				}
-			break;
-		}
-	}
-
 	public void graphicsSettings(Graphics2D g2) {
 
 		g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
@@ -463,11 +470,11 @@ public class Game extends JComponent implements KeyListener {
 			if (person.getMyGame() != this)
 				person.setMyGame(this);
 			person.draw(g);
-			if(person.getLives() > 0){
-			totalX += person.getX();
-			totalY += person.getY();
-			totalVelX += person.getVelX();
-			totalVelY += person.getVelY();
+			if (person.getLives() > 0) {
+				totalX += person.getX();
+				totalY += person.getY();
+				totalVelX += person.getVelX();
+				totalVelY += person.getVelY();
 			}
 		}
 
@@ -510,12 +517,12 @@ public class Game extends JComponent implements KeyListener {
 				cameraLocationVelX -= .03;
 			else
 				cameraLocationVelX /= 1.2;
-			if(cameraLocationX < -75 )
+			if (cameraLocationX < -75)
 				cameraLocationVelX = .5;
-			if(cameraLocationX > 75 )
+			if (cameraLocationX > 75)
 				cameraLocationVelX = -.5;
 		}
-		//decided not to alter to y location. it just didnt work
+		// decided not to alter to y location. it just didnt work
 		/*
 		 * if (cameraLocationY > -15) cameraLocationVelY -= .01; else if
 		 * (cameraLocationY < 15) cameraLocationVelY += .01;
@@ -530,7 +537,6 @@ public class Game extends JComponent implements KeyListener {
 			g.drawRect(((int) cameraLocationX + DEFAULT_SCREEN_SIZE_X / 2) - 50,
 					((int) cameraLocationY + DEFAULT_SCREEN_SIZE_Y / 2) - 20, 40, 40);
 		}
-		System.out.println(dayTime);
 	}
 
 	public void doPlayerPhysics(Graphics g) {
@@ -549,8 +555,11 @@ public class Game extends JComponent implements KeyListener {
 			for (Hitbox platform : PLATFORMS) {
 				if (groundChecker.intersects(platform.getRect())) {
 					if (person.getY() + person.getH() - 10 < platform.getY()) {
-						if (person.getVelY() >= 0 && person.getState() != Character.STATE_CROUCH)
+						if (person.getVelY() >= 0 && person.getState() != Character.STATE_CROUCH) {
 							isOnPlatform = true;
+							person.isOnPlatform = true;
+						} else
+							person.isOnPlatform = false;
 						person.setY(platform.getY() - person.getH());
 					}
 				}
@@ -640,17 +649,18 @@ public class Game extends JComponent implements KeyListener {
 
 			RoundRectangle2D rounded = new RoundRectangle2D.Double(placementX - 50, 650, 120, 60, 30, 30);
 			RoundRectangle2D rounded2 = new RoundRectangle2D.Double(placementX - 60, 640, 140, 80, 30, 30);
-			g.setColor(new Color(255,255,255,150));
+			g.setColor(new Color(255, 255, 255, 150));
 			g2.fill(rounded2);
-			g.setColor(new Color(149, 214, 223,150));
+			g.setColor(new Color(149, 214, 223, 150));
 			g2.fill(rounded);
 
 			Character person = characters.get(i);
-			g.setColor(new Color(0,0,0,200));
+			g.setColor(new Color(0, 0, 0, 200));
 			g.setFont(new Font("Futura", Font.PLAIN, 15));
 			g.drawString(String.valueOf((int) person.getpercentage()) + " %", placementX + 25, 675);
 
-			g.drawString(person.name, placementX - 40, 700);
+			String output = person.name.substring(0, 1).toUpperCase() + person.name.substring(1);
+			g.drawString(output, placementX - 40, 700);
 
 			g.drawString("P" + (i + 1), placementX + 25, 700);
 
@@ -710,11 +720,11 @@ public class Game extends JComponent implements KeyListener {
 
 		}
 		for (Projectile proj : projectiles) {
-			if (proj.x < -50) {
+			if (proj.x < -200 || proj.y < -200) {
 				projectiles.remove(proj);
 				break;
 			}
-			if (proj.x > DEFAULT_SCREEN_SIZE_X + 50) {
+			if (proj.x > DEFAULT_SCREEN_SIZE_X + 200 || proj.y > DEFAULT_SCREEN_SIZE_Y + 200) {
 				projectiles.remove(proj);
 				break;
 			}
@@ -743,8 +753,8 @@ public class Game extends JComponent implements KeyListener {
 
 		else
 			g2.drawImage(sun2img, (int) (dayTime * 300) - 1100, (int) (Math.sin(dayTime) * 400) + 500, 400, 400, this);
-		
-		if(dayTime > 5.8)
+
+		if (dayTime > 5.8)
 			dayTime = 2.3;
 	}
 
@@ -861,7 +871,8 @@ public class Game extends JComponent implements KeyListener {
 				for (AttackHitbox hitbox : person2.hitboxes)
 					if (checkCollision(person1.getHurtbox().getRect(), hitbox.getRect()))
 						if (!person1.equals(hitbox.getLinkedCharacter()) && !hitbox.playerHitList.contains(person1)) {
-							if (person1.getState() != Character.STATE_DODGE && person2.getGrabBox() == null && person1.getRespawnTimer() <= 0) {
+							if (person1.getState() != Character.STATE_DODGE && person2.getGrabBox() == null
+									&& person1.getRespawnTimer() <= 0) {
 
 								boolean shouldapplydamage = false;
 								// new approach, divides the hitbox into 6, each

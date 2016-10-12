@@ -9,7 +9,7 @@ public class AiController {
 	int distanceToX;
 	int distanceToY;
 	int attackWindow = 0;
-	int dashDanceCounter = 0;
+
 
 	public AiController(Character character, Game gameinstance) {
 		connectedCharacter = character;

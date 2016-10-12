@@ -42,14 +42,14 @@ public class Character {
 	private int keyShield;
 	private int keyGrab;
 	private int keySpecial;
-	private double jumpHeight = 9;
-	private double lowJumpHeight = 6;
+	protected double jumpHeight = 9;
+	protected double lowJumpHeight = 6;
 	private double runSpeed = 6;
 	private double horizontalSlowdownFactor = 1.3;
 	private double horizontalInAirSpeed = 6;
 	private boolean hasDoubleJump = false;
 	private double maxAirSpeed = 5;
-
+	protected int bairOffset = 0;
 	// State variables
 	public static int STATE_NEUTRAL = 0;
 	public static int STATE_ATTACK = 1;
@@ -234,10 +234,10 @@ public class Character {
 	private int lives = 3;
 	ArrayList<Particle> particles = new ArrayList<Particle>();
 	private boolean inputEnabled = true;
-
+	public boolean isOnPlatform = false;
 	// respawn timer for invincibility
 	private int respawnTimer = 0;
-
+	
 	public Character(int posx, int posy, int upKey, int downKey, int leftKey, int rightKey, int modifierKey,
 			int jumpKey, int attackKey, int specialKey, int shieldKey, int grabKey, Game gameinstance) {
 		myGame = gameinstance;
@@ -446,7 +446,7 @@ public class Character {
 			runImages.add(run1Image);
 			// jab and tilts
 			jabImage = initializeImage("img/" + name + "/jab.png");
-			fTiltImage = initializeImage("img/" + name + "/tilt_f.png");
+			fTiltImage = initializeImage("img/" + name + "/tilt_f.png",6,3);
 			uTiltImage = initializeImage("img/" + name + "/tilt_u.png");
 			dTiltImage = initializeImage("img/" + name + "/tilt_d.png");
 			// aerials
@@ -643,9 +643,9 @@ public class Character {
 			}
 			if (state == STATE_ATTACK_UAIR) {
 				if (direction == DIRECTION_RIGHT)
-					g.drawImage(uairImage, (int) x, (int) y, (int) (w * imageXTransform), h, null);
+					g.drawImage(uairImage, (int) x, (int) y - (int) (h * imageYTransform) + h, (int) (w * imageXTransform), (int) (h * imageYTransform), null);
 				if (direction == DIRECTION_LEFT)
-					g.drawImage(uairImage, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
+					g.drawImage(uairImage, (int) x + w, (int) y - (int) (h * imageYTransform) + h, (int) (-w * imageXTransform), (int) (h * imageYTransform), null);
 			}
 			// smash chargin has a bit of nuances in it so it needs it's own
 			// area
@@ -1019,7 +1019,7 @@ public class Character {
 
 	public void attemptToShield() {
 		if (inputEnabled) {
-			if (state != STATE_GRABBED && state != STATE_GRAB && state != STATE_HELPLESS) {
+			if (state== STATE_NEUTRAL || state == STATE_SHIELD) {
 				if (isController) {
 					if (myController != null && getPortNum() == myController.getPortNumber())
 						for (Component comp : myController.getComponents()) {
@@ -1184,7 +1184,7 @@ public class Character {
 	}
 
 	public void handleInput() {
-		if (inputEnabled  && lives > 0) {
+		if (inputEnabled && lives > 0) {
 			if (!isController) {
 				if (state != STATE_HITSTUN) {
 					if (state == STATE_NEUTRAL || !isGrounded || state == STATE_CROUCH) {
@@ -1422,7 +1422,7 @@ public class Character {
 	}
 
 	public void fall() {
-		if (state != STATE_GRABBED) {
+		if (state != STATE_GRABBED && state != STATE_ATTACKDOWN) {
 			if (!isGrounded) {
 
 				velY += fallSpeed;
@@ -2337,9 +2337,10 @@ public class Character {
 			hurtbox.updateLocation(x, y + h * .2, w, h * .8);
 		else if (state == STATE_ATTACK_BAIR) {
 			if (direction == DIRECTION_RIGHT)
-				hurtbox.updateLocation(x, y, w, h);
+				hurtbox.updateLocation(x + bairOffset, y, w, h);
 			if (direction == DIRECTION_LEFT)
-				hurtbox.updateLocation(x, y, w, h);
+				hurtbox.updateLocation(x - bairOffset, y, w, h);
+		
 		} else
 			hurtbox.updateLocation(x, y, w, h);
 		for (AttackHitbox box : hitboxes) {
@@ -2357,7 +2358,10 @@ public class Character {
 					if (state == STATE_UPSPECIAL)
 						enterHelpless();
 					else {
-						state = STATE_NEUTRAL;
+						if (state == STATE_ATTACKDOWN)
+							state = STATE_CROUCH;
+						else
+							state = STATE_NEUTRAL;
 					}
 				}
 				break;
