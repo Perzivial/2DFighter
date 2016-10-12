@@ -16,7 +16,7 @@ public class Projectile {
 	BufferedImage img;
 	AttackHitbox myHitbox;
 	double rotateamount;
-
+	int lifetime = 600;
 	public Projectile(int posx, int posy, int mywidth, int myheight, double velx, double vely, BufferedImage image,
 			Character chara) {
 		x = posx;
@@ -30,6 +30,7 @@ public class Projectile {
 	}
 
 	public void draw(Graphics g) {
+		lifetime --;
 		Graphics2D g2 = (Graphics2D) g;
 		AffineTransform old = g2.getTransform();
 
@@ -42,11 +43,11 @@ public class Projectile {
 		double rotationRequired = 90;
 			System.out.println(rotateamount);
 		if (rotateamount < 1)
-			rotationRequired = Math.toRadians(90);
+			rotationRequired = Math.toRadians(80);
 		else if (rotateamount < 2)
-			rotationRequired = Math.toRadians(180);
+			rotationRequired = Math.toRadians(170);
 		else if (rotateamount < 3)
-			rotationRequired = Math.toRadians(270);
+			rotationRequired = Math.toRadians(260);
 		else
 			rotationRequired = Math.toRadians(360);
 		

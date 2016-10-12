@@ -720,7 +720,7 @@ public class Game extends JComponent implements KeyListener {
 
 		}
 		for (Projectile proj : projectiles) {
-			if (proj.x < -200 || proj.y < -200) {
+			if (proj.x < -200 || proj.y < -200 || proj.lifetime <= 0) {
 				projectiles.remove(proj);
 				break;
 			}

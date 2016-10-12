@@ -5,7 +5,10 @@ import java.awt.image.BufferedImage;
 public class Asriel extends Character {
 
 	public BufferedImage starimg = new Image("img/asriel/star.png").img;
-
+	public BufferedImage sparkimg = new Image("img/asriel/spark.png").img;
+	public BufferedImage spark2img = new Image("img/asriel/spark2.png").img;
+	public BufferedImage spark3img = new Image("img/asriel/spark3.png").img;
+	public BufferedImage spark4img = new Image("img/asriel/spark4.png").img;
 	public Asriel(int posx, int posy, int upKey, int downKey, int leftKey, int rightKey, int modifierKey, int jumpKey,
 			int attackKey, int specialKey, int shieldKey, int grabKey, Game gameinstance) {
 		super(posx, posy, upKey, downKey, leftKey, rightKey, modifierKey, jumpKey, attackKey, specialKey, shieldKey,
@@ -125,6 +128,22 @@ public class Asriel extends Character {
 		
 		hitboxes.add(new AttackHitbox(this, w - 20, 20, 25, 25, 0, -5, 5, 20, 20, 10, .1));
 		hitboxes.add(new AttackHitbox(this, 0, 20, 25, 25, 0, -5, 5, 20, 20, 10, .1));
-		state = STATE_ATTACK_NAIR;
+		
+
+			myGame.projectiles.add(new Projectile((int) (x + w/2) + Game.help.randInt(-20, 20), (int) y + 20 + Game.help.randInt(-20, 20), 10, 10, Game.help.randInt(-20, 20),
+					Game.help.randInt(-20, 20), sparkimg, this));
+			
+			myGame.projectiles.add(new Projectile((int) (x + w/2) + Game.help.randInt(-20, 20), (int) y + 20 + Game.help.randInt(-20, 20),10, 10, Game.help.randInt(-20, 20),
+					Game.help.randInt(-20, 20), spark2img, this));
+			
+			myGame.projectiles.add(new Projectile((int) (x + w/2) + Game.help.randInt(-20, 20), (int) y + 20 + Game.help.randInt(-20, 20), 10, 10, Game.help.randInt(-20, 20),
+					Game.help.randInt(-20, 20), spark3img, this));
+			
+			myGame.projectiles.add(new Projectile((int) (x + w/2) + Game.help.randInt(-20, 20), (int) y + 20 + Game.help.randInt(-20, 20), 10, 10, Game.help.randInt(-20, 20),
+					Game.help.randInt(-20, 20), spark4img, this));
+			
+				
+		
+			state = STATE_ATTACK_NAIR;
 	}
 }
