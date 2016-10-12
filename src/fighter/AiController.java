@@ -17,7 +17,10 @@ public class AiController {
 	}
 
 	public void update() {
-		FollowCharacterWithHighestPercent();
+		if (connectedCharacter.getLives() > 0) {
+			FollowCharacterWithHighestPercent();
+			recover();
+		}
 	}
 
 	public void getDistanceToX() {
@@ -114,6 +117,21 @@ public class AiController {
 		}
 	}
 
+	public void recover() {
+		if (connectedCharacter.getX() < myGame.GROUND_HITBOX.getX() - 20 || connectedCharacter.getX()
+				+ connectedCharacter.getWidth() > myGame.GROUND_HITBOX.getX() + myGame.GROUND_HITBOX.getWidth() + 20) {
+			if (connectedCharacter.getX() < 544)
+				connectedCharacter.runRight();
+			else
+				connectedCharacter.runLeft();
+			if(connectedCharacter.getY() > 500)
+			if (connectedCharacter.state == Character.STATE_NEUTRAL){
+				connectedCharacter.upSpecial();
+				connectedCharacter.state = Character.STATE_UPSPECIAL;
+			}
+		}
+	}
+
 	public void chooseBestAirAttack() {
 		if (connectedCharacter.state == Character.STATE_NEUTRAL) {
 			if (distanceToX < 10) {
@@ -128,6 +146,7 @@ public class AiController {
 					connectedCharacter.state = Character.STATE_ATTACK_DAIR;
 					attackWindow = 20;
 				} else if (distanceToX < 40) {
+					connectedCharacter.direction = -followedCharacter.direction;
 					connectedCharacter.fair();
 					connectedCharacter.state = Character.STATE_ATTACK_FAIR;
 					attackWindow = 10;
@@ -143,6 +162,7 @@ public class AiController {
 	}
 
 	public void chooseBestGroundAttack() {
+
 		Random rand = new Random();
 		int randomChoice = rand.nextInt(2);
 		switch (randomChoice) {
@@ -154,7 +174,7 @@ public class AiController {
 				} else if (distanceToX < 30) {
 					connectedCharacter.jab();
 					attackWindow = 20;
-				} else{
+				} else {
 					connectedCharacter.dTilt();
 					attackWindow = 20;
 				}

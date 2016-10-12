@@ -256,19 +256,21 @@ public class Game extends JComponent implements KeyListener {
 
 			g2.setTransform(oldTransform2);
 			drawBackground(g);
-			g2.setTransform(newTransform);
+			
 
+
+			
+			g2.setTransform(newTransform);
 			g2.translate(-cameraLocationX, -cameraLocationY);
 			drawSun(g2);
 			g2.translate(cameraLocationX, cameraLocationY);
-
 			g2.setTransform(oldTransform2);
 			drawMountain(g);
-			
+
 			g2.setTransform(newTransform);
-			
+
 			drawClouds(g2);
-			
+
 			drawGround(g);
 			doPlayerPhysics(g);
 			doPlayerDrawing(g);
@@ -461,10 +463,12 @@ public class Game extends JComponent implements KeyListener {
 			if (person.getMyGame() != this)
 				person.setMyGame(this);
 			person.draw(g);
+			if(person.getLives() > 0){
 			totalX += person.getX();
 			totalY += person.getY();
 			totalVelX += person.getVelX();
 			totalVelY += person.getVelY();
+			}
 		}
 
 		personAverageX = totalX / characters.size();
@@ -499,31 +503,34 @@ public class Game extends JComponent implements KeyListener {
 			else
 				cameraLocationVelX /= 1.1;
 		} else {
-			
+
 			if (cameraLocationX < -5)
 				cameraLocationVelX += .03;
 			else if (cameraLocationX > 5)
 				cameraLocationVelX -= .03;
 			else
 				cameraLocationVelX /= 1.2;
+			if(cameraLocationX < -75 )
+				cameraLocationVelX = .5;
+			if(cameraLocationX > 75 )
+				cameraLocationVelX = -.5;
 		}
-
-		if (cameraLocationY > -15)
-			cameraLocationVelY -= .01;
-		else if (cameraLocationY < 15)
-			cameraLocationVelY += .01;
-
-		if (cameraLocationY < -15 || cameraLocationY > 15)
-			if (Math.abs(cameraLocationVelY) > 0) {
-				cameraLocationVelY /= 1.05;
-			}
-
+		//decided not to alter to y location. it just didnt work
+		/*
+		 * if (cameraLocationY > -15) cameraLocationVelY -= .01; else if
+		 * (cameraLocationY < 15) cameraLocationVelY += .01;
+		 * 
+		 * if (cameraLocationY < -15 || cameraLocationY > 15) if
+		 * (Math.abs(cameraLocationVelY) > 0) { cameraLocationVelY /= 1.05; }
+		 */
 		cameraLocationX += cameraLocationVelX;
-		cameraLocationY += cameraLocationVelY;
+		// cameraLocationY += cameraLocationVelY;
 		g.setColor(Color.red);
-		if (shouldShowHitboxes)
+		if (shouldShowHitboxes) {
 			g.drawRect(((int) cameraLocationX + DEFAULT_SCREEN_SIZE_X / 2) - 50,
 					((int) cameraLocationY + DEFAULT_SCREEN_SIZE_Y / 2) - 20, 40, 40);
+		}
+		System.out.println(dayTime);
 	}
 
 	public void doPlayerPhysics(Graphics g) {
@@ -633,13 +640,13 @@ public class Game extends JComponent implements KeyListener {
 
 			RoundRectangle2D rounded = new RoundRectangle2D.Double(placementX - 50, 650, 120, 60, 30, 30);
 			RoundRectangle2D rounded2 = new RoundRectangle2D.Double(placementX - 60, 640, 140, 80, 30, 30);
-			g.setColor(Color.white);
+			g.setColor(new Color(255,255,255,150));
 			g2.fill(rounded2);
-			g.setColor(new Color(149, 214, 223));
+			g.setColor(new Color(149, 214, 223,150));
 			g2.fill(rounded);
 
 			Character person = characters.get(i);
-			g.setColor(Color.black);
+			g.setColor(new Color(0,0,0,200));
 			g.setFont(new Font("Futura", Font.PLAIN, 15));
 			g.drawString(String.valueOf((int) person.getpercentage()) + " %", placementX + 25, 675);
 
@@ -732,15 +739,17 @@ public class Game extends JComponent implements KeyListener {
 		}
 
 		if (sunimage1)
-			g2.drawImage(sunimg, (int) (dayTime * 300) - 1100, (int) (Math.sin(dayTime) * 150) + 300, 400, 400, this);
+			g2.drawImage(sunimg, (int) (dayTime * 300) - 1100, (int) (Math.sin(dayTime) * 400) + 500, 400, 400, this);
 
 		else
-			g2.drawImage(sun2img, (int) (dayTime * 300) - 1100, (int) (Math.sin(dayTime) * 150) + 300, 400, 400, this);
-
+			g2.drawImage(sun2img, (int) (dayTime * 300) - 1100, (int) (Math.sin(dayTime) * 400) + 500, 400, 400, this);
+		
+		if(dayTime > 5.8)
+			dayTime = 2.3;
 	}
 
 	public void overlayColour(Graphics g) {
-		g.setColor(new Color(0, 0, 180, 80 - (int) (Math.sin(dayTime - 2.5) * 50)));
+		g.setColor(new Color(0, 0, 180, 80 - (int) (Math.sin(dayTime - 2.5) * 30)));
 
 		if (isnormalscreen)
 			g.fillRect(0, 0, DEFAULT_SCREEN_SIZE_X, DEFAULT_SCREEN_SIZE_Y);
@@ -778,10 +787,6 @@ public class Game extends JComponent implements KeyListener {
 	}
 
 	public void drawGround(Graphics g) {
-		// g.setColor(Color.black);
-		// Graphics2D g2 = (Graphics2D) g;
-		// g2.fill(GROUND_HITBOX.getRect());
-
 		g.drawImage(ground, (int) GROUND_HITBOX.getX(), ((int) GROUND_HITBOX.getY() - 43),
 				(int) GROUND_HITBOX.getWidth(), (int) GROUND_HITBOX.getHeight() + 43, null);
 		for (Hitbox platform : PLATFORMS) {
@@ -807,6 +812,13 @@ public class Game extends JComponent implements KeyListener {
 				g2.setColor(new Color(255, 0, 0, 30));
 				if (person.getGrabBox() != null)
 					g2.fill(person.getGrabBox());
+
+				Point2D centre = new Point2D.Double(DEFAULT_SCREEN_SIZE_X / 2, DEFAULT_SCREEN_SIZE_Y / 2);
+				g.setColor(Color.red);
+				g.drawLine((int) (centre.getX() - 20), (int) (centre.getY()), (int) (centre.getX() + 20),
+						(int) (centre.getY()));
+				g.drawLine((int) (centre.getX()), (int) (centre.getY() - 20), (int) (centre.getX()),
+						(int) (centre.getY() + 20));
 			}
 		}
 	}
@@ -849,7 +861,7 @@ public class Game extends JComponent implements KeyListener {
 				for (AttackHitbox hitbox : person2.hitboxes)
 					if (checkCollision(person1.getHurtbox().getRect(), hitbox.getRect()))
 						if (!person1.equals(hitbox.getLinkedCharacter()) && !hitbox.playerHitList.contains(person1)) {
-							if (person1.getState() != Character.STATE_DODGE && person2.getGrabBox() == null) {
+							if (person1.getState() != Character.STATE_DODGE && person2.getGrabBox() == null && person1.getRespawnTimer() <= 0) {
 
 								boolean shouldapplydamage = false;
 								// new approach, divides the hitbox into 6, each
@@ -885,6 +897,7 @@ public class Game extends JComponent implements KeyListener {
 									person1.applyDamage(hitbox.getDamage());
 									hitbox.playerHitList.add(person1);
 									hitSounds.getRandomSound().play();
+									person1.hurtsounds.stopAllSounds();
 									person1.hurtsounds.getRandomSound().play();
 									shakeScreen(1 + (int) (person1.percent / 10) + (int) (hitbox.getDamage() / 10));
 								}

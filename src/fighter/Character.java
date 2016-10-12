@@ -158,6 +158,7 @@ public class Character {
 	SoundArray hurtsounds;
 	Sound stockLoss;
 
+	boolean shoulddraw = true;
 	private double startx;
 	private double starty;
 	private boolean isController = false;
@@ -233,6 +234,9 @@ public class Character {
 	private int lives = 3;
 	ArrayList<Particle> particles = new ArrayList<Particle>();
 	private boolean inputEnabled = true;
+
+	// respawn timer for invincibility
+	private int respawnTimer = 0;
 
 	public Character(int posx, int posy, int upKey, int downKey, int leftKey, int rightKey, int modifierKey,
 			int jumpKey, int attackKey, int specialKey, int shieldKey, int grabKey, Game gameinstance) {
@@ -396,8 +400,10 @@ public class Character {
 
 	public BufferedImage initializeImage(String url) {
 		try {
-			//BufferedImage buff = getScaledInstance(new Image(url).img, w * 6, h * 6,RenderingHints.VALUE_INTERPOLATION_BILINEAR, false);
-			BufferedImage buff = getScaledInstance(new Image(url).img, (int)(w * myGame.screenWidth/640), (int)(h * myGame.screenHeight/400),RenderingHints.VALUE_INTERPOLATION_BILINEAR, false);
+			// BufferedImage buff = getScaledInstance(new Image(url).img, w * 6,
+			// h * 6,RenderingHints.VALUE_INTERPOLATION_BILINEAR, false);
+			BufferedImage buff = getScaledInstance(new Image(url).img, (int) (w * myGame.screenWidth / 640),
+					(int) (h * myGame.screenHeight / 400), RenderingHints.VALUE_INTERPOLATION_BILINEAR, false);
 			return buff;
 		} catch (NullPointerException e) {
 			System.out.println("error");
@@ -428,71 +434,71 @@ public class Character {
 	}
 
 	public void initializeImages() {
-		try{
-		neutralImage = initializeImage("img/" + name + "/neutral.png");
-		run1Image = initializeImage("img/" + name + "/run1.png");
-		run2Image = initializeImage("img/" + name + "/run2.png");
-		run3Image = initializeImage("img/" + name + "/run3.png");
+		try {
+			neutralImage = initializeImage("img/" + name + "/neutral.png");
+			run1Image = initializeImage("img/" + name + "/run1.png");
+			run2Image = initializeImage("img/" + name + "/run2.png");
+			run3Image = initializeImage("img/" + name + "/run3.png");
 
-		runImages.add(run2Image);
-		runImages.add(run3Image);
-		runImages.add(run2Image);
-		runImages.add(run1Image);
-		// jab and tilts
-		jabImage = initializeImage("img/" + name + "/jab.png");
-		fTiltImage = initializeImage("img/" + name + "/tilt_f.png");
-		uTiltImage = initializeImage("img/" + name + "/tilt_u.png");
-		dTiltImage = initializeImage("img/" + name + "/tilt_d.png");
-		// aerials
-		nairImage = initializeImage("img/" + name + "/air_n.png");
-		uairImage = initializeImage("img/" + name + "/air_u.png");
-		dairImage = initializeImage("img/" + name + "/air_d.png");
-		fairImage = initializeImage("img/" + name + "/air_f.png");
-		bairImage = initializeImage("img/" + name + "/air_b.png");
+			runImages.add(run2Image);
+			runImages.add(run3Image);
+			runImages.add(run2Image);
+			runImages.add(run1Image);
+			// jab and tilts
+			jabImage = initializeImage("img/" + name + "/jab.png");
+			fTiltImage = initializeImage("img/" + name + "/tilt_f.png");
+			uTiltImage = initializeImage("img/" + name + "/tilt_u.png");
+			dTiltImage = initializeImage("img/" + name + "/tilt_d.png");
+			// aerials
+			nairImage = initializeImage("img/" + name + "/air_n.png");
+			uairImage = initializeImage("img/" + name + "/air_u.png");
+			dairImage = initializeImage("img/" + name + "/air_d.png");
+			fairImage = initializeImage("img/" + name + "/air_f.png");
+			bairImage = initializeImage("img/" + name + "/air_b.png");
 
-		// smashes
-		uSmashChargeImage = initializeImage("img/" + name + "/smash_charge_u.png");
-		uSmashImage = initializeImage("img/" + name + "/smash_u.png");
+			// smashes
+			uSmashChargeImage = initializeImage("img/" + name + "/smash_charge_u.png");
+			uSmashImage = initializeImage("img/" + name + "/smash_u.png");
 
-		dSmashChargeImage = initializeImage("img/" + name + "/smash_charge_d.png");
-		dSmashImage = initializeImage("img/" + name + "/smash_d.png");
+			dSmashChargeImage = initializeImage("img/" + name + "/smash_charge_d.png");
+			dSmashImage = initializeImage("img/" + name + "/smash_d.png");
 
-		fSmashChargeImage = initializeImage("img/" + name + "/smash_charge_f.png");
-		fSmashImage = initializeImage("img/" + name + "/smash_f.png");
+			fSmashChargeImage = initializeImage("img/" + name + "/smash_charge_f.png");
+			fSmashImage = initializeImage("img/" + name + "/smash_f.png");
 
-		// other
-		hitstunImage = initializeImage("img/" + name + "/hitstun.png");
-		jumpSquatImage = initializeImage("img/" + name + "/jumpsquat.png");
-		jumpImage = initializeImage("img/" + name + "/jump.png");
-		helplessImage = initializeImage("img/" + name + "/helpless.png");
-		// shielding/dodging
-		shieldImage = initializeImage("img/" + name + "/shield.png");
-		dodgeImage = initializeImage("img/" + name + "/dodge.png");
-		// lag
-		lagImage = initializeImage("img/" + name + "/endlag.png");
+			// other
+			hitstunImage = initializeImage("img/" + name + "/hitstun.png");
+			jumpSquatImage = initializeImage("img/" + name + "/jumpsquat.png");
+			jumpImage = initializeImage("img/" + name + "/jump.png");
+			helplessImage = initializeImage("img/" + name + "/helpless.png");
+			// shielding/dodging
+			shieldImage = initializeImage("img/" + name + "/shield.png");
+			dodgeImage = initializeImage("img/" + name + "/dodge.png");
+			// lag
+			lagImage = initializeImage("img/" + name + "/endlag.png");
 
-		// grab
-		grabImage = initializeImage("img/" + name + "/grab.png");
-		grabbedImage = initializeImage("img/" + name + "/grabbed.png");
-		uThrowImage = initializeImage("img/" + name + "/throw_u.png");
-		dThrowImage = initializeImage("img/" + name + "/throw_d.png");
-		fThrowImage = initializeImage("img/" + name + "/throw_f.png");
-		bThrowImage = initializeImage("img/" + name + "/throw_b.png");
+			// grab
+			grabImage = initializeImage("img/" + name + "/grab.png");
+			grabbedImage = initializeImage("img/" + name + "/grabbed.png");
+			uThrowImage = initializeImage("img/" + name + "/throw_u.png");
+			dThrowImage = initializeImage("img/" + name + "/throw_d.png");
+			fThrowImage = initializeImage("img/" + name + "/throw_f.png");
+			bThrowImage = initializeImage("img/" + name + "/throw_b.png");
 
-		// Specials
-		chargeBeam1Image = initializeImage("img/" + name + "/chargebeam1.png");
-		chargeBeam2Image = initializeImage("img/" + name + "/chargebeam2.png");
-		chargeBeam3Image = initializeImage("img/" + name + "/chargebeam3.png");
-		chargeBeam4Image = initializeImage("img/" + name + "/chargebeam4.png");
-		uSpecialImage = initializeImage("img/" + name + "/upspecial.png");
-		dSpecialImage = initializeImage("img/" + name + "/downspecial.png");
-		fSpecialImage = initializeImage("img/" + name + "/forwardspecial.png");
+			// Specials
+			chargeBeam1Image = initializeImage("img/" + name + "/chargebeam1.png");
+			chargeBeam2Image = initializeImage("img/" + name + "/chargebeam2.png");
+			chargeBeam3Image = initializeImage("img/" + name + "/chargebeam3.png");
+			chargeBeam4Image = initializeImage("img/" + name + "/chargebeam4.png");
+			uSpecialImage = initializeImage("img/" + name + "/upspecial.png");
+			dSpecialImage = initializeImage("img/" + name + "/downspecial.png");
+			fSpecialImage = initializeImage("img/" + name + "/forwardspecial.png");
 
-		// extra images
-		chargeBeamBlueImage = initializeImage("img/" + name + "/chargebeamblue.png");
-		kiBlastBlueImage = initializeImage("img/misc/kiblastblue.png");
-		livesIconImage = initializeImage("img/" + name + "/livesicon.png", 20, 20);
-		}catch(Exception e){
+			// extra images
+			chargeBeamBlueImage = initializeImage("img/" + name + "/chargebeamblue.png");
+			kiBlastBlueImage = initializeImage("img/misc/kiblastblue.png");
+			livesIconImage = initializeImage("img/" + name + "/livesicon.png", 20, 20);
+		} catch (Exception e) {
 			System.out.println("a problem occured");
 		}
 	}
@@ -543,281 +549,291 @@ public class Character {
 		// TODO draws the correct sprite given current state, direction and
 		// other
 		// factors
-		if (state == STATE_NEUTRAL) {
-			boolean isRunning = false;
-			if (isController) {
-				if (isAxisLeft || isAxisRight)
+		if (respawnTimer > 0) {
+			shoulddraw = !shoulddraw;
+		} else {
+			shoulddraw = true;
+		}
+		if (shoulddraw) {
+			if (state == STATE_NEUTRAL) {
+				boolean isRunning = false;
+				if (isController) {
+					if (isAxisLeft || isAxisRight)
+						isRunning = true;
+				} else if (isPressing(keyLeft) || isPressing(keyRight))
 					isRunning = true;
-			} else if (isPressing(keyLeft) || isPressing(keyRight))
-				isRunning = true;
-			if(!inputEnabled){
-				if(Math.abs(velX) > .1)
-					isRunning = true;
-			}
-			if (isGrounded) {
-				if (!isRunning) {
-					if (direction == DIRECTION_RIGHT) {
-						g.drawImage(neutralImage, (int) x, (int) y, w, h, null);
+				if (!inputEnabled) {
+					if (Math.abs(velX) > .1)
+						isRunning = true;
+				}
+				if (isGrounded) {
+					if (!isRunning) {
+						if (direction == DIRECTION_RIGHT) {
+							g.drawImage(neutralImage, (int) x, (int) y, w, h, null);
+						}
+						if (direction == DIRECTION_LEFT) {
+							g.drawImage(neutralImage, (int) x + w, (int) y, -w, h, null);
+						}
+					} else {
+						if (direction == DIRECTION_RIGHT)
+							g.drawImage(runImages.get(runIndex), (int) x, (int) y, w, h, null);
+						if (direction == DIRECTION_LEFT)
+							g.drawImage(runImages.get(runIndex), (int) x + w, (int) y, -w, h, null);
 					}
-					if (direction == DIRECTION_LEFT) {
-						g.drawImage(neutralImage, (int) x + w, (int) y, -w, h, null);
+				} else {
+					if (direction == DIRECTION_RIGHT)
+						g.drawImage(runImages.get(2), (int) x, (int) y, w, h, null);
+					if (direction == DIRECTION_LEFT)
+						g.drawImage(runImages.get(2), (int) x + w, (int) y, -w, h, null);
+				}
+			}
+			if (state == STATE_ATTACK) {
+				if (direction == DIRECTION_RIGHT)
+					g.drawImage(jabImage, (int) x, (int) y, (int) ((w) * imageXTransform), (int) (h * imageYTransform),
+							null);
+				if (direction == DIRECTION_LEFT)
+					g.drawImage(jabImage, (int) x + w, (int) y, (int) ((-w) * imageXTransform),
+							(int) (h * imageYTransform), null);
+			}
+			if (state == STATE_ATTACKSIDE) {
+				if (direction == DIRECTION_RIGHT)
+					g.drawImage(fTiltImage, (int) x, (int) y - (int) (h * imageYTransform) + h,
+							(int) (w * imageXTransform), (int) (h * imageYTransform), null);
+				if (direction == DIRECTION_LEFT)
+					g.drawImage(fTiltImage, (int) x + w, (int) y - (int) (h * imageYTransform) + h,
+							(int) (-w * imageXTransform), (int) (h * imageYTransform), null);
+			}
+			if (state == STATE_ATTACKUP) {
+				if (direction == DIRECTION_RIGHT)
+					g.drawImage(uTiltImage, (int) x, (int) y - (int) (h * imageYTransform) + h,
+							(int) (w * imageXTransform), (int) (h * imageYTransform), null);
+				if (direction == DIRECTION_LEFT)
+					g.drawImage(uTiltImage, (int) x + w, (int) y - (int) (h * imageYTransform) + h,
+							(int) (-w * imageXTransform), (int) (h * imageYTransform), null);
+			}
+			if (state == STATE_ATTACKDOWN) {
+				if (direction == DIRECTION_RIGHT)
+					g.drawImage(dTiltImage, (int) x, (int) y, (int) (w * imageXTransform), h, null);
+				if (direction == DIRECTION_LEFT)
+					g.drawImage(dTiltImage, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
+			}
+			if (state == STATE_ATTACK_NAIR) {
+				if (direction == DIRECTION_RIGHT)
+					g.drawImage(nairImage, (int) x, (int) y, (int) (w * imageXTransform), h, null);
+				if (direction == DIRECTION_LEFT)
+					g.drawImage(nairImage, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
+			}
+			if (state == STATE_ATTACK_FAIR) {
+				if (direction == DIRECTION_RIGHT)
+					g.drawImage(fairImage, (int) x, (int) y, (int) (w * imageXTransform), h, null);
+				if (direction == DIRECTION_LEFT)
+					g.drawImage(fairImage, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
+			}
+			if (state == STATE_ATTACK_BAIR) {
+				if (direction == DIRECTION_RIGHT)
+					g.drawImage(bairImage, (int) x, (int) y, (int) (w * imageXTransform), h, null);
+				if (direction == DIRECTION_LEFT)
+					g.drawImage(bairImage, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
+			}
+			if (state == STATE_ATTACK_DAIR) {
+				if (direction == DIRECTION_RIGHT)
+					g.drawImage(dairImage, (int) x, (int) y, (int) (w * imageXTransform), h, null);
+				if (direction == DIRECTION_LEFT)
+					g.drawImage(dairImage, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
+			}
+			if (state == STATE_ATTACK_UAIR) {
+				if (direction == DIRECTION_RIGHT)
+					g.drawImage(uairImage, (int) x, (int) y, (int) (w * imageXTransform), h, null);
+				if (direction == DIRECTION_LEFT)
+					g.drawImage(uairImage, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
+			}
+			// smash chargin has a bit of nuances in it so it needs it's own
+			// area
+			if (state == STATE_SMASH_ATTACK_CHARGE && isGrounded) {
+				if (smashAttackDirection == DIRECTION_UP) {
+					if (direction == DIRECTION_RIGHT)
+						g.drawImage(uSmashChargeImage, (int) x, (int) y, w, h, null);
+					if (direction == DIRECTION_LEFT)
+						g.drawImage(uSmashChargeImage, (int) x + w, (int) y, -w, h, null);
+				}
+				if (smashAttackDirection == DIRECTION_DOWN) {
+					if (direction == DIRECTION_RIGHT)
+						g.drawImage(dSmashChargeImage, (int) x, (int) y, w, h, null);
+					if (direction == DIRECTION_LEFT)
+						g.drawImage(dSmashChargeImage, (int) x + w, (int) y, -w, h, null);
+				}
+				if (smashAttackDirection == DIRECTION_LEFT || smashAttackDirection == DIRECTION_RIGHT) {
+					if (direction == DIRECTION_RIGHT)
+						g.drawImage(fSmashChargeImage, (int) x, (int) y, w, h, null);
+					if (direction == DIRECTION_LEFT)
+						g.drawImage(fSmashChargeImage, (int) x + w, (int) y, -w, h, null);
+				}
+			}
+			if (state == STATE_SMASH_ATTACK_UP) {
+				if (direction == DIRECTION_RIGHT)
+					g.drawImage(uSmashImage, (int) x, (int) y, w, h, null);
+				if (direction == DIRECTION_LEFT)
+					g.drawImage(uSmashImage, (int) x + w, (int) y, -w, h, null);
+			}
+			if (state == STATE_SMASH_ATTACK_DOWN) {
+				if (direction == DIRECTION_RIGHT)
+					g.drawImage(dSmashImage, (int) x, (int) y, w, h, null);
+				if (direction == DIRECTION_LEFT)
+					g.drawImage(dSmashImage, (int) x + w, (int) y, -w, h, null);
+			}
+			if (state == STATE_SMASH_ATTACK_FORWARD) {
+				if (direction == DIRECTION_RIGHT)
+					g.drawImage(fSmashImage, (int) x, (int) y, (int) (w * imageXTransform), h, null);
+				if (direction == DIRECTION_LEFT)
+					g.drawImage(fSmashImage, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
+			}
+			if (state == STATE_HITSTUN) {
+				if (direction == DIRECTION_RIGHT)
+					g.drawImage(hitstunImage, (int) x, (int) y, w, h, null);
+				if (direction == DIRECTION_LEFT)
+					g.drawImage(hitstunImage, (int) x + w, (int) y, -w, h, null);
+			}
+			if (state == STATE_JUMPSQUAT) {
+				if (direction == DIRECTION_RIGHT)
+					g.drawImage(jumpSquatImage, (int) x, (int) y, w, h, null);
+				if (direction == DIRECTION_LEFT)
+					g.drawImage(jumpSquatImage, (int) x + w, (int) y, -w, h, null);
+			}
+			if (state == STATE_JUMP) {
+				if (direction == DIRECTION_RIGHT)
+					g.drawImage(jumpImage, (int) x, (int) y, w, h, null);
+				if (direction == DIRECTION_LEFT)
+					g.drawImage(jumpImage, (int) x + w, (int) y, -w, h, null);
+			}
+			if (state == STATE_LANDINGLAG) {
+				if (direction == DIRECTION_RIGHT)
+					g.drawImage(jumpSquatImage, (int) x, (int) y, w, (int) (h), null);
+				if (direction == DIRECTION_LEFT)
+					g.drawImage(jumpSquatImage, (int) x + w, (int) y, -w, (int) (h), null);
+			}
+			if (state == STATE_CROUCH) {
+				if (direction == DIRECTION_RIGHT)
+					g.drawImage(jumpSquatImage, (int) x, (int) y, w, h, null);
+				if (direction == DIRECTION_LEFT)
+					g.drawImage(jumpSquatImage, (int) x + w, (int) y, -w, h, null);
+			}
+			if (state == STATE_SHIELD) {
+				if (direction == DIRECTION_RIGHT)
+					g.drawImage(shieldImage, (int) x, (int) y, w, h, null);
+				if (direction == DIRECTION_LEFT)
+					g.drawImage(shieldImage, (int) x + w, (int) y, -w, h, null);
+			}
+			if (state == STATE_DODGE) {
+				if (direction == DIRECTION_RIGHT)
+					g.drawImage(dodgeImage, (int) x, (int) y, w, h, null);
+				if (direction == DIRECTION_LEFT)
+					g.drawImage(dodgeImage, (int) x + w, (int) y, -w, h, null);
+			}
+			if (state == STATE_LAG) {
+				if (direction == DIRECTION_RIGHT)
+					g.drawImage(lagImage, (int) x, (int) y, w, h, null);
+				if (direction == DIRECTION_LEFT)
+					g.drawImage(lagImage, (int) x + w, (int) y, -w, h, null);
+			}
+			if (state == STATE_GRAB) {
+				if (direction == DIRECTION_RIGHT)
+					g.drawImage(grabImage, (int) x, (int) y, (int) (w * imageXTransform), h, null);
+				if (direction == DIRECTION_LEFT)
+					g.drawImage(grabImage, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
+			}
+			if (state == STATE_GRABBED) {
+				if (direction == DIRECTION_RIGHT)
+					g.drawImage(grabbedImage, (int) x, (int) y, w, h, null);
+				if (direction == DIRECTION_LEFT)
+					g.drawImage(grabbedImage, (int) x + w, (int) y, -w, h, null);
+			}
+			if (state == STATE_UTHROW) {
+				if (direction == DIRECTION_RIGHT)
+					g.drawImage(uThrowImage, (int) x, (int) y, (int) (w * imageXTransform), h, null);
+				if (direction == DIRECTION_LEFT)
+					g.drawImage(uThrowImage, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
+			}
+			if (state == STATE_DTHROW) {
+				if (direction == DIRECTION_RIGHT)
+					g.drawImage(dThrowImage, (int) x, (int) y, w, h, null);
+				if (direction == DIRECTION_LEFT)
+					g.drawImage(dThrowImage, (int) x + w, (int) y, -w, h, null);
+			}
+			if (state == STATE_FTHROW) {
+				if (direction == DIRECTION_RIGHT)
+					g.drawImage(fThrowImage, (int) x, (int) y, (int) (w * imageXTransform), h, null);
+				if (direction == DIRECTION_LEFT)
+					g.drawImage(fThrowImage, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
+			}
+			if (state == STATE_BTHROW) {
+				if (direction == DIRECTION_RIGHT)
+					g.drawImage(bThrowImage, (int) x, (int) y - (int) (h * imageYTransform) + h,
+							(int) (w * imageXTransform), (int) (h * imageYTransform), null);
+				if (direction == DIRECTION_LEFT)
+					g.drawImage(bThrowImage, (int) x + w, (int) y - (int) (h * imageYTransform) + h,
+							(int) (-w * imageXTransform), (int) (h * imageYTransform), null);
+			}
+			// the neutral charging state needs more images to show how far it
+			// has
+			// gone along charging
+			if (state == STATE_NEUTRALSPECIAL) {
+				if (hitboxes.size() == 0) {
+					if (neutralSpecialCharge < .5) {
+						if (direction == DIRECTION_RIGHT)
+							g.drawImage(chargeBeam1Image, (int) x, (int) y, w, h, null);
+						if (direction == DIRECTION_LEFT)
+							g.drawImage(chargeBeam1Image, (int) x + w, (int) y, -w, h, null);
+					} else {
+						if (direction == DIRECTION_RIGHT)
+							g.drawImage(chargeBeam2Image, (int) x, (int) y, w, h, null);
+						if (direction == DIRECTION_LEFT)
+							g.drawImage(chargeBeam2Image, (int) x + w, (int) y, -w, h, null);
 					}
 				} else {
-					if (direction == DIRECTION_RIGHT)
-						g.drawImage(runImages.get(runIndex), (int) x, (int) y, w, h, null);
-					if (direction == DIRECTION_LEFT)
-						g.drawImage(runImages.get(runIndex), (int) x + w, (int) y, -w, h, null);
-				}
-			} else {
-				if (direction == DIRECTION_RIGHT)
-					g.drawImage(runImages.get(2), (int) x, (int) y, w, h, null);
-				if (direction == DIRECTION_LEFT)
-					g.drawImage(runImages.get(2), (int) x + w, (int) y, -w, h, null);
-			}
-		}
-		if (state == STATE_ATTACK) {
-			if (direction == DIRECTION_RIGHT)
-				g.drawImage(jabImage, (int) x, (int) y, (int) ((w) * imageXTransform), (int) (h * imageYTransform),
-						null);
-			if (direction == DIRECTION_LEFT)
-				g.drawImage(jabImage, (int) x + w, (int) y, (int) ((-w) * imageXTransform), (int) (h * imageYTransform),
-						null);
-		}
-		if (state == STATE_ATTACKSIDE) {
-			if (direction == DIRECTION_RIGHT)
-				g.drawImage(fTiltImage, (int) x, (int) y - (int) (h * imageYTransform) + h, (int) (w * imageXTransform),
-						(int) (h * imageYTransform), null);
-			if (direction == DIRECTION_LEFT)
-				g.drawImage(fTiltImage, (int) x + w, (int) y - (int) (h * imageYTransform) + h,
-						(int) (-w * imageXTransform), (int) (h * imageYTransform), null);
-		}
-		if (state == STATE_ATTACKUP) {
-			if (direction == DIRECTION_RIGHT)
-				g.drawImage(uTiltImage, (int) x, (int) y - (int) (h * imageYTransform) + h, (int) (w * imageXTransform),
-						(int) (h * imageYTransform), null);
-			if (direction == DIRECTION_LEFT)
-				g.drawImage(uTiltImage, (int) x + w, (int) y - (int) (h * imageYTransform) + h,
-						(int) (-w * imageXTransform), (int) (h * imageYTransform), null);
-		}
-		if (state == STATE_ATTACKDOWN) {
-			if (direction == DIRECTION_RIGHT)
-				g.drawImage(dTiltImage, (int) x, (int) y, (int) (w * imageXTransform), h, null);
-			if (direction == DIRECTION_LEFT)
-				g.drawImage(dTiltImage, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
-		}
-		if (state == STATE_ATTACK_NAIR) {
-			if (direction == DIRECTION_RIGHT)
-				g.drawImage(nairImage, (int) x, (int) y, (int) (w * imageXTransform), h, null);
-			if (direction == DIRECTION_LEFT)
-				g.drawImage(nairImage, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
-		}
-		if (state == STATE_ATTACK_FAIR) {
-			if (direction == DIRECTION_RIGHT)
-				g.drawImage(fairImage, (int) x, (int) y, (int) (w * imageXTransform), h, null);
-			if (direction == DIRECTION_LEFT)
-				g.drawImage(fairImage, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
-		}
-		if (state == STATE_ATTACK_BAIR) {
-			if (direction == DIRECTION_RIGHT)
-				g.drawImage(bairImage, (int) x, (int) y, (int) (w * imageXTransform), h, null);
-			if (direction == DIRECTION_LEFT)
-				g.drawImage(bairImage, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
-		}
-		if (state == STATE_ATTACK_DAIR) {
-			if (direction == DIRECTION_RIGHT)
-				g.drawImage(dairImage, (int) x, (int) y, (int) (w * imageXTransform), h, null);
-			if (direction == DIRECTION_LEFT)
-				g.drawImage(dairImage, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
-		}
-		if (state == STATE_ATTACK_UAIR) {
-			if (direction == DIRECTION_RIGHT)
-				g.drawImage(uairImage, (int) x, (int) y, (int) (w * imageXTransform), h, null);
-			if (direction == DIRECTION_LEFT)
-				g.drawImage(uairImage, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
-		}
-		// smash chargin has a bit of nuances in it so it needs it's own area
-		if (state == STATE_SMASH_ATTACK_CHARGE && isGrounded) {
-			if (smashAttackDirection == DIRECTION_UP) {
-				if (direction == DIRECTION_RIGHT)
-					g.drawImage(uSmashChargeImage, (int) x, (int) y, w, h, null);
-				if (direction == DIRECTION_LEFT)
-					g.drawImage(uSmashChargeImage, (int) x + w, (int) y, -w, h, null);
-			}
-			if (smashAttackDirection == DIRECTION_DOWN) {
-				if (direction == DIRECTION_RIGHT)
-					g.drawImage(dSmashChargeImage, (int) x, (int) y, w, h, null);
-				if (direction == DIRECTION_LEFT)
-					g.drawImage(dSmashChargeImage, (int) x + w, (int) y, -w, h, null);
-			}
-			if (smashAttackDirection == DIRECTION_LEFT || smashAttackDirection == DIRECTION_RIGHT) {
-				if (direction == DIRECTION_RIGHT)
-					g.drawImage(fSmashChargeImage, (int) x, (int) y, w, h, null);
-				if (direction == DIRECTION_LEFT)
-					g.drawImage(fSmashChargeImage, (int) x + w, (int) y, -w, h, null);
-			}
-		}
-		if (state == STATE_SMASH_ATTACK_UP) {
-			if (direction == DIRECTION_RIGHT)
-				g.drawImage(uSmashImage, (int) x, (int) y, w, h, null);
-			if (direction == DIRECTION_LEFT)
-				g.drawImage(uSmashImage, (int) x + w, (int) y, -w, h, null);
-		}
-		if (state == STATE_SMASH_ATTACK_DOWN) {
-			if (direction == DIRECTION_RIGHT)
-				g.drawImage(dSmashImage, (int) x, (int) y, w, h, null);
-			if (direction == DIRECTION_LEFT)
-				g.drawImage(dSmashImage, (int) x + w, (int) y, -w, h, null);
-		}
-		if (state == STATE_SMASH_ATTACK_FORWARD) {
-			if (direction == DIRECTION_RIGHT)
-				g.drawImage(fSmashImage, (int) x, (int) y, (int) (w * imageXTransform), h, null);
-			if (direction == DIRECTION_LEFT)
-				g.drawImage(fSmashImage, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
-		}
-		if (state == STATE_HITSTUN) {
-			if (direction == DIRECTION_RIGHT)
-				g.drawImage(hitstunImage, (int) x, (int) y, w, h, null);
-			if (direction == DIRECTION_LEFT)
-				g.drawImage(hitstunImage, (int) x + w, (int) y, -w, h, null);
-		}
-		if (state == STATE_JUMPSQUAT) {
-			if (direction == DIRECTION_RIGHT)
-				g.drawImage(jumpSquatImage, (int) x, (int) y, w, h, null);
-			if (direction == DIRECTION_LEFT)
-				g.drawImage(jumpSquatImage, (int) x + w, (int) y, -w, h, null);
-		}
-		if (state == STATE_JUMP) {
-			if (direction == DIRECTION_RIGHT)
-				g.drawImage(jumpImage, (int) x, (int) y, w, h, null);
-			if (direction == DIRECTION_LEFT)
-				g.drawImage(jumpImage, (int) x + w, (int) y, -w, h, null);
-		}
-		if (state == STATE_LANDINGLAG) {
-			if (direction == DIRECTION_RIGHT)
-				g.drawImage(jumpSquatImage, (int) x, (int) y, w, (int) (h), null);
-			if (direction == DIRECTION_LEFT)
-				g.drawImage(jumpSquatImage, (int) x + w, (int) y, -w, (int) (h), null);
-		}
-		if (state == STATE_CROUCH) {
-			if (direction == DIRECTION_RIGHT)
-				g.drawImage(jumpSquatImage, (int) x, (int) y, w, h, null);
-			if (direction == DIRECTION_LEFT)
-				g.drawImage(jumpSquatImage, (int) x + w, (int) y, -w, h, null);
-		}
-		if (state == STATE_SHIELD) {
-			if (direction == DIRECTION_RIGHT)
-				g.drawImage(shieldImage, (int) x, (int) y, w, h, null);
-			if (direction == DIRECTION_LEFT)
-				g.drawImage(shieldImage, (int) x + w, (int) y, -w, h, null);
-		}
-		if (state == STATE_DODGE) {
-			if (direction == DIRECTION_RIGHT)
-				g.drawImage(dodgeImage, (int) x, (int) y, w, h, null);
-			if (direction == DIRECTION_LEFT)
-				g.drawImage(dodgeImage, (int) x + w, (int) y, -w, h, null);
-		}
-		if (state == STATE_LAG) {
-			if (direction == DIRECTION_RIGHT)
-				g.drawImage(lagImage, (int) x, (int) y, w, h, null);
-			if (direction == DIRECTION_LEFT)
-				g.drawImage(lagImage, (int) x + w, (int) y, -w, h, null);
-		}
-		if (state == STATE_GRAB) {
-			if (direction == DIRECTION_RIGHT)
-				g.drawImage(grabImage, (int) x, (int) y, (int) (w * imageXTransform), h, null);
-			if (direction == DIRECTION_LEFT)
-				g.drawImage(grabImage, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
-		}
-		if (state == STATE_GRABBED) {
-			if (direction == DIRECTION_RIGHT)
-				g.drawImage(grabbedImage, (int) x, (int) y, w, h, null);
-			if (direction == DIRECTION_LEFT)
-				g.drawImage(grabbedImage, (int) x + w, (int) y, -w, h, null);
-		}
-		if (state == STATE_UTHROW) {
-			if (direction == DIRECTION_RIGHT)
-				g.drawImage(uThrowImage, (int) x, (int) y, (int) (w * imageXTransform), h, null);
-			if (direction == DIRECTION_LEFT)
-				g.drawImage(uThrowImage, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
-		}
-		if (state == STATE_DTHROW) {
-			if (direction == DIRECTION_RIGHT)
-				g.drawImage(dThrowImage, (int) x, (int) y, w, h, null);
-			if (direction == DIRECTION_LEFT)
-				g.drawImage(dThrowImage, (int) x + w, (int) y, -w, h, null);
-		}
-		if (state == STATE_FTHROW) {
-			if (direction == DIRECTION_RIGHT)
-				g.drawImage(fThrowImage, (int) x, (int) y, (int) (w * imageXTransform), h, null);
-			if (direction == DIRECTION_LEFT)
-				g.drawImage(fThrowImage, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
-		}
-		if (state == STATE_BTHROW) {
-			if (direction == DIRECTION_RIGHT)
-				g.drawImage(bThrowImage, (int) x, (int) y - (int) (h * imageYTransform) + h,
-						(int) (w * imageXTransform), (int) (h * imageYTransform), null);
-			if (direction == DIRECTION_LEFT)
-				g.drawImage(bThrowImage, (int) x + w, (int) y - (int) (h * imageYTransform) + h,
-						(int) (-w * imageXTransform), (int) (h * imageYTransform), null);
-		}
-		// the neutral charging state needs more images to show how far it has
-		// gone along charging
-		if (state == STATE_NEUTRALSPECIAL) {
-			if (hitboxes.size() == 0) {
-				if (neutralSpecialCharge < .5) {
-					if (direction == DIRECTION_RIGHT)
-						g.drawImage(chargeBeam1Image, (int) x, (int) y, w, h, null);
-					if (direction == DIRECTION_LEFT)
-						g.drawImage(chargeBeam1Image, (int) x + w, (int) y, -w, h, null);
-				} else {
-					if (direction == DIRECTION_RIGHT)
-						g.drawImage(chargeBeam2Image, (int) x, (int) y, w, h, null);
-					if (direction == DIRECTION_LEFT)
-						g.drawImage(chargeBeam2Image, (int) x + w, (int) y, -w, h, null);
-				}
-			} else {
-				if (hitboxes.get(0).isActive) {
-					if (direction == DIRECTION_RIGHT)
-						g.drawImage(chargeBeam3Image, (int) x, (int) y, (int) (w * imageXTransform), h, null);
-					if (direction == DIRECTION_LEFT)
-						g.drawImage(chargeBeam3Image, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
-				} else {
-					if (direction == DIRECTION_RIGHT)
-						g.drawImage(chargeBeam4Image, (int) x, (int) y, (int) (w * imageXTransform), h, null);
-					if (direction == DIRECTION_LEFT)
-						g.drawImage(chargeBeam4Image, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
+					if (hitboxes.get(0).isActive) {
+						if (direction == DIRECTION_RIGHT)
+							g.drawImage(chargeBeam3Image, (int) x, (int) y, (int) (w * imageXTransform), h, null);
+						if (direction == DIRECTION_LEFT)
+							g.drawImage(chargeBeam3Image, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
+					} else {
+						if (direction == DIRECTION_RIGHT)
+							g.drawImage(chargeBeam4Image, (int) x, (int) y, (int) (w * imageXTransform), h, null);
+						if (direction == DIRECTION_LEFT)
+							g.drawImage(chargeBeam4Image, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
+					}
 				}
 			}
-		}
 
-		if (state == STATE_UPSPECIAL) {
-			if (direction == DIRECTION_RIGHT)
-				g.drawImage(uSpecialImage, (int) x, (int) y, (int) (w * imageXTransform), h, null);
-			if (direction == DIRECTION_LEFT)
-				g.drawImage(uSpecialImage, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
-		}
+			if (state == STATE_UPSPECIAL) {
+				if (direction == DIRECTION_RIGHT)
+					g.drawImage(uSpecialImage, (int) x, (int) y, (int) (w * imageXTransform), h, null);
+				if (direction == DIRECTION_LEFT)
+					g.drawImage(uSpecialImage, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
+			}
 
-		if (state == STATE_DOWNSPECIAL) {
-			if (direction == DIRECTION_RIGHT)
-				g.drawImage(dSpecialImage, (int) x, (int) y, (int) (w * imageXTransform), h, null);
-			if (direction == DIRECTION_LEFT)
-				g.drawImage(dSpecialImage, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
-		}
+			if (state == STATE_DOWNSPECIAL) {
+				if (direction == DIRECTION_RIGHT)
+					g.drawImage(dSpecialImage, (int) x, (int) y, (int) (w * imageXTransform), h, null);
+				if (direction == DIRECTION_LEFT)
+					g.drawImage(dSpecialImage, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
+			}
 
-		if (state == STATE_FORWARDSPECIAL) {
-			if (direction == DIRECTION_RIGHT)
-				g.drawImage(fSpecialImage, (int) x, (int) y, (int) (w * imageXTransform), h, null);
-			if (direction == DIRECTION_LEFT)
-				g.drawImage(fSpecialImage, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
-		}
+			if (state == STATE_FORWARDSPECIAL) {
+				if (direction == DIRECTION_RIGHT)
+					g.drawImage(fSpecialImage, (int) x, (int) y, (int) (w * imageXTransform), h, null);
+				if (direction == DIRECTION_LEFT)
+					g.drawImage(fSpecialImage, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
+			}
 
-		if (state == STATE_HELPLESS) {
-			if (direction == DIRECTION_RIGHT)
-				g.drawImage(helplessImage, (int) x, (int) y, (int) (w * imageXTransform), h, null);
-			if (direction == DIRECTION_LEFT)
-				g.drawImage(helplessImage, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
+			if (state == STATE_HELPLESS) {
+				if (direction == DIRECTION_RIGHT)
+					g.drawImage(helplessImage, (int) x, (int) y, (int) (w * imageXTransform), h, null);
+				if (direction == DIRECTION_LEFT)
+					g.drawImage(helplessImage, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
+			}
 		}
-
+		{
+		}
 	}
 
 	public void drawSpecialSprites(Graphics g) {
@@ -957,7 +973,7 @@ public class Character {
 	}
 
 	public void placeShield() {
-		
+
 		shield = new Ellipse2D.Double();
 		if (!isJumpButtonDownController() && state != STATE_JUMPSQUAT && state != STATE_JUMP) {
 			if (isShielding && state != STATE_DODGE && state != STATE_LAG && !isJumpButtonDownController()) {
@@ -1002,59 +1018,61 @@ public class Character {
 	}
 
 	public void attemptToShield() {
-		if(inputEnabled){
-		if (state != STATE_GRABBED && state != STATE_GRAB && state != STATE_HELPLESS) {
-			if (isController) {
-				if (myController != null && getPortNum() == myController.getPortNumber())
-					for (Component comp : myController.getComponents()) {
-						if (comp.getName().equals(getLeftTrigger()) || comp.getName().equals(getRightTrigger())) {
-							if (comp.getPollData() > getAxisMidpoint()) {
-								if (isGrounded) {
-									if (isGrounded && state != STATE_HITSTUN && state != STATE_DODGE) {
-										isShielding = true;
-										shieldWidth -= 0.002666666667;
-										breakShield();
-									}
-								} else if (state != STATE_HITSTUN && state != STATE_DODGE && canAirDodge) {
-									// velX = 0;
-									// velY = 0;
-									if (state != STATE_JUMPSQUAT) {
-										dodge();
+		if (inputEnabled) {
+			if (state != STATE_GRABBED && state != STATE_GRAB && state != STATE_HELPLESS) {
+				if (isController) {
+					if (myController != null && getPortNum() == myController.getPortNumber())
+						for (Component comp : myController.getComponents()) {
+							if (comp.getName().equals(getLeftTrigger()) || comp.getName().equals(getRightTrigger())) {
+								if (comp.getPollData() > getAxisMidpoint()) {
+									if (isGrounded) {
+										if (isGrounded && state != STATE_HITSTUN && state != STATE_DODGE) {
+											isShielding = true;
+											shieldWidth -= 0.002666666667;
+											breakShield();
+										}
+									} else if (state != STATE_HITSTUN && state != STATE_DODGE && canAirDodge) {
+										// velX = 0;
+										// velY = 0;
+										if (state != STATE_JUMPSQUAT) {
+											dodge();
+										}
 									}
 								}
+
+							}
+						}
+				} else {
+					if (isPressing(keyShield) && state != STATE_HITSTUN && state != STATE_DODGE
+							&& state != STATE_CROUCH) {
+						if (isGrounded && state != STATE_JUMPSQUAT) {
+							if (isPressing(keyLeft)) {
+								velX = -5;
+								dodge();
+							} else if (isPressing(keyRight)) {
+								velX = 5;
+								dodge();
+							} else {
+								isShielding = true;
+								shieldWidth -= 0.002666666667;
+								breakShield();
 							}
 
-						}
-					}
-			} else {
-				if (isPressing(keyShield) && state != STATE_HITSTUN && state != STATE_DODGE && state != STATE_CROUCH) {
-					if (isGrounded && state != STATE_JUMPSQUAT) {
-						if (isPressing(keyLeft)) {
-							velX = -5;
-							dodge();
-						} else if (isPressing(keyRight)) {
-							velX = 5;
-							dodge();
 						} else {
-							isShielding = true;
-							shieldWidth -= 0.002666666667;
-							breakShield();
-						}
-
-					} else {
-						if (state != STATE_JUMPSQUAT) {
-							/*
-							 * if (isPressing(keyLeft)) velX -= waveDashSpeed;
-							 * if (isPressing(keyRight)) velX += waveDashSpeed;
-							 * if (isPressing(keyUp)) velY -= waveDashSpeed; if
-							 * (isPressing(keyDown)) velY += waveDashSpeed;
-							 */
-							dodge();
+							if (state != STATE_JUMPSQUAT) {
+								/*
+								 * if (isPressing(keyLeft)) velX -=
+								 * waveDashSpeed; if (isPressing(keyRight)) velX
+								 * += waveDashSpeed; if (isPressing(keyUp)) velY
+								 * -= waveDashSpeed; if (isPressing(keyDown))
+								 * velY += waveDashSpeed;
+								 */
+								dodge();
+							}
 						}
 					}
 				}
 			}
-		}
 		}
 	}
 
@@ -1091,7 +1109,8 @@ public class Character {
 	}
 
 	public void applyDamage(double damageApplied) {
-		percent += damageApplied;
+		if (respawnTimer <= 0)
+			percent += damageApplied;
 	}
 
 	public void getController() {
@@ -1154,15 +1173,18 @@ public class Character {
 				velY = 0;
 				percent = 0;
 				state = STATE_NEUTRAL;
+				respawnTimer = 60;
 			}
 			lives--;
 			if (lives > -1)
 				stockLoss.play();
+		} else if (respawnTimer > 0) {
+			respawnTimer--;
 		}
 	}
 
 	public void handleInput() {
-		if (inputEnabled) {
+		if (inputEnabled  && lives > 0) {
 			if (!isController) {
 				if (state != STATE_HITSTUN) {
 					if (state == STATE_NEUTRAL || !isGrounded || state == STATE_CROUCH) {
@@ -1250,7 +1272,7 @@ public class Character {
 					else
 						velX = runSpeed;
 					direction = DIRECTION_RIGHT;
-					
+
 					rotateRunArray();
 				}
 			} else if (velX < maxAirSpeed && state != STATE_AIRDODGE && canAirDodge && state != STATE_GRABBED) {
@@ -1870,12 +1892,12 @@ public class Character {
 	}
 
 	public void applyKnockback(double newVelX, double newVelY, int direction2) {
-
-		double dampenedpercent = percent / 50;
-		velX = (newVelX * (dampenedpercent + 1));
-		velY = newVelY * (dampenedpercent + 1);
-		System.out.println(direction2);
-
+		if (respawnTimer <= 0) {
+			double dampenedpercent = percent / 50;
+			velX = (newVelX * (dampenedpercent + 1));
+			velY = newVelY * (dampenedpercent + 1);
+			System.out.println(direction2);
+		}
 	}
 
 	public void shouldBounceOffGround() {
@@ -1885,15 +1907,15 @@ public class Character {
 	}
 
 	public void tryGrab() {
-		if(inputEnabled){
-		if (isGrounded) {
-			if (!isController) {
-				if (isPressing(keyGrab)) {
-					if (state == STATE_NEUTRAL)
-						grab();
+		if (inputEnabled) {
+			if (isGrounded) {
+				if (!isController) {
+					if (isPressing(keyGrab)) {
+						if (state == STATE_NEUTRAL)
+							grab();
+					}
 				}
 			}
-		}
 		}
 	}
 
@@ -2200,52 +2222,79 @@ public class Character {
 	}
 
 	public void chargeNeutralSpecial() {
-		if(inputEnabled){
-		if (state == STATE_NEUTRALSPECIAL && hitboxes.size() == 0) {
-			if (isController) {
-				if (isSpecialButtonDownController() && neutralSpecialCharge < 1) {
-					neutralSpecialCharge += neutralSpecialChargeIncrement;
+		if (inputEnabled) {
+			if (state == STATE_NEUTRALSPECIAL && hitboxes.size() == 0) {
+				if (isController) {
+					if (isSpecialButtonDownController() && neutralSpecialCharge < 1) {
+						neutralSpecialCharge += neutralSpecialChargeIncrement;
+					} else {
+						if (neutralSpecialCharge >= 1) {
+							neutralSpecial();
+							neutralSpecialCharge = 0;
+						} else if (hitboxes.size() == 0)
+							state = STATE_NEUTRAL;
+					}
 				} else {
-					if (neutralSpecialCharge >= 1) {
-						neutralSpecial();
-						neutralSpecialCharge = 0;
-					} else if (hitboxes.size() == 0)
-						state = STATE_NEUTRAL;
+					if (isPressing(keySpecial) && neutralSpecialCharge < 1) {
+						neutralSpecialCharge += neutralSpecialChargeIncrement;
+					} else {
+						if (neutralSpecialCharge >= 1) {
+							neutralSpecial();
+							neutralSpecialCharge = 0;
+						} else if (hitboxes.size() == 0)
+							state = STATE_NEUTRAL;
+					}
 				}
-			} else {
-				if (isPressing(keySpecial) && neutralSpecialCharge < 1) {
-					neutralSpecialCharge += neutralSpecialChargeIncrement;
-				} else {
-					if (neutralSpecialCharge >= 1) {
-						neutralSpecial();
-						neutralSpecialCharge = 0;
-					} else if (hitboxes.size() == 0)
-						state = STATE_NEUTRAL;
-				}
+			} else if (neutralSpecialCharge != 0) {
+				neutralSpecialCharge = 0;
 			}
-		} else if (neutralSpecialCharge != 0) {
-			neutralSpecialCharge = 0;
-		}
 		}
 	}
 	// end of attack codes
 
 	public void doSpecialAttacks() {
-		if(inputEnabled){
-		if (state == STATE_NEUTRAL || state == STATE_CROUCH) {
-			if (isController) {
-				if (isSpecialButtonDownController()) {
-					if (isAxisUp) {
+		if (inputEnabled && lives > 0) {
+			if (state == STATE_NEUTRAL || state == STATE_CROUCH) {
+				if (isController) {
+					if (isSpecialButtonDownController()) {
+						if (isAxisUp) {
+							upSpecial();
+							state = STATE_UPSPECIAL;
+						} else if (isAxisDown) {
+							downSpecial();
+							state = STATE_DOWNSPECIAL;
+						} else if (isAxisLeft) {
+							direction = DIRECTION_LEFT;
+							forwardSpecial();
+							state = STATE_FORWARDSPECIAL;
+						} else if (isAxisRight) {
+							direction = DIRECTION_RIGHT;
+							forwardSpecial();
+							state = STATE_FORWARDSPECIAL;
+						} else {
+							for (double myint : moveAxisHistoryX) {
+								if (myint == direction * -1) {
+									direction *= -1;
+									break;
+								}
+							}
+
+							state = STATE_NEUTRALSPECIAL;
+						}
+
+					}
+				} else if (isPressing(keySpecial)) {
+					if (isPressing(keyUp)) {
 						upSpecial();
 						state = STATE_UPSPECIAL;
-					} else if (isAxisDown) {
+					} else if (isPressing(keyDown)) {
 						downSpecial();
 						state = STATE_DOWNSPECIAL;
-					} else if (isAxisLeft) {
+					} else if (isPressing(keyLeft)) {
 						direction = DIRECTION_LEFT;
 						forwardSpecial();
 						state = STATE_FORWARDSPECIAL;
-					} else if (isAxisRight) {
+					} else if (isPressing(keyRight)) {
 						direction = DIRECTION_RIGHT;
 						forwardSpecial();
 						state = STATE_FORWARDSPECIAL;
@@ -2256,37 +2305,10 @@ public class Character {
 								break;
 							}
 						}
-
 						state = STATE_NEUTRALSPECIAL;
 					}
-
-				}
-			} else if (isPressing(keySpecial)) {
-				if (isPressing(keyUp)) {
-					upSpecial();
-					state = STATE_UPSPECIAL;
-				} else if (isPressing(keyDown)) {
-					downSpecial();
-					state = STATE_DOWNSPECIAL;
-				} else if (isPressing(keyLeft)) {
-					direction = DIRECTION_LEFT;
-					forwardSpecial();
-					state = STATE_FORWARDSPECIAL;
-				} else if (isPressing(keyRight)) {
-					direction = DIRECTION_RIGHT;
-					forwardSpecial();
-					state = STATE_FORWARDSPECIAL;
-				} else {
-					for (double myint : moveAxisHistoryX) {
-						if (myint == direction * -1) {
-							direction *= -1;
-							break;
-						}
-					}
-					state = STATE_NEUTRALSPECIAL;
 				}
 			}
-		}
 		}
 		// smashAttackChargePercent = 1.0;
 	}
@@ -2821,6 +2843,14 @@ public class Character {
 
 	public void setRunIndexChangeCounter(int runIndexChangeCounter) {
 		this.runIndexChangeCounter = runIndexChangeCounter;
+	}
+
+	public int getRespawnTimer() {
+		return respawnTimer;
+	}
+
+	public void setRespawnTimer(int respawnTimer) {
+		this.respawnTimer = respawnTimer;
 	}
 
 }
