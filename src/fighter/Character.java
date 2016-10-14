@@ -22,7 +22,7 @@ public class Character {
 	private Ellipse2D shield;
 	private double shieldWidth = 1.0;
 	boolean isShielding = false;
-	private double fallSpeed = .8;
+	protected double fallSpeed = .8;
 	protected double velX;
 	protected double velY;
 	protected double x = 200;
@@ -177,7 +177,7 @@ public class Character {
 	private boolean isAxisRight = false;
 	private boolean isAxisLeft = false;
 	private boolean isAxisUp = false;
-	private boolean isAxisDown = false;
+	protected boolean isAxisDown = false;
 	private boolean isAxisHalfway = false;
 	private double axisDeadZone;
 	private String buttonJump;
@@ -200,7 +200,7 @@ public class Character {
 	private boolean lastFrameIsGrounded;
 	private int landingLagCounter = 0;
 
-	private int rollDistance = 10;
+	private int rollDistance = 15;
 	private int rollCounter = 0;
 	private int lagCounter = 0;
 	private int rollLag = 10;
@@ -237,7 +237,7 @@ public class Character {
 	public boolean isOnPlatform = false;
 	// respawn timer for invincibility
 	private int respawnTimer = 0;
-	
+	protected boolean shouldSlide = false;
 	public Character(int posx, int posy, int upKey, int downKey, int leftKey, int rightKey, int modifierKey,
 			int jumpKey, int attackKey, int specialKey, int shieldKey, int grabKey, Game gameinstance) {
 		myGame = gameinstance;
@@ -355,8 +355,9 @@ public class Character {
 		move();
 		blastZone();
 		translateHitboxes();
-		drawCorrectSprite(g);
 		drawSpecialSprites(g);
+		drawCorrectSprite(g);
+
 		recordLastFrameX();
 		recordLastFrameY();
 		recordLastFrameIsGrounded();
@@ -734,6 +735,7 @@ public class Character {
 					g.drawImage(lagImage, (int) x, (int) y, w, h, null);
 				if (direction == DIRECTION_LEFT)
 					g.drawImage(lagImage, (int) x + w, (int) y, -w, h, null);
+			
 			}
 			if (state == STATE_GRAB) {
 				if (direction == DIRECTION_RIGHT)
@@ -755,9 +757,9 @@ public class Character {
 			}
 			if (state == STATE_DTHROW) {
 				if (direction == DIRECTION_RIGHT)
-					g.drawImage(dThrowImage, (int) x, (int) y, w, h, null);
+					g.drawImage(dThrowImage, (int) x, (int) y, (int) (w * imageXTransform), h, null);
 				if (direction == DIRECTION_LEFT)
-					g.drawImage(dThrowImage, (int) x + w, (int) y, -w, h, null);
+					g.drawImage(dThrowImage, (int) x + w, (int) y, (int) (-w * imageXTransform), h, null);
 			}
 			if (state == STATE_FTHROW) {
 				if (direction == DIRECTION_RIGHT)
@@ -985,8 +987,8 @@ public class Character {
 				// (h + (5 * w / 10)) * shieldWidth);
 				// hopefuly this new method works
 
-				shield.setFrameFromCenter(x + w / 2, y + h / 2, (x + w * 1.7) - 1 / shieldWidth * (w / 3),
-						(y + h * 1.5) - 1 / shieldWidth * (w / 2.5));
+				shield.setFrameFromCenter(x + w / 2, y + h / 2, (x + w * 1.6) - 1 / shieldWidth * (w / 3),
+						(y + h * 1.4) - 1 / shieldWidth * (w / 2.5));
 
 				state = STATE_SHIELD;
 				if (isAxisLeft) {
@@ -1567,11 +1569,9 @@ public class Character {
 	}
 
 	public void applyFriction() {
+		if(!shouldSlide)
 		if (isGrounded && state != STATE_DODGE && state != STATE_JUMPSQUAT)
 			velX /= horizontalSlowdownFactor;
-		if (state == STATE_LANDFALLSPECIAL) {
-			velX /= horizontalSlowdownFactor / 2;
-		}
 	}
 
 	// TODO attack locations. syntax is : character, local position x, local
@@ -1934,7 +1934,7 @@ public class Character {
 			grabCounter = grabLength;
 		}
 	}
-
+	//this has to be hard overriden to allow for custom grab boxes
 	public void placeGrabBox() {
 
 		if (state == STATE_GRAB && grabbedPlayer == null) {

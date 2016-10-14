@@ -22,6 +22,7 @@ public class Particle {
 		this.velX = velocityx;
 		this.velY = velocityy;
 		color = colour;
+		setShapeToPreset("cubesmall");
 	}
 
 	public void draw(Graphics g) {
@@ -34,7 +35,7 @@ public class Particle {
 
 	public void setShapeToPreset(String preset) {
 		switch (preset) {
-		case ("squaresmall"):
+		case ("cubesmall"):
 			myShape.addPoint(x, y);
 			myShape.addPoint(x + 5, y);
 			myShape.addPoint(x + 5, y + 5);

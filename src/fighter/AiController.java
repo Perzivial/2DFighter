@@ -28,7 +28,7 @@ public class AiController {
 	}
 
 	public void getDistanceToY() {
-		distanceToY = (int) Math.abs(followedCharacter.getY() - connectedCharacter.getY());
+		distanceToY = (int) Math.abs(followedCharacter.getY()  - connectedCharacter.getY() -  connectedCharacter.h/2);
 	}
 
 	// makes the ai walk towards the player who has the highest percent
@@ -165,6 +165,10 @@ public class AiController {
 
 		Random rand = new Random();
 		int randomChoice = rand.nextInt(2);
+		if(distanceToX > 0)
+			connectedCharacter.direction = Character.DIRECTION_LEFT;
+		else 
+			connectedCharacter.direction = Character.DIRECTION_RIGHT;
 		switch (randomChoice) {
 		case (0):
 			if (connectedCharacter.state == Character.STATE_NEUTRAL) {

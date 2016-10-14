@@ -17,6 +17,7 @@ public class Projectile {
 	AttackHitbox myHitbox;
 	double rotateamount;
 	int lifetime = 600;
+	int damage = 5;
 	public Projectile(int posx, int posy, int mywidth, int myheight, double velx, double vely, BufferedImage image,
 			Character chara) {
 		x = posx;
@@ -28,7 +29,28 @@ public class Projectile {
 		img = image;
 		myHitbox = new AttackHitbox(chara, 0, 0, w, h, 0, 0, 5, 60, 5, 0, .05);
 	}
-
+	public Projectile(int posx, int posy, int mywidth, int myheight, double velx, double vely, BufferedImage image,
+			Character chara, int damage) {
+		x = posx;
+		y = posy;
+		w = mywidth;
+		h = myheight;
+		velX = velx;
+		velY = vely;
+		img = image;
+		myHitbox = new AttackHitbox(chara, 0, 0, w, h, 0, 0, 5, 60, damage, 0, .05);
+	}
+	public Projectile(int posx, int posy, int mywidth, int myheight, double velx, double vely, BufferedImage image,
+			Character chara, int damage, int knockbackx, int knockbacky) {
+		x = posx;
+		y = posy;
+		w = mywidth;
+		h = myheight;
+		velX = velx;
+		velY = vely;
+		img = image;
+		myHitbox = new AttackHitbox(chara, 0, 0, w, h, knockbackx, knockbacky, 5, 60, damage, 0, .05);
+	}
 	public void draw(Graphics g) {
 		lifetime --;
 		Graphics2D g2 = (Graphics2D) g;
@@ -43,11 +65,11 @@ public class Projectile {
 		double rotationRequired = 90;
 			System.out.println(rotateamount);
 		if (rotateamount < 1)
-			rotationRequired = Math.toRadians(80);
+			rotationRequired = Math.toRadians(90);
 		else if (rotateamount < 2)
-			rotationRequired = Math.toRadians(170);
+			rotationRequired = Math.toRadians(180);
 		else if (rotateamount < 3)
-			rotationRequired = Math.toRadians(260);
+			rotationRequired = Math.toRadians(270);
 		else
 			rotationRequired = Math.toRadians(360);
 		

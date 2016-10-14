@@ -73,8 +73,8 @@ public class Game extends JComponent implements KeyListener {
 	private final static int SCREEN_STATE_CHOOSE_CONTROL_SCHEME = 3;
 	private final static int SCREEN_STATE_WIN_SCREEN = 4;
 	// character select screen specific variables
-	private int charSelectX = WIDTH / 2;
-	private int charSelectY = HEIGHT / 2;
+	private int charSelectX = DEFAULT_SCREEN_SIZE_X / 2;
+	private int charSelectY = DEFAULT_SCREEN_SIZE_Y / 2;
 	private HashSet<Integer> keysPressed = new HashSet<Integer>();
 	BufferedImage selectorHandImage = initializeImage("img/misc/selectorhand.png", 75 * 2,
 			(int) (75 * 0.6818181818) * 2);
@@ -257,7 +257,7 @@ public class Game extends JComponent implements KeyListener {
 		Graphics2D g2 = (Graphics2D) g;
 		AffineTransform oldTransform = g2.getTransform();
 		graphicsSettings(g2);
-
+		AffineTransform newTransformnoShake = g2.getTransform();
 		AffineTransform oldTransform2 = g2.getTransform();
 		if (screenState == SCREEN_STATE_INGAME) {
 			g2.scale(1.2, 1.2);
@@ -278,7 +278,7 @@ public class Game extends JComponent implements KeyListener {
 		switch (screenState) {
 		case (SCREEN_STATE_INGAME):
 			// basic background stuff to build scene
-			AffineTransform newTransformnoShake = g2.getTransform();
+
 			applyShakeScreen(g2);
 			AffineTransform newTransform = g2.getTransform();
 			// creates a new camera transform to set to after it draws the
@@ -287,12 +287,12 @@ public class Game extends JComponent implements KeyListener {
 
 			g2.setTransform(oldTransform2);
 			drawBackground(g);
-
-			g2.setTransform(newTransformnoShake);
-			g2.translate(-cameraLocationX, -cameraLocationY);
-			drawSun(g2);
-			g2.translate(cameraLocationX, cameraLocationY);
 			g2.setTransform(oldTransform2);
+			//g2.setTransform(newTransformnoShake);
+			//g2.translate(-cameraLocationX, -cameraLocationY);
+			drawSun(g2);
+			//g2.translate(cameraLocationX, cameraLocationY);
+			
 			drawMountain(g);
 
 			g2.setTransform(newTransform);
@@ -359,13 +359,13 @@ public class Game extends JComponent implements KeyListener {
 			g.setColor(new Color(149, 214, 223));
 			g.fillRect(0, 0, DEFAULT_SCREEN_SIZE_X, DEFAULT_SCREEN_SIZE_Y);
 			if (keysPressed.contains(KeyEvent.VK_UP))
-				charSelectY -= 10;
+				charSelectY -= 15;
 			if (keysPressed.contains(KeyEvent.VK_DOWN))
-				charSelectY += 10;
+				charSelectY += 15;
 			if (keysPressed.contains(KeyEvent.VK_LEFT))
-				charSelectX -= 10;
+				charSelectX -= 15;
 			if (keysPressed.contains(KeyEvent.VK_RIGHT))
-				charSelectX += 10;
+				charSelectX += 15;
 
 			if (keysPressed.contains(KeyEvent.VK_SPACE))
 				isSelecting = true;
@@ -710,6 +710,7 @@ public class Game extends JComponent implements KeyListener {
 							if (!player.getShield().intersects(proj.getMyHitbox().getRect())) {
 								player.applyDamage(proj.getMyHitbox().getDamage());
 								player.applyHitstun(proj.getMyHitbox().getHitstunLength());
+								player.applyKnockback(proj.getMyHitbox().getKnockbackX(), proj.getMyHitbox().getKnockbackX(), 1);
 							} else {
 								player.setShieldWidth(player.getShieldWidth() - proj.getMyHitbox().getShieldDamage());
 							}
@@ -741,7 +742,14 @@ public class Game extends JComponent implements KeyListener {
 	}
 
 	public void drawSun(Graphics2D g2) {
+		AffineTransform old = g2.getTransform();
+		if (!isnormalscreen) {
+			// g2.translate(0, (screenWidth / (screenHeight /
+			// DEFAULT_SCREEN_SIZE_X) - DEFAULT_SCREEN_SIZE_Y) / 16);
+			g2.scale(screenWidth / DEFAULT_SCREEN_SIZE_X, (screenHeight / DEFAULT_SCREEN_SIZE_X) / 0.625);
 
+		}
+		
 		sunimgcounter--;
 		if (sunimgcounter <= 0) {
 			sunimage1 = !sunimage1;
@@ -756,6 +764,8 @@ public class Game extends JComponent implements KeyListener {
 
 		if (dayTime > 5.8)
 			dayTime = 2.3;
+		
+		g2.setTransform(old);
 	}
 
 	public void overlayColour(Graphics g) {
