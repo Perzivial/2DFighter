@@ -356,10 +356,10 @@ public class Game extends JComponent implements KeyListener {
 			break;
 		// TODO the character select screen
 		case (SCREEN_STATE_CHARACTER_SELECT):
-			
-			//g.setColor(new Color(149, 214, 223));
-			g.setColor(new Color(150, 150, 150));
-		g.fillRect(0, 0, DEFAULT_SCREEN_SIZE_X, DEFAULT_SCREEN_SIZE_Y);
+
+			// g.setColor(new Color(149, 214, 223));
+			g.setColor(new Color(120, 150, 150));
+			g.fillRect(0, 0, DEFAULT_SCREEN_SIZE_X, DEFAULT_SCREEN_SIZE_Y);
 			if (keysPressed.contains(KeyEvent.VK_UP))
 				charSelectY -= 15;
 			if (keysPressed.contains(KeyEvent.VK_DOWN))
@@ -373,11 +373,11 @@ public class Game extends JComponent implements KeyListener {
 				isSelecting = true;
 			else
 				isSelecting = false;
-			
+
 			drawPlayersSelection(g);
-			
+
 			drawIcons(g);
-			
+
 			if (!isSelecting) {
 				g.drawImage(selectorHandImage, charSelectX, charSelectY, 75, (int) (75 * 0.6818181818), this);
 				selectionRect = new Rectangle(charSelectX - 10, charSelectY - 10, 35, 35);
@@ -392,10 +392,12 @@ public class Game extends JComponent implements KeyListener {
 
 			break;
 		case (SCREEN_STATE_CHOOSE_CONTROL_SCHEME):
-			g.setColor(Color.BLACK);
+			
+			g.setColor(new Color(120, 150, 150));
+			g.fillRect(0, 0, DEFAULT_SCREEN_SIZE_X, DEFAULT_SCREEN_SIZE_Y);
 
 			g.drawImage(controlChoiceImage, 0, 0, DEFAULT_SCREEN_SIZE_X, DEFAULT_SCREEN_SIZE_Y, null);
-
+			g.setColor(Color.BLACK);
 			if (selectedIcon.isChoosingKeyBoard) {
 				g.fillOval(100, (DEFAULT_SCREEN_SIZE_Y / 2) - 50, 50, 50);
 			} else {
@@ -675,22 +677,23 @@ public class Game extends JComponent implements KeyListener {
 			}
 		}
 	}
-	
-	public void drawPlayersSelection(Graphics g){
-		//int space = (int) (screenWidth / characters.size());
-		for(int i = 0; i < characters.size();i++){
+
+	public void drawPlayersSelection(Graphics g) {
+		// int space = (int) (screenWidth / characters.size());
+		for (int i = 0; i < characters.size(); i++) {
 			g.setColor(Color.red);
-				g.fillRect(((DEFAULT_SCREEN_SIZE_X / 5 ))/2 - 20 + (((DEFAULT_SCREEN_SIZE_X / 5) + 10) * i), (int) (DEFAULT_SCREEN_SIZE_Y * .70), (int) (DEFAULT_SCREEN_SIZE_X / 5), (int) (DEFAULT_SCREEN_SIZE_Y * .25));
+			g.fillRect(((DEFAULT_SCREEN_SIZE_X / 5)) / 2 - 20 + (((DEFAULT_SCREEN_SIZE_X / 5) + 10) * i),
+					(int) (DEFAULT_SCREEN_SIZE_Y * .70), (int) (DEFAULT_SCREEN_SIZE_X / 5),
+					(int) (DEFAULT_SCREEN_SIZE_Y * .25));
 
 			/*
-			if(i == 0){
-				g.fillRect(50, (int) (DEFAULT_SCREEN_SIZE_Y * .70), (int) (DEFAULT_SCREEN_SIZE_Y / 5), (int) (DEFAULT_SCREEN_SIZE_Y * .25));
-			}
-			*/
+			 * if(i == 0){ g.fillRect(50, (int) (DEFAULT_SCREEN_SIZE_Y * .70),
+			 * (int) (DEFAULT_SCREEN_SIZE_Y / 5), (int) (DEFAULT_SCREEN_SIZE_Y *
+			 * .25)); }
+			 */
 		}
 	}
-	
-	
+
 	public void shouldPlayerWin() {
 		int howManyAtZero = 0;
 		for (Character person : characters) {
@@ -735,9 +738,9 @@ public class Game extends JComponent implements KeyListener {
 							if (!player.getShield().intersects(proj.getMyHitbox().getRect())) {
 								player.applyDamage(proj.getMyHitbox().getDamage());
 
-									player.applyHitstun(proj.getMyHitbox().getHitstunLength());
-									player.applyKnockback(proj.getMyHitbox().getKnockbackX(),
-											proj.getMyHitbox().getKnockbackX(), 1);
+								player.applyHitstun(proj.getMyHitbox().getHitstunLength());
+								player.applyKnockback(proj.getMyHitbox().getKnockbackX(),
+										proj.getMyHitbox().getKnockbackX(), 1);
 
 							} else {
 								player.setShieldWidth(player.getShieldWidth() - proj.getMyHitbox().getShieldDamage());
