@@ -1176,10 +1176,10 @@ public class Character {
 				percent = 0;
 				state = STATE_NEUTRAL;
 				respawnTimer = 60;
+				stockLoss.play();
 			}
 			lives--;
-			if (lives > -1)
-				stockLoss.play();
+				
 		} else if (respawnTimer > 0) {
 			respawnTimer--;
 		}

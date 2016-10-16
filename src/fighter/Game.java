@@ -199,9 +199,9 @@ public class Game extends JComponent implements KeyListener {
 
 	public void addCharIcons() {
 		// kid goku
-		charIcons.add(new KidGokuIcon(0,characters, this));
+		charIcons.add(new KidGokuIcon(0, characters, this));
 
-		charIcons.add(new AsrielIcon(0,characters, this));
+		charIcons.add(new AsrielIcon(0, characters, this));
 
 		for (int i = 0; i < charIcons.size(); i++) {
 			CharacterIcon icon = charIcons.get(i);
@@ -288,11 +288,11 @@ public class Game extends JComponent implements KeyListener {
 			g2.setTransform(oldTransform2);
 			drawBackground(g);
 			g2.setTransform(oldTransform2);
-			//g2.setTransform(newTransformnoShake);
-			//g2.translate(-cameraLocationX, -cameraLocationY);
+			// g2.setTransform(newTransformnoShake);
+			// g2.translate(-cameraLocationX, -cameraLocationY);
 			drawSun(g2);
-			//g2.translate(cameraLocationX, cameraLocationY);
-			
+			// g2.translate(cameraLocationX, cameraLocationY);
+
 			drawMountain(g);
 
 			g2.setTransform(newTransform);
@@ -356,8 +356,10 @@ public class Game extends JComponent implements KeyListener {
 			break;
 		// TODO the character select screen
 		case (SCREEN_STATE_CHARACTER_SELECT):
-			g.setColor(new Color(149, 214, 223));
-			g.fillRect(0, 0, DEFAULT_SCREEN_SIZE_X, DEFAULT_SCREEN_SIZE_Y);
+			
+			//g.setColor(new Color(149, 214, 223));
+			g.setColor(new Color(150, 150, 150));
+		g.fillRect(0, 0, DEFAULT_SCREEN_SIZE_X, DEFAULT_SCREEN_SIZE_Y);
 			if (keysPressed.contains(KeyEvent.VK_UP))
 				charSelectY -= 15;
 			if (keysPressed.contains(KeyEvent.VK_DOWN))
@@ -371,7 +373,11 @@ public class Game extends JComponent implements KeyListener {
 				isSelecting = true;
 			else
 				isSelecting = false;
+			
+			drawPlayersSelection(g);
+			
 			drawIcons(g);
+			
 			if (!isSelecting) {
 				g.drawImage(selectorHandImage, charSelectX, charSelectY, 75, (int) (75 * 0.6818181818), this);
 				selectionRect = new Rectangle(charSelectX - 10, charSelectY - 10, 35, 35);
@@ -669,7 +675,22 @@ public class Game extends JComponent implements KeyListener {
 			}
 		}
 	}
+	
+	public void drawPlayersSelection(Graphics g){
+		//int space = (int) (screenWidth / characters.size());
+		for(int i = 0; i < characters.size();i++){
+			g.setColor(Color.red);
+				g.fillRect(((DEFAULT_SCREEN_SIZE_X / 5 ))/2 - 20 + (((DEFAULT_SCREEN_SIZE_X / 5) + 10) * i), (int) (DEFAULT_SCREEN_SIZE_Y * .70), (int) (DEFAULT_SCREEN_SIZE_X / 5), (int) (DEFAULT_SCREEN_SIZE_Y * .25));
 
+			/*
+			if(i == 0){
+				g.fillRect(50, (int) (DEFAULT_SCREEN_SIZE_Y * .70), (int) (DEFAULT_SCREEN_SIZE_Y / 5), (int) (DEFAULT_SCREEN_SIZE_Y * .25));
+			}
+			*/
+		}
+	}
+	
+	
 	public void shouldPlayerWin() {
 		int howManyAtZero = 0;
 		for (Character person : characters) {
@@ -706,11 +727,18 @@ public class Game extends JComponent implements KeyListener {
 			for (Character player : characters) {
 				if (proj.getMyHitbox().getLinkedCharacter() != player)
 					if (proj.getMyHitbox().getRect().intersects(player.getHurtbox().getRect())) {
-						if (!proj.getMyHitbox().playerHitList.contains(player)) {
+
+						// if
+						// (!proj.getMyHitbox().playerHitList.contains(player))
+						// {
+						if (player.state != Character.STATE_HITSTUN && player.state != Character.STATE_GRABBED) {
 							if (!player.getShield().intersects(proj.getMyHitbox().getRect())) {
 								player.applyDamage(proj.getMyHitbox().getDamage());
-								player.applyHitstun(proj.getMyHitbox().getHitstunLength());
-								player.applyKnockback(proj.getMyHitbox().getKnockbackX(), proj.getMyHitbox().getKnockbackX(), 1);
+
+									player.applyHitstun(proj.getMyHitbox().getHitstunLength());
+									player.applyKnockback(proj.getMyHitbox().getKnockbackX(),
+											proj.getMyHitbox().getKnockbackX(), 1);
+
 							} else {
 								player.setShieldWidth(player.getShieldWidth() - proj.getMyHitbox().getShieldDamage());
 							}
@@ -749,7 +777,7 @@ public class Game extends JComponent implements KeyListener {
 			g2.scale(screenWidth / DEFAULT_SCREEN_SIZE_X, (screenHeight / DEFAULT_SCREEN_SIZE_X) / 0.625);
 
 		}
-		
+
 		sunimgcounter--;
 		if (sunimgcounter <= 0) {
 			sunimage1 = !sunimage1;
@@ -764,7 +792,7 @@ public class Game extends JComponent implements KeyListener {
 
 		if (dayTime > 5.8)
 			dayTime = 2.3;
-		
+
 		g2.setTransform(old);
 	}
 

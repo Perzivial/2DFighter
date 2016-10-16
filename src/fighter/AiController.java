@@ -40,12 +40,12 @@ public class AiController {
 				if (followedCharacter == null)
 					followedCharacter = person;
 				else {
-					if (person.percent > followedCharacter.percent && person.getLives() > 0) {
+					if (person.percent > followedCharacter.percent & person.getLives() > 0) {
 						followedCharacter = person;
 					}
 				}
 			}
-
+			
 		}
 		getDistanceToX();
 		getDistanceToY();
