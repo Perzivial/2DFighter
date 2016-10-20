@@ -358,7 +358,7 @@ public class Game extends JComponent implements KeyListener {
 		case (SCREEN_STATE_CHARACTER_SELECT):
 
 			// g.setColor(new Color(149, 214, 223));
-			g.setColor(new Color(120, 150, 150));
+			g.setColor(new Color(130, 150, 150));
 			g.fillRect(0, 0, DEFAULT_SCREEN_SIZE_X, DEFAULT_SCREEN_SIZE_Y);
 			if (keysPressed.contains(KeyEvent.VK_UP))
 				charSelectY -= 15;
@@ -393,7 +393,7 @@ public class Game extends JComponent implements KeyListener {
 			break;
 		case (SCREEN_STATE_CHOOSE_CONTROL_SCHEME):
 			
-			g.setColor(new Color(120, 150, 150));
+			g.setColor(new Color(130, 150, 150));
 			g.fillRect(0, 0, DEFAULT_SCREEN_SIZE_X, DEFAULT_SCREEN_SIZE_Y);
 
 			g.drawImage(controlChoiceImage, 0, 0, DEFAULT_SCREEN_SIZE_X, DEFAULT_SCREEN_SIZE_Y, null);
@@ -685,6 +685,8 @@ public class Game extends JComponent implements KeyListener {
 			g.fillRect(((DEFAULT_SCREEN_SIZE_X / 5)) / 2 - 20 + (((DEFAULT_SCREEN_SIZE_X / 5) + 10) * i),
 					(int) (DEFAULT_SCREEN_SIZE_Y * .70), (int) (DEFAULT_SCREEN_SIZE_X / 5),
 					(int) (DEFAULT_SCREEN_SIZE_Y * .25));
+			g.setColor(Color.BLACK);
+			g.drawString(characters.get(i).name, ((DEFAULT_SCREEN_SIZE_X / 5)) / 2 - 20 + (((DEFAULT_SCREEN_SIZE_X / 5) + 10) * i) + 5, (int) (DEFAULT_SCREEN_SIZE_Y * .70) + 40);
 
 			/*
 			 * if(i == 0){ g.fillRect(50, (int) (DEFAULT_SCREEN_SIZE_Y * .70),
