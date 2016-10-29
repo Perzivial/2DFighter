@@ -114,13 +114,13 @@ public class Game extends JComponent implements KeyListener {
 	SoundArray music = new SoundArray(headchalapiano, headchalaremix);
 
 	// misc sounds
-	Sound hitsound1 = new Sound("sound/misc/hitsound1.wav");
-	Sound hitsound2 = new Sound("sound/misc/hitsound2.wav");
-	Sound hitsound3 = new Sound("sound/misc/hitsound3.wav");
-	Sound hitsound4 = new Sound("sound/misc/hitsound4.wav");
-	Sound hitsound5 = new Sound("sound/misc/hitsound5.wav");
-	Sound hitsound6 = new Sound("sound/misc/hitsound6.wav");
-	SoundArray hitSounds = new SoundArray(hitsound2, hitsound2, hitsound3, hitsound4, hitsound5, hitsound6);
+	//Sound hitsound1 = new Sound("sound/misc/hitsound1.wav");
+	//Sound hitsound2 = new Sound("sound/misc/hitsound2.wav");
+	//Sound hitsound3 = new Sound("sound/misc/hitsound3.wav");
+	//Sound hitsound4 = new Sound("sound/misc/hitsound4.wav");
+	//Sound hitsound5 = new Sound("sound/misc/hitsound5.wav");
+	//Sound hitsound6 = new Sound("sound/misc/hitsound6.wav");
+	//SoundArray hitSounds = new SoundArray(hitsound2, hitsound2, hitsound3, hitsound4, hitsound5, hitsound6);
 
 	boolean canPlayMusic = false;
 	boolean musicEnabled = true;
@@ -950,7 +950,7 @@ public class Game extends JComponent implements KeyListener {
 									person1.applyHitstun(hitbox.getHitstunLength());
 									person1.applyDamage(hitbox.getDamage());
 									hitbox.playerHitList.add(person1);
-									hitSounds.getRandomSound().play();
+									//hitSounds.getRandomSound().play();
 									person1.hurtsounds.stopAllSounds();
 									person1.hurtsounds.getRandomSound().play();
 									shakeScreen(1 + (int) (person1.percent / 10) + (int) (hitbox.getDamage() / 10));
